@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { CSSProperties, forwardRef } from 'react';
+import { FolderOpen } from 'lucide-react';
 
 export type FitzgeraldCategory = 'people' | 'verbs' | 'descriptors' | 'social';
 
@@ -9,6 +10,7 @@ interface AACCardProps {
   icon?: string;
   imageUrl?: string;
   size?: 'sm' | 'md' | 'lg';
+  isFolder?: boolean;
   onClick?: () => void;
   className?: string;
   style?: CSSProperties;
@@ -29,7 +31,7 @@ const sizeStyles = {
 };
 
 export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
-  ({ text, category, icon, imageUrl, size = 'md', onClick, className, style, disabled }, ref) => {
+  ({ text, category, icon, imageUrl, size = 'md', isFolder, onClick, className, style, disabled }, ref) => {
     return (
       <button
         ref={ref}
@@ -45,10 +47,19 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
           'disabled:opacity-50 disabled:pointer-events-none',
           categoryStyles[category],
           sizeStyles[size],
+          // Stacked card appearance for folders
+          isFolder && 'before:absolute before:inset-1 before:-z-10 before:rounded-xl before:bg-inherit before:opacity-60 before:translate-x-1 before:translate-y-1',
           className
         )}
-        aria-label={text}
+        aria-label={isFolder ? `${text} - folder` : text}
       >
+        {/* Folder indicator */}
+        {isFolder && (
+          <div className="absolute top-2 end-2 p-1 rounded-md bg-foreground/10">
+            <FolderOpen className="h-3 w-3 text-foreground/70" />
+          </div>
+        )}
+
         {/* Icon or Image */}
         <div className="flex-1 flex items-center justify-center">
           {imageUrl ? (
