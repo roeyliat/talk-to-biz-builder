@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-type Language = 'he' | 'en';
+export type Language = 'he' | 'en' | 'ar' | 'ru';
 type Direction = 'rtl' | 'ltr';
 
 interface LanguageContextType {
@@ -18,6 +18,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.create': 'יצירת לוח',
     'nav.login': 'התחברות',
     'nav.signup': 'הרשמה',
+    'nav.aacBoard': 'לוח תקשורת',
     
     // Hero
     'hero.title': 'קול לעסק',
@@ -74,7 +75,7 @@ const translations: Record<Language, Record<string, string>> = {
     'fitzgerald.descriptors': 'תיאורים',
     'fitzgerald.social': 'מילים חברתיות',
     
-    // Common AAC Words
+    // Common AAC Words - Core Vocabulary
     'aac.hello': 'שלום',
     'aac.thanks': 'תודה',
     'aac.please': 'בבקשה',
@@ -85,6 +86,25 @@ const translations: Record<Language, Record<string, string>> = {
     'aac.more': 'עוד',
     'aac.done': 'סיימתי',
     'aac.i': 'אני',
+    'aac.toilet': 'שירותים',
+    'aac.back': 'חזרה',
+    
+    // AAC Board UI
+    'aac.coreVocabulary': 'מילים בסיסיות',
+    'aac.mainBoard': 'לוח ראשי',
+    'aac.uploadMenu': 'העלו תמונת תפריט',
+    'aac.aiProcessing': 'ה-AI יעבד את התמונה ויצור כרטיסים',
+    
+    // Menu Items
+    'menu.drinks': 'משקאות',
+    'menu.food': 'אוכל',
+    'menu.desserts': 'קינוחים',
+    'menu.coffee': 'קפה',
+    'menu.tea': 'תה',
+    'menu.juice': 'מיץ',
+    'menu.water': 'מים',
+    'menu.hotDrinks': 'משקאות חמים',
+    'menu.coldDrinks': 'משקאות קרים',
     
     // Footer
     'footer.rights': 'כל הזכויות שמורות',
@@ -98,6 +118,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.create': 'Create Board',
     'nav.login': 'Login',
     'nav.signup': 'Sign Up',
+    'nav.aacBoard': 'AAC Board',
     
     // Hero
     'hero.title': 'TalkBiz',
@@ -154,7 +175,7 @@ const translations: Record<Language, Record<string, string>> = {
     'fitzgerald.descriptors': 'Descriptors',
     'fitzgerald.social': 'Social Words',
     
-    // Common AAC Words
+    // Common AAC Words - Core Vocabulary
     'aac.hello': 'Hello',
     'aac.thanks': 'Thank you',
     'aac.please': 'Please',
@@ -165,11 +186,230 @@ const translations: Record<Language, Record<string, string>> = {
     'aac.more': 'More',
     'aac.done': 'Done',
     'aac.i': 'I',
+    'aac.toilet': 'Toilet',
+    'aac.back': 'Back',
+    
+    // AAC Board UI
+    'aac.coreVocabulary': 'Core Words',
+    'aac.mainBoard': 'Main Board',
+    'aac.uploadMenu': 'Upload Menu Photo',
+    'aac.aiProcessing': 'AI will process the image and create cards',
+    
+    // Menu Items
+    'menu.drinks': 'Drinks',
+    'menu.food': 'Food',
+    'menu.desserts': 'Desserts',
+    'menu.coffee': 'Coffee',
+    'menu.tea': 'Tea',
+    'menu.juice': 'Juice',
+    'menu.water': 'Water',
+    'menu.hotDrinks': 'Hot Drinks',
+    'menu.coldDrinks': 'Cold Drinks',
     
     // Footer
     'footer.rights': 'All rights reserved',
     'footer.privacy': 'Privacy Policy',
     'footer.terms': 'Terms of Service',
+  },
+  ar: {
+    // Navigation
+    'nav.home': 'الرئيسية',
+    'nav.dashboard': 'لوحة التحكم',
+    'nav.create': 'إنشاء لوحة',
+    'nav.login': 'تسجيل الدخول',
+    'nav.signup': 'إنشاء حساب',
+    'nav.aacBoard': 'لوحة التواصل',
+    
+    // Hero
+    'hero.title': 'TalkBiz',
+    'hero.subtitle': 'اجعل عملك متاحاً للجميع',
+    'hero.description': 'أنشئ لوحات تواصل بصرية مخصصة لعملك، لكي يتمكن كل عميل من التواصل بسهولة',
+    'hero.cta': 'ابدأ الآن',
+    'hero.demo': 'شاهد العرض',
+    
+    // Features
+    'features.title': 'لماذا TalkBiz؟',
+    'features.ai.title': 'مدعوم بالذكاء الاصطناعي',
+    'features.ai.description': 'ذكاء اصطناعي يفهم عملك وينشئ لوحات مخصصة',
+    'features.accessible.title': 'متاح للجميع',
+    'features.accessible.description': 'مصمم باستخدام طريقة Fitzgerald Key السريرية المثبتة',
+    'features.easy.title': 'سهل الاستخدام',
+    'features.easy.description': 'واجهة سحب وإفلات بسيطة للتحرير السريع',
+    'features.print.title': 'طباعة ورقمي',
+    'features.print.description': 'تصدير إلى PDF للطباعة أو الاستخدام التفاعلي',
+    
+    // Dashboard
+    'dashboard.title': 'لوحة التحكم',
+    'dashboard.welcome': 'مرحباً',
+    'dashboard.boards': 'لوحاتي',
+    'dashboard.createNew': 'إنشاء لوحة جديدة',
+    'dashboard.noBoards': 'لا توجد لوحات بعد. أنشئ أول واحدة!',
+    
+    // Board Creator
+    'creator.title': 'إنشاء لوحة جديدة',
+    'creator.step1': 'نوع العمل',
+    'creator.step2': 'مستوى التعقيد',
+    'creator.step3': 'تفاصيل القائمة',
+    'creator.step4': 'مراجعة وإنشاء',
+    'creator.businessType': 'اختر نوع العمل',
+    'creator.complexity': 'اختر مستوى التعقيد',
+    'creator.level1': 'أساسي (4-6 خلايا)',
+    'creator.level2': 'متوسط (12-16 خلية)',
+    'creator.level3': 'متقدم (24-32 خلية)',
+    'creator.menuItems': 'أدخل عناصر القائمة',
+    'creator.generate': 'إنشاء اللوحة',
+    'creator.generating': 'جاري إنشاء اللوحة...',
+    
+    // Business Types
+    'business.iceCream': 'محل آيس كريم',
+    'business.cafe': 'مقهى',
+    'business.restaurant': 'مطعم',
+    'business.pharmacy': 'صيدلية',
+    'business.bakery': 'مخبز',
+    'business.supermarket': 'سوبرماركت',
+    'business.other': 'أخرى',
+    
+    // Fitzgerald Categories
+    'fitzgerald.people': 'أشخاص / أسماء',
+    'fitzgerald.verbs': 'أفعال',
+    'fitzgerald.descriptors': 'صفات',
+    'fitzgerald.social': 'كلمات اجتماعية',
+    
+    // Common AAC Words - Core Vocabulary
+    'aac.hello': 'مرحباً',
+    'aac.thanks': 'شكراً',
+    'aac.please': 'من فضلك',
+    'aac.yes': 'نعم',
+    'aac.no': 'لا',
+    'aac.want': 'أريد',
+    'aac.help': 'مساعدة',
+    'aac.more': 'المزيد',
+    'aac.done': 'انتهيت',
+    'aac.i': 'أنا',
+    'aac.toilet': 'حمام',
+    'aac.back': 'رجوع',
+    
+    // AAC Board UI
+    'aac.coreVocabulary': 'كلمات أساسية',
+    'aac.mainBoard': 'اللوحة الرئيسية',
+    'aac.uploadMenu': 'تحميل صورة القائمة',
+    'aac.aiProcessing': 'سيقوم الذكاء الاصطناعي بمعالجة الصورة',
+    
+    // Menu Items
+    'menu.drinks': 'مشروبات',
+    'menu.food': 'طعام',
+    'menu.desserts': 'حلويات',
+    'menu.coffee': 'قهوة',
+    'menu.tea': 'شاي',
+    'menu.juice': 'عصير',
+    'menu.water': 'ماء',
+    'menu.hotDrinks': 'مشروبات ساخنة',
+    'menu.coldDrinks': 'مشروبات باردة',
+    
+    // Footer
+    'footer.rights': 'جميع الحقوق محفوظة',
+    'footer.privacy': 'سياسة الخصوصية',
+    'footer.terms': 'شروط الخدمة',
+  },
+  ru: {
+    // Navigation
+    'nav.home': 'Главная',
+    'nav.dashboard': 'Панель управления',
+    'nav.create': 'Создать доску',
+    'nav.login': 'Войти',
+    'nav.signup': 'Регистрация',
+    'nav.aacBoard': 'Коммуникационная доска',
+    
+    // Hero
+    'hero.title': 'TalkBiz',
+    'hero.subtitle': 'Сделайте свой бизнес доступным для всех',
+    'hero.description': 'Создавайте персонализированные коммуникационные доски для вашего бизнеса, чтобы каждый клиент мог легко общаться',
+    'hero.cta': 'Начать',
+    'hero.demo': 'Смотреть демо',
+    
+    // Features
+    'features.title': 'Почему TalkBiz?',
+    'features.ai.title': 'На основе ИИ',
+    'features.ai.description': 'Умный ИИ, который понимает ваш бизнес и создает персонализированные доски',
+    'features.accessible.title': 'Доступно для всех',
+    'features.accessible.description': 'Разработано с использованием проверенного клинического метода Fitzgerald Key',
+    'features.easy.title': 'Простота использования',
+    'features.easy.description': 'Простой интерфейс перетаскивания для быстрого редактирования',
+    'features.print.title': 'Печать и цифра',
+    'features.print.description': 'Экспорт в PDF для печати или интерактивного использования',
+    
+    // Dashboard
+    'dashboard.title': 'Мои доски',
+    'dashboard.welcome': 'Добро пожаловать',
+    'dashboard.boards': 'Мои доски',
+    'dashboard.createNew': 'Создать новую доску',
+    'dashboard.noBoards': 'Пока нет досок. Создайте первую!',
+    
+    // Board Creator
+    'creator.title': 'Создать новую доску',
+    'creator.step1': 'Тип бизнеса',
+    'creator.step2': 'Уровень сложности',
+    'creator.step3': 'Детали меню',
+    'creator.step4': 'Обзор и создание',
+    'creator.businessType': 'Выберите тип бизнеса',
+    'creator.complexity': 'Выберите уровень сложности',
+    'creator.level1': 'Базовый (4-6 ячеек)',
+    'creator.level2': 'Средний (12-16 ячеек)',
+    'creator.level3': 'Продвинутый (24-32 ячейки)',
+    'creator.menuItems': 'Введите пункты меню',
+    'creator.generate': 'Создать доску',
+    'creator.generating': 'Создание доски...',
+    
+    // Business Types
+    'business.iceCream': 'Мороженое',
+    'business.cafe': 'Кафе',
+    'business.restaurant': 'Ресторан',
+    'business.pharmacy': 'Аптека',
+    'business.bakery': 'Пекарня',
+    'business.supermarket': 'Супермаркет',
+    'business.other': 'Другое',
+    
+    // Fitzgerald Categories
+    'fitzgerald.people': 'Люди / Существительные',
+    'fitzgerald.verbs': 'Действия',
+    'fitzgerald.descriptors': 'Описания',
+    'fitzgerald.social': 'Социальные слова',
+    
+    // Common AAC Words - Core Vocabulary
+    'aac.hello': 'Привет',
+    'aac.thanks': 'Спасибо',
+    'aac.please': 'Пожалуйста',
+    'aac.yes': 'Да',
+    'aac.no': 'Нет',
+    'aac.want': 'Хочу',
+    'aac.help': 'Помощь',
+    'aac.more': 'Ещё',
+    'aac.done': 'Готово',
+    'aac.i': 'Я',
+    'aac.toilet': 'Туалет',
+    'aac.back': 'Назад',
+    
+    // AAC Board UI
+    'aac.coreVocabulary': 'Основные слова',
+    'aac.mainBoard': 'Главная доска',
+    'aac.uploadMenu': 'Загрузить фото меню',
+    'aac.aiProcessing': 'ИИ обработает изображение и создаст карточки',
+    
+    // Menu Items
+    'menu.drinks': 'Напитки',
+    'menu.food': 'Еда',
+    'menu.desserts': 'Десерты',
+    'menu.coffee': 'Кофе',
+    'menu.tea': 'Чай',
+    'menu.juice': 'Сок',
+    'menu.water': 'Вода',
+    'menu.hotDrinks': 'Горячие напитки',
+    'menu.coldDrinks': 'Холодные напитки',
+    
+    // Footer
+    'footer.rights': 'Все права защищены',
+    'footer.privacy': 'Политика конфиденциальности',
+    'footer.terms': 'Условия использования',
   },
 };
 
@@ -178,7 +418,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('he');
 
-  const direction: Direction = language === 'he' ? 'rtl' : 'ltr';
+  const direction: Direction = (language === 'he' || language === 'ar') ? 'rtl' : 'ltr';
 
   useEffect(() => {
     document.documentElement.dir = direction;
@@ -186,7 +426,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [language, direction]);
 
   const t = (key: string): string => {
-    return translations[language][key] || key;
+    return translations[language][key] || translations['en'][key] || key;
   };
 
   return (
