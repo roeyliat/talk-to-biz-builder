@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CreateBoard from "./pages/CreateBoard";
 import BoardDemo from "./pages/BoardDemo";
+import AACBoard from "./pages/AACBoard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/create" element={<CreateBoard />} />
             <Route path="/demo" element={<BoardDemo />} />
+            <Route path="/board" element={<AACBoard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
