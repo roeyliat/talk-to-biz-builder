@@ -18,10 +18,10 @@ export function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
-            ק
+            T
           </div>
           <span className="font-bold text-xl text-foreground">
-            {t('hero.title')}
+            TalkBiz
           </span>
         </Link>
 
