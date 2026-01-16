@@ -6,8 +6,9 @@ import { CoreVocabularySidebar } from './CoreVocabularySidebar';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 
 // Demo data for a cafe
 const demoBoardsData: Record<string, AACBoard> = {
@@ -114,6 +115,7 @@ export function AACDashboard({
   className 
 }: AACDashboardProps) {
   const { language, direction, t } = useLanguage();
+  const { speak, isSpeaking, isSupported } = useTextToSpeech();
   const [navState, setNavState] = useState<BoardNavigationState>({
     currentBoardId: rootBoardId,
     breadcrumbs: [],
@@ -190,19 +192,28 @@ export function AACDashboard({
     if (cell.linkToBoardId && boards[cell.linkToBoardId]) {
       navigateToBoard(cell.linkToBoardId);
     } else {
-      // Add to selected words (for TTS later)
-      const text = language === 'he' ? cell.text : cell.textEn;
+      // Speak the word and add to selected words
+      const text = language === 'he' || language === 'ar' ? cell.text : cell.textEn;
+      speak(text);
       setSelectedWords(prev => [...prev, text]);
     }
-  }, [boards, navigateToBoard, language]);
+  }, [boards, navigateToBoard, language, speak]);
 
   const handleCoreWordClick = useCallback((word: { textKey: string }) => {
-    setSelectedWords(prev => [...prev, t(word.textKey)]);
-  }, [t]);
+    const text = t(word.textKey);
+    speak(text);
+    setSelectedWords(prev => [...prev, text]);
+  }, [t, speak]);
 
   const clearSelectedWords = useCallback(() => {
     setSelectedWords([]);
   }, []);
+
+  const speakAllWords = useCallback(() => {
+    if (selectedWords.length > 0) {
+      speak(selectedWords.join(' '));
+    }
+  }, [selectedWords, speak]);
 
   if (!currentBoard) {
     return <div className="text-center text-muted-foreground">Board not found</div>;
@@ -276,9 +287,23 @@ export function AACDashboard({
               </span>
             ))}
           </div>
-          <Button variant="ghost" size="sm" onClick={clearSelectedWords}>
-            ✕
-          </Button>
+          <div className="flex gap-2">
+            {isSupported && (
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={speakAllWords}
+                disabled={isSpeaking}
+                className="gap-2"
+              >
+                <Volume2 className={cn("h-4 w-4", isSpeaking && "animate-pulse")} />
+                {language === 'he' ? 'השמע הכל' : 'Speak All'}
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={clearSelectedWords}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 
