@@ -1,9 +1,17 @@
+import { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Plus, LayoutGrid, Settings, FileText } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Plus, LayoutGrid, Settings, FileText, ScanLine } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { MenuScannerModal } from '@/components/menu-scanner/MenuScannerModal';
+import { ProcessingOverlay } from '@/components/menu-scanner/ProcessingOverlay';
+import { BoardReviewEditor } from '@/components/menu-scanner/BoardReviewEditor';
+import { useMenuScanner } from '@/hooks/useMenuScanner';
+import { AACDashboard } from '@/components/aac/AACDashboard';
+import { AACBoard } from '@/types/aac';
+import { useToast } from '@/hooks/use-toast';
 
 const mockBoards = [
   {
@@ -26,12 +34,128 @@ const mockBoards = [
   },
 ];
 
+type ViewState = 'dashboard' | 'review' | 'preview';
+
 const Dashboard = () => {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [viewState, setViewState] = useState<ViewState>('dashboard');
+  const [previewBoards, setPreviewBoards] = useState<Record<string, AACBoard> | null>(null);
+  
+  const { 
+    isProcessing, 
+    generatedBoards, 
+    processMenuImage, 
+    reset 
+  } = useMenuScanner();
+
+  const handleImageSelected = async (imageBase64: string) => {
+    setShowScannerModal(false);
+    const success = await processMenuImage(imageBase64);
+    if (success) {
+      setViewState('review');
+    }
+  };
+
+  const handleCancelProcessing = () => {
+    reset();
+  };
+
+  const handleSaveBoard = (boards: Record<string, AACBoard>) => {
+    // In a full implementation, this would save to the database
+    toast({
+      title: language === 'he' ? 'הלוח נשמר בהצלחה!' : 'Board saved successfully!',
+      description: language === 'he' 
+        ? 'הלוח החדש נוסף ללוח הבקרה שלך' 
+        : 'The new board has been added to your dashboard',
+    });
+    reset();
+    setViewState('dashboard');
+  };
+
+  const handlePreviewBoard = (boards: Record<string, AACBoard>) => {
+    setPreviewBoards(boards);
+    setViewState('preview');
+  };
+
+  const handleBackFromReview = () => {
+    reset();
+    setViewState('dashboard');
+  };
+
+  const handleBackFromPreview = () => {
+    setViewState('review');
+  };
+
+  const texts = {
+    he: {
+      scanMenu: 'סרוק תפריט חדש',
+      scanDescription: 'העלו תמונת תפריט והבינה המלאכותית תיצור לוח תקשורת',
+    },
+    en: {
+      scanMenu: 'Scan New Menu',
+      scanDescription: 'Upload a menu photo and AI will create a communication board',
+    },
+    ar: {
+      scanMenu: 'مسح قائمة جديدة',
+      scanDescription: 'قم بتحميل صورة القائمة وسيقوم الذكاء الاصطناعي بإنشاء لوحة اتصال',
+    },
+    ru: {
+      scanMenu: 'Сканировать новое меню',
+      scanDescription: 'Загрузите фото меню, и ИИ создаст коммуникационную доску',
+    },
+  };
+
+  const localT = texts[language as keyof typeof texts] || texts.en;
+
+  // Show review editor
+  if (viewState === 'review' && generatedBoards) {
+    return (
+      <BoardReviewEditor
+        boards={generatedBoards}
+        onSave={handleSaveBoard}
+        onPreview={handlePreviewBoard}
+        onBack={handleBackFromReview}
+      />
+    );
+  }
+
+  // Show preview
+  if (viewState === 'preview' && previewBoards) {
+    return (
+      <div className="min-h-screen flex flex-col bg-muted/30">
+        <div className="p-4 bg-card border-b border-border flex items-center justify-between">
+          <Button variant="outline" onClick={handleBackFromPreview}>
+            {language === 'he' ? 'חזרה לעריכה' : 'Back to Edit'}
+          </Button>
+          <span className="font-medium text-muted-foreground">
+            {language === 'he' ? 'תצוגה מקדימה' : 'Preview Mode'}
+          </span>
+          <Button onClick={() => handleSaveBoard(previewBoards)}>
+            {language === 'he' ? 'שמור לוח' : 'Save Board'}
+          </Button>
+        </div>
+        <div className="flex-1">
+          <AACDashboard boards={previewBoards} rootBoardId="main" showAIUpload={false} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
       <Header />
+      
+      <ProcessingOverlay isProcessing={isProcessing} onCancel={handleCancelProcessing} />
+      
+      <MenuScannerModal
+        open={showScannerModal}
+        onClose={() => setShowScannerModal(false)}
+        onImageSelected={handleImageSelected}
+      />
       
       <main className="flex-1 py-8">
         <div className="container">
@@ -48,12 +172,38 @@ const Dashboard = () => {
                 }
               </p>
             </div>
-            <Button size="lg" asChild>
-              <Link to="/create" className="gap-2">
-                <Plus className="h-5 w-5" />
-                {t('dashboard.createNew')}
-              </Link>
-            </Button>
+            <div className="flex gap-3">
+              <Button size="lg" variant="default" onClick={() => setShowScannerModal(true)} className="gap-2">
+                <ScanLine className="h-5 w-5" />
+                {localT.scanMenu}
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/create" className="gap-2">
+                  <Plus className="h-5 w-5" />
+                  {t('dashboard.createNew')}
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Scan Menu CTA Card */}
+          <div className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl p-6 border border-primary/20">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="h-20 w-20 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0">
+                <ScanLine className="h-10 w-10 text-primary" />
+              </div>
+              <div className="flex-1 text-center md:text-start">
+                <h2 className="text-xl font-semibold text-foreground mb-2">
+                  {localT.scanMenu}
+                </h2>
+                <p className="text-muted-foreground">
+                  {localT.scanDescription}
+                </p>
+              </div>
+              <Button size="lg" onClick={() => setShowScannerModal(true)} className="shrink-0">
+                {language === 'he' ? 'התחל סריקה' : 'Start Scan'}
+              </Button>
+            </div>
           </div>
 
           {/* Boards Grid */}
