@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Plus, LayoutGrid, Settings, FileText, ScanLine } from 'lucide-react';
+import { Plus, LayoutGrid, Settings, FileText, ScanLine, QrCode, Share2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MenuScannerModal } from '@/components/menu-scanner/MenuScannerModal';
 import { ProcessingOverlay } from '@/components/menu-scanner/ProcessingOverlay';
@@ -12,6 +12,8 @@ import { useMenuScanner } from '@/hooks/useMenuScanner';
 import { AACDashboard } from '@/components/aac/AACDashboard';
 import { AACBoard } from '@/types/aac';
 import { useToast } from '@/hooks/use-toast';
+import { BoardExportModal } from '@/components/board-export/BoardExportModal';
+import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 
 const mockBoards = [
   {
@@ -44,6 +46,13 @@ const Dashboard = () => {
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [viewState, setViewState] = useState<ViewState>('dashboard');
   const [previewBoards, setPreviewBoards] = useState<Record<string, AACBoard> | null>(null);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [selectedBoard, setSelectedBoard] = useState<typeof mockBoards[0] | null>(null);
+  
+  const handleOpenExport = (board: typeof mockBoards[0]) => {
+    setSelectedBoard(board);
+    setExportModalOpen(true);
+  };
   
   const { 
     isProcessing, 
@@ -151,6 +160,17 @@ const Dashboard = () => {
       
       <ProcessingOverlay isProcessing={isProcessing} onCancel={handleCancelProcessing} />
       
+      {selectedBoard && (
+        <BoardExportModal
+          open={exportModalOpen}
+          onClose={() => setExportModalOpen(false)}
+          boardId={selectedBoard.id}
+          boardName={language === 'he' ? selectedBoard.name : selectedBoard.nameEn}
+          businessType={selectedBoard.businessType}
+          boards={getBoardsForBusinessType(selectedBoard.businessType as BusinessType)}
+        />
+      )}
+      
       <MenuScannerModal
         open={showScannerModal}
         onClose={() => setShowScannerModal(false)}
@@ -245,11 +265,19 @@ const Dashboard = () => {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      {language === 'he' ? 'עריכה' : 'Edit'}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleOpenExport(board)}
+                      className="gap-1"
+                    >
+                      <QrCode className="h-3.5 w-3.5" />
+                      {language === 'he' ? 'ייצוא' : 'Export'}
                     </Button>
-                    <Button size="sm" className="flex-1">
-                      {language === 'he' ? 'תצוגה' : 'View'}
+                    <Button size="sm" className="flex-1" asChild>
+                      <Link to={`/board/${board.id}?type=${board.businessType}`}>
+                        {language === 'he' ? 'תצוגה' : 'View'}
+                      </Link>
                     </Button>
                   </div>
                 </div>
