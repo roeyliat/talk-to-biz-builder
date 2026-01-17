@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AACCard } from '@/components/aac/AACCard';
+import { businessPreviewCards, BusinessType } from '@/data/businessBoards';
 
 const businessTypes = [
   { key: 'iceCream', icon: '🍦' },
@@ -24,20 +25,6 @@ const complexityLevels = [
   { level: 2, cells: '12-16', grid: '3x4 / 4x4' },
   { level: 3, cells: '24-32', grid: '4x6 / 4x8' },
 ];
-
-const previewCards = {
-  iceCream: [
-    { text: 'שלום', textEn: 'Hello', category: 'social' as const, icon: '👋' },
-    { text: 'אני', textEn: 'I', category: 'people' as const, icon: '🙋' },
-    { text: 'רוצה', textEn: 'Want', category: 'verbs' as const, icon: '👉' },
-    { text: 'גלידה', textEn: 'Ice Cream', category: 'people' as const, icon: '🍦' },
-    { text: 'שוקולד', textEn: 'Chocolate', category: 'people' as const, icon: '🍫' },
-    { text: 'וניל', textEn: 'Vanilla', category: 'people' as const, icon: '🍨' },
-    { text: 'גדול', textEn: 'Large', category: 'descriptors' as const, icon: '📏' },
-    { text: 'קטן', textEn: 'Small', category: 'descriptors' as const, icon: '🔹' },
-    { text: 'תודה', textEn: 'Thank you', category: 'social' as const, icon: '🙏' },
-  ],
-};
 
 const CreateBoard = () => {
   const { t, language, direction } = useLanguage();
@@ -273,15 +260,17 @@ const CreateBoard = () => {
                       {language === 'he' ? 'תצוגה מקדימה' : 'Preview'}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      {previewCards.iceCream.slice(0, formData.complexity === 1 ? 6 : 9).map((card, index) => (
-                        <AACCard
-                          key={index}
-                          text={language === 'he' ? card.text : card.textEn}
-                          category={card.category}
-                          icon={card.icon}
-                          size="sm"
-                        />
-                      ))}
+                      {(businessPreviewCards[formData.businessType as BusinessType] || businessPreviewCards.cafe)
+                        .slice(0, formData.complexity === 1 ? 6 : 9)
+                        .map((card, index) => (
+                          <AACCard
+                            key={index}
+                            text={language === 'he' ? card.text : card.textEn}
+                            category={card.category}
+                            icon={card.icon}
+                            size="sm"
+                          />
+                        ))}
                     </div>
                   </div>
                 </div>
