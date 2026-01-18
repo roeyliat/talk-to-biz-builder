@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Input validation constants
+const MAX_IMAGE_SIZE = 10_000_000; // 10MB
+const VALID_IMAGE_FORMAT = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/]+=*$/;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,21 +16,99 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64 } = await req.json();
-
-    if (!imageBase64) {
+    // Authentication check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.warn("Request rejected: Missing or invalid authorization header");
       return new Response(
-        JSON.stringify({ success: false, error: "Image is required" }),
+        JSON.stringify({ success: false, error: "Unauthorized: Missing authentication" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify the user's JWT token
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.warn("Request rejected: Invalid JWT token", claimsError?.message);
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized: Invalid token" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log(`Authenticated request from user: ${userId}`);
+
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid JSON in request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { imageBase64 } = body;
+
+    // Input validation: Check if image exists
+    if (!imageBase64 || typeof imageBase64 !== "string") {
+      console.warn("Request rejected: Missing or invalid image data");
+      return new Response(
+        JSON.stringify({ success: false, error: "Image is required and must be a string" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Input validation: Check image format
+    if (!VALID_IMAGE_FORMAT.test(imageBase64)) {
+      console.warn("Request rejected: Invalid image format");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid image format. Supported: PNG, JPEG, WebP, GIF" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Input validation: Check image size
+    if (imageBase64.length > MAX_IMAGE_SIZE) {
+      console.warn(`Request rejected: Image too large (${imageBase64.length} bytes)`);
+      return new Response(
+        JSON.stringify({ success: false, error: "Image too large. Maximum size: 10MB" }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Input validation: Verify base64 encoding
+    try {
+      const base64Data = imageBase64.split(",")[1];
+      if (!base64Data) {
+        throw new Error("No base64 data found");
+      }
+      atob(base64Data);
+    } catch {
+      console.warn("Request rejected: Invalid base64 encoding");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid base64 encoding" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
+      console.error("Configuration error: LOVABLE_API_KEY is not set");
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log("Processing menu image...");
+    console.log(`Processing menu image for user ${userId}...`);
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -145,12 +228,14 @@ Be thorough but practical - focus on the main items visible in the menu.`
 
     if (!response.ok) {
       if (response.status === 429) {
+        console.warn(`Rate limit exceeded for user ${userId}`);
         return new Response(
           JSON.stringify({ success: false, error: "Rate limit exceeded. Please try again later." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
+        console.warn(`Payment required for user ${userId}`);
         return new Response(
           JSON.stringify({ success: false, error: "Payment required. Please add credits to continue." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -162,7 +247,7 @@ Be thorough but practical - focus on the main items visible in the menu.`
     }
 
     const data = await response.json();
-    console.log("AI response received");
+    console.log(`AI response received for user ${userId}`);
 
     // Extract the tool call result
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
@@ -171,7 +256,7 @@ Be thorough but practical - focus on the main items visible in the menu.`
     }
 
     const menuData = JSON.parse(toolCall.function.arguments);
-    console.log("Menu data parsed successfully:", menuData.businessName);
+    console.log(`Menu data parsed successfully for user ${userId}: ${menuData.businessName}`);
 
     return new Response(
       JSON.stringify({ success: true, data: menuData }),
