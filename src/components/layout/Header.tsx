@@ -1,15 +1,58 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Globe, Menu, X } from 'lucide-react';
+import { Globe, Menu, X, LogOut, User } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 export function Header() {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { user, isGuest, signInAsGuest, signOut, loading } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   const toggleLanguage = () => {
     setLanguage(language === 'he' ? 'en' : 'he');
+  };
+
+  const handleGuestLogin = async () => {
+    setIsLoggingIn(true);
+    const { error } = await signInAsGuest();
+    setIsLoggingIn(false);
+    
+    if (error) {
+      toast({
+        title: language === 'he' ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: language === 'he' ? 'ברוך הבא!' : 'Welcome!',
+        description: language === 'he' ? 'התחברת כאורח' : 'You are now signed in as a guest',
+      });
+      navigate('/dashboard');
+    }
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        title: language === 'he' ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: language === 'he' ? 'להתראות!' : 'Goodbye!',
+        description: language === 'he' ? 'התנתקת בהצלחה' : 'You have been signed out',
+      });
+      navigate('/');
+    }
   };
 
   return (
@@ -59,13 +102,34 @@ export function Header() {
             <Globe className="h-5 w-5" />
           </Button>
           
-          <Button variant="outline" size="sm" className="hidden md:inline-flex">
-            {t('nav.login')}
-          </Button>
-          
-          <Button size="sm" className="hidden md:inline-flex">
-            {t('nav.signup')}
-          </Button>
+          {!loading && (
+            <>
+              {user ? (
+                <div className="hidden md:flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <User className="h-4 w-4" />
+                    <span>{isGuest ? (language === 'he' ? 'אורח' : 'Guest') : user.email}</span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+                    <LogOut className="h-4 w-4" />
+                    {language === 'he' ? 'התנתק' : 'Sign Out'}
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  size="sm" 
+                  className="hidden md:inline-flex"
+                  onClick={handleGuestLogin}
+                  disabled={isLoggingIn}
+                >
+                  {isLoggingIn 
+                    ? (language === 'he' ? 'מתחבר...' : 'Connecting...') 
+                    : (language === 'he' ? 'התנסות כאורח' : 'Try as Guest')
+                  }
+                </Button>
+              )}
+            </>
+          )}
 
           {/* Mobile menu button */}
           <Button
@@ -114,12 +178,28 @@ export function Header() {
                 <Globe className="h-4 w-4" />
                 {language === 'he' ? 'English' : 'עברית'}
               </Button>
-              <Button variant="outline" size="sm">
-                {t('nav.login')}
-              </Button>
-              <Button size="sm">
-                {t('nav.signup')}
-              </Button>
+              
+              {!loading && (
+                <>
+                  {user ? (
+                    <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+                      <LogOut className="h-4 w-4" />
+                      {language === 'he' ? 'התנתק' : 'Sign Out'}
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      onClick={handleGuestLogin}
+                      disabled={isLoggingIn}
+                    >
+                      {isLoggingIn 
+                        ? (language === 'he' ? 'מתחבר...' : 'Connecting...') 
+                        : (language === 'he' ? 'התנסות כאורח' : 'Try as Guest')
+                      }
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
           </nav>
         </div>
