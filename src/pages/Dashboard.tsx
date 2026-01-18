@@ -274,6 +274,12 @@ const Dashboard = () => {
                       <QrCode className="h-3.5 w-3.5" />
                       {language === 'he' ? 'ייצוא' : 'Export'}
                     </Button>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to={`/board/${board.id}?type=${board.businessType}&edit=true`} className="gap-1">
+                        <Settings className="h-3.5 w-3.5" />
+                        {language === 'he' ? 'עריכה' : 'Edit'}
+                      </Link>
+                    </Button>
                     <Button size="sm" className="flex-1" asChild>
                       <Link to={`/board/${board.id}?type=${board.businessType}`}>
                         {language === 'he' ? 'תצוגה' : 'View'}
