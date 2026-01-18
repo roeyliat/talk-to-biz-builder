@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -8,7 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AACCard } from '@/components/aac/AACCard';
-import { businessPreviewCards, BusinessType } from '@/data/businessBoards';
+import { businessPreviewCards, BusinessType, getBoardsForBusinessType } from '@/data/businessBoards';
+import { useToast } from '@/hooks/use-toast';
+import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
 
 const businessTypes = [
   { key: 'iceCream', icon: '🍦' },
@@ -26,8 +29,61 @@ const complexityLevels = [
   { level: 3, cells: '24-32', grid: '4x6 / 4x8' },
 ];
 
+// Helper to generate a unique ID
+const generateId = () => `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+// Helper to get an appropriate emoji for a menu item
+const getItemEmoji = (item: string, businessType: string): string => {
+  const lowerItem = item.toLowerCase();
+  
+  // Common food/drink items
+  if (lowerItem.includes('קפה') || lowerItem.includes('coffee')) return '☕';
+  if (lowerItem.includes('תה') || lowerItem.includes('tea')) return '🍵';
+  if (lowerItem.includes('מים') || lowerItem.includes('water')) return '💧';
+  if (lowerItem.includes('מיץ') || lowerItem.includes('juice')) return '🧃';
+  if (lowerItem.includes('שוקולד') || lowerItem.includes('chocolate')) return '🍫';
+  if (lowerItem.includes('וניל') || lowerItem.includes('vanilla')) return '🍨';
+  if (lowerItem.includes('תות') || lowerItem.includes('strawberry')) return '🍓';
+  if (lowerItem.includes('לימון') || lowerItem.includes('lemon')) return '🍋';
+  if (lowerItem.includes('פיצה') || lowerItem.includes('pizza')) return '🍕';
+  if (lowerItem.includes('המבורגר') || lowerItem.includes('burger')) return '🍔';
+  if (lowerItem.includes('סלט') || lowerItem.includes('salad')) return '🥗';
+  if (lowerItem.includes('מרק') || lowerItem.includes('soup')) return '🍜';
+  if (lowerItem.includes('לחם') || lowerItem.includes('bread')) return '🍞';
+  if (lowerItem.includes('עוגה') || lowerItem.includes('cake')) return '🍰';
+  if (lowerItem.includes('גלידה') || lowerItem.includes('ice cream')) return '🍦';
+  if (lowerItem.includes('פסטה') || lowerItem.includes('pasta')) return '🍝';
+  if (lowerItem.includes('בשר') || lowerItem.includes('meat') || lowerItem.includes('סטייק') || lowerItem.includes('steak')) return '🥩';
+  if (lowerItem.includes('עוף') || lowerItem.includes('chicken')) return '🍗';
+  if (lowerItem.includes('דג') || lowerItem.includes('fish')) return '🐟';
+  if (lowerItem.includes('ביצ') || lowerItem.includes('egg')) return '🥚';
+  if (lowerItem.includes('גבינ') || lowerItem.includes('cheese')) return '🧀';
+  if (lowerItem.includes('חלב') || lowerItem.includes('milk')) return '🥛';
+  if (lowerItem.includes('בירה') || lowerItem.includes('beer')) return '🍺';
+  if (lowerItem.includes('יין') || lowerItem.includes('wine')) return '🍷';
+  if (lowerItem.includes('קרואסון') || lowerItem.includes('croissant')) return '🥐';
+  if (lowerItem.includes('בורקס') || lowerItem.includes('burekas')) return '🥧';
+  if (lowerItem.includes('תרופ') || lowerItem.includes('medicine') || lowerItem.includes('pill')) return '💊';
+  if (lowerItem.includes('פלסטר') || lowerItem.includes('bandage')) return '🩹';
+  
+  // Default by business type
+  const defaults: Record<string, string> = {
+    iceCream: '🍦',
+    cafe: '☕',
+    restaurant: '🍽️',
+    pharmacy: '💊',
+    bakery: '🥐',
+    supermarket: '🛒',
+    other: '📦',
+  };
+  
+  return defaults[businessType] || '🍽️';
+};
+
 const CreateBoard = () => {
   const { t, language, direction } = useLanguage();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     businessType: '',
@@ -56,14 +112,148 @@ const CreateBoard = () => {
 
   const handleGenerate = () => {
     setIsGenerating(true);
-    // Simulate AI generation
-    setTimeout(() => {
+    
+    try {
+      // Get base boards for the business type
+      const businessType = formData.businessType;
+      const validBusinessTypes: BusinessType[] = ['pharmacy', 'supermarket', 'iceCream', 'cafe', 'restaurant', 'bakery'];
+      const actualType: BusinessType = validBusinessTypes.includes(businessType as BusinessType) 
+        ? (businessType as BusinessType) 
+        : 'cafe';
+      const baseBoards = getBoardsForBusinessType(actualType);
+      
+      // Create a deep copy of the boards
+      const customBoards: Record<string, AACBoard> = JSON.parse(JSON.stringify(baseBoards));
+      
+      // Update the main board name
+      if (customBoards.main) {
+        customBoards.main.name = formData.businessName;
+        customBoards.main.nameEn = formData.businessName;
+      }
+      
+      // If user provided custom menu items, add them to the board
+      if (formData.menuItems.trim()) {
+        const items = formData.menuItems
+          .split('\n')
+          .map(item => item.trim())
+          .filter(item => item.length > 0);
+        
+        if (items.length > 0) {
+          // Create custom items as AACCells
+          const customCells: AACCell[] = items.map(item => ({
+            id: generateId(),
+            text: item,
+            textEn: item, // User can edit later
+            category: 'people' as FitzgeraldCategory,
+            icon: getItemEmoji(item, formData.businessType),
+          }));
+          
+          // Add custom items board
+          const customBoardId = 'custom-items';
+          customBoards[customBoardId] = {
+            id: customBoardId,
+            name: language === 'he' ? 'פריטים מותאמים' : 'Custom Items',
+            nameEn: 'Custom Items',
+            parentBoardId: 'main',
+            cells: customCells,
+            gridSize: {
+              cols: Math.min(Math.ceil(Math.sqrt(customCells.length)), 4),
+              rows: Math.ceil(customCells.length / 4),
+            },
+          };
+          
+          // Add link to custom items in main board
+          if (customBoards.main) {
+            customBoards.main.cells.push({
+              id: 'custom-items-link',
+              text: language === 'he' ? 'פריטים מותאמים' : 'Custom Items',
+              textEn: 'Custom Items',
+              category: 'people' as FitzgeraldCategory,
+              icon: '⭐',
+              linkToBoardId: customBoardId,
+            });
+          }
+        }
+      }
+      
+      // Adjust grid size based on complexity
+      if (customBoards.main) {
+        const cellCount = customBoards.main.cells.length;
+        switch (formData.complexity) {
+          case 1:
+            customBoards.main.gridSize = { cols: 2, rows: 3 };
+            customBoards.main.cells = customBoards.main.cells.slice(0, 6);
+            break;
+          case 2:
+            customBoards.main.gridSize = { cols: 3, rows: Math.ceil(cellCount / 3) };
+            break;
+          case 3:
+            customBoards.main.gridSize = { cols: 4, rows: Math.ceil(cellCount / 4) };
+            break;
+        }
+      }
+      
+      // Store the generated boards in sessionStorage for now
+      // In a full implementation, this would be saved to the database
+      sessionStorage.setItem('generatedBoards', JSON.stringify(customBoards));
+      sessionStorage.setItem('generatedBoardsType', formData.businessType);
+      sessionStorage.setItem('generatedBoardsName', formData.businessName);
+      
+      // Small delay to show the loading state
+      setTimeout(() => {
+        setIsGenerating(false);
+        toast({
+          title: language === 'he' ? 'הלוח נוצר בהצלחה!' : 'Board created successfully!',
+          description: language === 'he' 
+            ? 'מועברים לתצוגת הלוח שלך'
+            : 'Redirecting to your board',
+        });
+        
+        // Navigate to the board with edit mode enabled
+        navigate(`/board/custom?type=${formData.businessType}&edit=true`);
+      }, 1000);
+      
+    } catch (error) {
       setIsGenerating(false);
-    }, 2000);
+      console.error('Error generating board:', error);
+      toast({
+        title: language === 'he' ? 'שגיאה' : 'Error',
+        description: language === 'he' 
+          ? 'אירעה שגיאה ביצירת הלוח. נסו שוב.'
+          : 'Failed to create board. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const ArrowIcon = direction === 'rtl' ? ArrowLeft : ArrowRight;
   const BackArrowIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
+
+  // Get preview items - mix of base items and user's custom items
+  const getPreviewItems = () => {
+    const baseItems = (businessPreviewCards[formData.businessType as BusinessType] || businessPreviewCards.cafe)
+      .slice(0, formData.complexity === 1 ? 4 : 6);
+    
+    // Add some user items to preview if they exist
+    if (formData.menuItems.trim()) {
+      const userItems = formData.menuItems
+        .split('\n')
+        .map(item => item.trim())
+        .filter(item => item.length > 0)
+        .slice(0, 3)
+        .map(item => ({
+          text: item,
+          textEn: item,
+          category: 'people' as FitzgeraldCategory,
+          icon: getItemEmoji(item, formData.businessType),
+        }));
+      
+      // Replace some base items with user items
+      return [...baseItems.slice(0, Math.max(3, baseItems.length - userItems.length)), ...userItems];
+    }
+    
+    return baseItems;
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/30">
@@ -199,14 +389,21 @@ const CreateBoard = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-card-foreground mb-2">
-                      {language === 'he' ? 'פריטי תפריט (אחד בכל שורה)' : 'Menu Items (one per line)'}
+                      {language === 'he' 
+                        ? 'פריטי תפריט מותאמים (אחד בכל שורה) - אופציונלי' 
+                        : 'Custom Menu Items (one per line) - optional'}
                     </label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {language === 'he'
+                        ? 'הוסיפו פריטים ספציפיים לעסק שלכם. הם יתווספו ללוח הבסיסי.'
+                        : 'Add items specific to your business. They will be added to the base board.'}
+                    </p>
                     <Textarea
                       value={formData.menuItems}
                       onChange={(e) => setFormData({ ...formData, menuItems: e.target.value })}
                       placeholder={language === 'he' 
-                        ? 'שוקולד\nוניל\nתות\nפיסטוק\nלימון'
-                        : 'Chocolate\nVanilla\nStrawberry\nPistachio\nLemon'
+                        ? 'שוקולד בלגי\nוניל מדגסקר\nסורבה מנגו\nפיסטוק איטלקי'
+                        : 'Belgian Chocolate\nMadagascar Vanilla\nMango Sorbet\nItalian Pistachio'
                       }
                       rows={6}
                     />
@@ -252,6 +449,16 @@ const CreateBoard = () => {
                         {formData.businessName || '-'}
                       </div>
                     </div>
+                    {formData.menuItems.trim() && (
+                      <div className="bg-muted/50 rounded-xl p-4">
+                        <div className="text-sm text-muted-foreground mb-1">
+                          {language === 'he' ? 'פריטים מותאמים' : 'Custom Items'}
+                        </div>
+                        <div className="text-sm text-card-foreground">
+                          {formData.menuItems.split('\n').filter(i => i.trim()).length} {language === 'he' ? 'פריטים' : 'items'}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Preview */}
@@ -260,17 +467,15 @@ const CreateBoard = () => {
                       {language === 'he' ? 'תצוגה מקדימה' : 'Preview'}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      {(businessPreviewCards[formData.businessType as BusinessType] || businessPreviewCards.cafe)
-                        .slice(0, formData.complexity === 1 ? 6 : 9)
-                        .map((card, index) => (
-                          <AACCard
-                            key={index}
-                            text={language === 'he' ? card.text : card.textEn}
-                            category={card.category}
-                            icon={card.icon}
-                            size="sm"
-                          />
-                        ))}
+                      {getPreviewItems().map((card, index) => (
+                        <AACCard
+                          key={index}
+                          text={language === 'he' ? card.text : card.textEn}
+                          category={card.category}
+                          icon={card.icon}
+                          size="sm"
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -278,7 +483,7 @@ const CreateBoard = () => {
                 {/* Generate Button */}
                 <div className="flex justify-center pt-4">
                   <Button 
-                    size="xl" 
+                    size="lg" 
                     onClick={handleGenerate}
                     disabled={isGenerating}
                     className="gap-2 min-w-[200px]"
