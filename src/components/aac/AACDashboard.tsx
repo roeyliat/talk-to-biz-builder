@@ -5,11 +5,13 @@ import { AACCard } from './AACCard';
 import { CoreVocabularySidebar } from './CoreVocabularySidebar';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
+import { BoardEditModal } from './BoardEditModal';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
+import { useToast } from '@/hooks/use-toast';
 
 interface AACDashboardProps {
   boards?: Record<string, AACBoard>;
@@ -17,6 +19,8 @@ interface AACDashboardProps {
   showAIUpload?: boolean;
   className?: string;
   businessType?: BusinessType;
+  allowEdit?: boolean;
+  onBoardsChange?: (boards: Record<string, AACBoard>) => void;
 }
 
 export function AACDashboard({ 
@@ -24,24 +28,38 @@ export function AACDashboard({
   rootBoardId = 'main',
   showAIUpload = true,
   className,
-  businessType = 'cafe'
+  businessType = 'cafe',
+  allowEdit = false,
+  onBoardsChange,
 }: AACDashboardProps) {
   // Use provided boards or get boards based on business type
-  const activeBoards = useMemo(() => {
-    if (boards) return boards;
-    return getBoardsForBusinessType(businessType);
-  }, [boards, businessType]);
+  const [localBoards, setLocalBoards] = useState<Record<string, AACBoard>>(() => {
+    if (boards) return { ...boards };
+    return { ...getBoardsForBusinessType(businessType) };
+  });
+  
+  const activeBoards = localBoards;
   const { language, direction, t } = useLanguage();
   const { speak, isSpeaking, isSupported } = useTextToSpeech();
+  const { toast } = useToast();
+  
   const [navState, setNavState] = useState<BoardNavigationState>({
     currentBoardId: rootBoardId,
     breadcrumbs: [],
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingCell, setEditingCell] = useState<AACCell | null>(null);
 
   const currentBoard = activeBoards[navState.currentBoardId];
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
+
+  const updateBoards = useCallback((newBoards: Record<string, AACBoard>) => {
+    setLocalBoards(newBoards);
+    onBoardsChange?.(newBoards);
+  }, [onBoardsChange]);
 
   const navigateToBoard = useCallback((boardId: string) => {
     if (!activeBoards[boardId]) return;
@@ -106,6 +124,8 @@ export function AACDashboard({
   }, [rootBoardId]);
 
   const handleCellClick = useCallback((cell: AACCell) => {
+    if (isEditMode) return;
+    
     if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
       navigateToBoard(cell.linkToBoardId);
     } else {
@@ -114,7 +134,7 @@ export function AACDashboard({
       speak(text);
       setSelectedWords(prev => [...prev, text]);
     }
-  }, [activeBoards, navigateToBoard, language, speak]);
+  }, [activeBoards, navigateToBoard, language, speak, isEditMode]);
 
   const handleCoreWordClick = useCallback((word: { textKey: string }) => {
     const text = t(word.textKey);
@@ -131,6 +151,66 @@ export function AACDashboard({
       speak(selectedWords.join(' '));
     }
   }, [selectedWords, speak]);
+
+  // Edit mode handlers
+  const handleDeleteCell = useCallback((cellId: string) => {
+    const newBoards = { ...activeBoards };
+    const board = newBoards[navState.currentBoardId];
+    if (!board) return;
+
+    newBoards[navState.currentBoardId] = {
+      ...board,
+      cells: board.cells.filter(c => c.id !== cellId),
+    };
+    
+    updateBoards(newBoards);
+    toast({
+      title: language === 'he' ? 'הפריט הוסר' : 'Item removed',
+    });
+  }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
+
+  const handleEditCell = useCallback((cell: AACCell) => {
+    setEditingCell(cell);
+    setShowAddModal(true);
+  }, []);
+
+  const handleAddCell = useCallback((cellData: Omit<AACCell, 'id'>) => {
+    const newBoards = { ...activeBoards };
+    const board = newBoards[navState.currentBoardId];
+    if (!board) return;
+
+    const newCell: AACCell = {
+      ...cellData,
+      id: `custom-${Date.now()}`,
+    };
+
+    newBoards[navState.currentBoardId] = {
+      ...board,
+      cells: [...board.cells, newCell],
+    };
+    
+    updateBoards(newBoards);
+    toast({
+      title: language === 'he' ? 'הפריט נוסף' : 'Item added',
+    });
+  }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
+
+  const handleUpdateCell = useCallback((updatedCell: AACCell) => {
+    const newBoards = { ...activeBoards };
+    const board = newBoards[navState.currentBoardId];
+    if (!board) return;
+
+    newBoards[navState.currentBoardId] = {
+      ...board,
+      cells: board.cells.map(c => c.id === updatedCell.id ? updatedCell : c),
+    };
+    
+    updateBoards(newBoards);
+    setEditingCell(null);
+    toast({
+      title: language === 'he' ? 'הפריט עודכן' : 'Item updated',
+    });
+  }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
 
   if (!currentBoard) {
     return <div className="text-center text-muted-foreground">Board not found</div>;
@@ -188,11 +268,53 @@ export function AACDashboard({
           </nav>
         </div>
 
-        <LanguageSwitcher variant="compact" />
+        <div className="flex items-center gap-2">
+          {/* Edit Mode Toggle */}
+          {allowEdit && (
+            <Button
+              variant={isEditMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setIsEditMode(!isEditMode)}
+              className="gap-2"
+            >
+              {isEditMode ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  {language === 'he' ? 'סיום עריכה' : 'Done'}
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-4 w-4" />
+                  {language === 'he' ? 'עריכה' : 'Edit'}
+                </>
+              )}
+            </Button>
+          )}
+          <LanguageSwitcher variant="compact" />
+        </div>
       </header>
 
+      {/* Edit Mode Bar */}
+      {isEditMode && (
+        <div className="flex items-center justify-between gap-3 p-3 bg-primary/10 border-b border-primary/20">
+          <p className="text-sm text-primary font-medium">
+            {language === 'he' 
+              ? '🛠️ מצב עריכה: לחץ על פריט לעריכה, או על ה-X למחיקה' 
+              : '🛠️ Edit mode: Click item to edit, or X to delete'}
+          </p>
+          <Button
+            size="sm"
+            onClick={() => setShowAddModal(true)}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            {language === 'he' ? 'הוסף פריט' : 'Add Item'}
+          </Button>
+        </div>
+      )}
+
       {/* Selected Words Bar */}
-      {selectedWords.length > 0 && (
+      {selectedWords.length > 0 && !isEditMode && (
         <div className="flex items-center gap-3 p-3 bg-muted/50 border-b border-border">
           <div className="flex-1 flex flex-wrap gap-2">
             {selectedWords.map((word, index) => (
@@ -227,7 +349,7 @@ export function AACDashboard({
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Core Vocabulary Sidebar */}
-        <CoreVocabularySidebar onWordClick={handleCoreWordClick} />
+        {!isEditMode && <CoreVocabularySidebar onWordClick={handleCoreWordClick} />}
 
         {/* Main Grid Area */}
         <main className="flex-1 p-6 overflow-auto">
@@ -259,12 +381,15 @@ export function AACDashboard({
                 isFolder={!!cell.linkToBoardId}
                 onClick={() => handleCellClick(cell)}
                 size="lg"
+                isEditMode={isEditMode}
+                onDelete={() => handleDeleteCell(cell.id)}
+                onEdit={() => handleEditCell(cell)}
               />
             ))}
           </div>
 
           {/* AI Upload Placeholder */}
-          {showAIUpload && navState.currentBoardId === rootBoardId && (
+          {showAIUpload && navState.currentBoardId === rootBoardId && !isEditMode && (
             <AIUploadPlaceholder 
               className="mt-8 max-w-2xl mx-auto"
               onUpload={(file) => {
@@ -275,6 +400,18 @@ export function AACDashboard({
           )}
         </main>
       </div>
+
+      {/* Add/Edit Modal */}
+      <BoardEditModal
+        open={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingCell(null);
+        }}
+        onAddCell={handleAddCell}
+        editingCell={editingCell}
+        onUpdateCell={handleUpdateCell}
+      />
     </div>
   );
 }

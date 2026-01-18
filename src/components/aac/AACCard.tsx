@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { CSSProperties, forwardRef } from 'react';
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, X, Pencil } from 'lucide-react';
 
 export type FitzgeraldCategory = 'people' | 'verbs' | 'descriptors' | 'social';
 
@@ -15,6 +15,9 @@ interface AACCardProps {
   className?: string;
   style?: CSSProperties;
   disabled?: boolean;
+  isEditMode?: boolean;
+  onDelete?: () => void;
+  onEdit?: () => void;
 }
 
 const categoryStyles: Record<FitzgeraldCategory, string> = {
@@ -31,17 +34,17 @@ const sizeStyles = {
 };
 
 export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
-  ({ text, category, icon, imageUrl, size = 'md', isFolder, onClick, className, style, disabled }, ref) => {
+  ({ text, category, icon, imageUrl, size = 'md', isFolder, onClick, className, style, disabled, isEditMode, onDelete, onEdit }, ref) => {
     return (
       <button
         ref={ref}
-        onClick={onClick}
+        onClick={isEditMode ? onEdit : onClick}
         disabled={disabled}
         style={style}
         className={cn(
           'relative flex flex-col items-center justify-center gap-2 rounded-xl p-3',
           'transition-all duration-200 ease-out',
-          'hover:-translate-y-1 hover:shadow-lg',
+          !isEditMode && 'hover:-translate-y-1 hover:shadow-lg',
           'active:translate-y-0 active:shadow-md',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           'disabled:opacity-50 disabled:pointer-events-none',
@@ -49,12 +52,39 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
           sizeStyles[size],
           // Stacked card appearance for folders
           isFolder && 'before:absolute before:inset-1 before:-z-10 before:rounded-xl before:bg-inherit before:opacity-60 before:translate-x-1 before:translate-y-1',
+          isEditMode && 'ring-2 ring-dashed ring-foreground/30 cursor-pointer',
           className
         )}
         aria-label={isFolder ? `${text} - folder` : text}
       >
+        {/* Edit mode controls */}
+        {isEditMode && (
+          <>
+            <div
+              role="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.();
+              }}
+              className="absolute -top-2 -end-2 z-10 p-1.5 rounded-full bg-destructive text-destructive-foreground shadow-md hover:scale-110 transition-transform cursor-pointer"
+            >
+              <X className="h-3 w-3" />
+            </div>
+            <div
+              role="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit?.();
+              }}
+              className="absolute -top-2 start-1/2 -translate-x-1/2 z-10 p-1.5 rounded-full bg-primary text-primary-foreground shadow-md hover:scale-110 transition-transform cursor-pointer"
+            >
+              <Pencil className="h-3 w-3" />
+            </div>
+          </>
+        )}
+
         {/* Folder indicator */}
-        {isFolder && (
+        {isFolder && !isEditMode && (
           <div className="absolute top-2 end-2 p-1 rounded-md bg-foreground/10">
             <FolderOpen className="h-3 w-3 text-foreground/70" />
           </div>
