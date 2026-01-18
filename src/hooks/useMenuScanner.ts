@@ -31,11 +31,26 @@ export function useMenuScanner() {
     setIsProcessing(true);
     
     try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please sign in to use the menu scanner feature',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
       const { data, error } = await supabase.functions.invoke('process-menu', {
         body: { imageBase64 },
       });
 
       if (error) {
+        // Handle specific error cases
+        if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+          throw new Error('Authentication required. Please sign in again.');
+        }
         throw new Error(error.message);
       }
 

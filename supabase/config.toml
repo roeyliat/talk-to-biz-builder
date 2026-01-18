@@ -1,1 +1,4 @@
 project_id = "aqtpzssjyvlixunxqqci"
+
+[functions.process-menu]
+verify_jwt = false
