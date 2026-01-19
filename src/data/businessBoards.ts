@@ -239,70 +239,170 @@ const supermarketBoards: Record<string, AACBoard> = {
 };
 
 // =============================================================================
-// ICE CREAM SHOP BOARDS
+// ICE CREAM SHOP BOARDS - Multi-Level Hierarchical Demo
 // =============================================================================
 const iceCreamBoards: Record<string, AACBoard> = {
+  // Level 1: Main Menu
   'main': {
     id: 'main',
     name: 'גלידריה',
     nameEn: 'Ice Cream Shop',
     cells: [
-      cell('flavors', 'טעמים', 'Flavors', 'people', '🍦', 'flavors'),
-      cell('toppings', 'תוספות', 'Toppings', 'people', '🍫', 'toppings'),
-      cell('sizes', 'גדלים', 'Sizes', 'people', '📏', 'sizes'),
+      cell('ice-cream', 'גלידה', 'Ice Cream', 'people', '🍦', 'ice-cream-type'),
+      cell('sorbet', 'סורבה', 'Sorbet', 'people', '🍧', 'sorbet-type'),
+      cell('yogurt', 'יוגורט קפוא', 'Frozen Yogurt', 'people', '🥛', 'yogurt-type'),
+      cell('coffee', 'קפה', 'Coffee', 'people', '☕'),
+      cell('desserts', 'קינוחים', 'Desserts', 'people', '🍰', 'desserts'),
       cell('want', 'רוצה', 'Want', 'verbs', '👆'),
       cell('taste', 'לטעום', 'Taste', 'verbs', '👅'),
-      cell('cold', 'קר', 'Cold', 'descriptors', '❄️'),
-      cell('sweet', 'מתוק', 'Sweet', 'descriptors', '🍬'),
       cell('please', 'בבקשה', 'Please', 'social', '🙏'),
       cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
     ],
     gridSize: { cols: 3, rows: 3 },
   },
-  'flavors': {
-    id: 'flavors',
-    name: 'טעמים',
-    nameEn: 'Flavors',
+
+  // Level 2: Cup or Cone selection for Ice Cream
+  'ice-cream-type': {
+    id: 'ice-cream-type',
+    name: 'גביע או גלידה?',
+    nameEn: 'Cup or Cone?',
     parentBoardId: 'main',
     cells: [
-      cell('chocolate', 'שוקולד', 'Chocolate', 'people', '🍫'),
-      cell('vanilla', 'וניל', 'Vanilla', 'people', '🍨'),
-      cell('strawberry', 'תות', 'Strawberry', 'people', '🍓'),
-      cell('pistachio', 'פיסטוק', 'Pistachio', 'people', '🥜'),
-      cell('lemon', 'לימון', 'Lemon', 'people', '🍋'),
-      cell('mango', 'מנגו', 'Mango', 'people', '🥭'),
-      cell('cookies', 'עוגיות', 'Cookies', 'people', '🍪'),
-      cell('coffee', 'קפה', 'Coffee', 'people', '☕'),
+      cell('cup', 'גביע', 'Cup', 'people', '🥣', 'flavors-cup'),
+      cell('cone', 'גלידה', 'Cone', 'people', '🍦', 'flavors-cone'),
+    ],
+    gridSize: { cols: 2, rows: 1 },
+  },
+
+  // Level 2: Cup or Cone selection for Sorbet
+  'sorbet-type': {
+    id: 'sorbet-type',
+    name: 'גביע או גלידה?',
+    nameEn: 'Cup or Cone?',
+    parentBoardId: 'main',
+    cells: [
+      cell('cup', 'גביע', 'Cup', 'people', '🥣', 'sorbet-flavors'),
+      cell('cone', 'גלידה', 'Cone', 'people', '🍦', 'sorbet-flavors'),
+    ],
+    gridSize: { cols: 2, rows: 1 },
+  },
+
+  // Level 2: Cup selection for Frozen Yogurt
+  'yogurt-type': {
+    id: 'yogurt-type',
+    name: 'בחר גודל',
+    nameEn: 'Choose Size',
+    parentBoardId: 'main',
+    cells: [
+      cell('small', 'קטן', 'Small', 'descriptors', '🔹', 'yogurt-toppings'),
+      cell('medium', 'בינוני', 'Medium', 'descriptors', '🔶', 'yogurt-toppings'),
+      cell('large', 'גדול', 'Large', 'descriptors', '⬛', 'yogurt-toppings'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+
+  // Level 3: Ice Cream Flavors (Cup)
+  'flavors-cup': {
+    id: 'flavors-cup',
+    name: 'בחר טעם',
+    nameEn: 'Choose Flavor',
+    parentBoardId: 'ice-cream-type',
+    cells: [
+      cell('chocolate', 'שוקולד', 'Chocolate', 'people', '🍫', 'toppings'),
+      cell('vanilla', 'וניל', 'Vanilla', 'people', '🍨', 'toppings'),
+      cell('strawberry', 'תות', 'Strawberry', 'people', '🍓', 'toppings'),
+      cell('pistachio', 'פיסטוק', 'Pistachio', 'people', '🥜', 'toppings'),
+      cell('lemon', 'לימון', 'Lemon', 'people', '🍋', 'toppings'),
+      cell('mango', 'מנגו', 'Mango', 'people', '🥭', 'toppings'),
+      cell('cookies', 'עוגיות', 'Cookies & Cream', 'people', '🍪', 'toppings'),
+      cell('coffee', 'קפה', 'Coffee', 'people', '☕', 'toppings'),
     ],
     gridSize: { cols: 4, rows: 2 },
   },
-  'toppings': {
-    id: 'toppings',
-    name: 'תוספות',
-    nameEn: 'Toppings',
-    parentBoardId: 'main',
+
+  // Level 3: Ice Cream Flavors (Cone)
+  'flavors-cone': {
+    id: 'flavors-cone',
+    name: 'בחר טעם',
+    nameEn: 'Choose Flavor',
+    parentBoardId: 'ice-cream-type',
     cells: [
-      cell('sprinkles', 'סוכריות', 'Sprinkles', 'people', '🍬'),
-      cell('choco-chips', 'שבבי שוקולד', 'Chocolate Chips', 'people', '🍫'),
-      cell('whipped-cream', 'קצפת', 'Whipped Cream', 'people', '🥛'),
-      cell('sauce', 'רוטב', 'Sauce', 'people', '🍯'),
-      cell('nuts', 'אגוזים', 'Nuts', 'people', '🥜'),
-      cell('fruits', 'פירות', 'Fruits', 'people', '🍓'),
+      cell('chocolate', 'שוקולד', 'Chocolate', 'people', '🍫', 'toppings'),
+      cell('vanilla', 'וניל', 'Vanilla', 'people', '🍨', 'toppings'),
+      cell('strawberry', 'תות', 'Strawberry', 'people', '🍓', 'toppings'),
+      cell('pistachio', 'פיסטוק', 'Pistachio', 'people', '🥜', 'toppings'),
+      cell('lemon', 'לימון', 'Lemon', 'people', '🍋', 'toppings'),
+      cell('mango', 'מנגו', 'Mango', 'people', '🥭', 'toppings'),
+      cell('cookies', 'עוגיות', 'Cookies & Cream', 'people', '🍪', 'toppings'),
+      cell('coffee', 'קפה', 'Coffee', 'people', '☕', 'toppings'),
+    ],
+    gridSize: { cols: 4, rows: 2 },
+  },
+
+  // Level 3: Sorbet Flavors
+  'sorbet-flavors': {
+    id: 'sorbet-flavors',
+    name: 'בחר טעם סורבה',
+    nameEn: 'Choose Sorbet Flavor',
+    parentBoardId: 'sorbet-type',
+    cells: [
+      cell('lemon', 'לימון', 'Lemon', 'people', '🍋', 'toppings'),
+      cell('mango', 'מנגו', 'Mango', 'people', '🥭', 'toppings'),
+      cell('raspberry', 'פטל', 'Raspberry', 'people', '🫐', 'toppings'),
+      cell('passion', 'פסיפלורה', 'Passion Fruit', 'people', '🍊', 'toppings'),
+      cell('watermelon', 'אבטיח', 'Watermelon', 'people', '🍉', 'toppings'),
+      cell('coconut', 'קוקוס', 'Coconut', 'people', '🥥', 'toppings'),
     ],
     gridSize: { cols: 3, rows: 2 },
   },
-  'sizes': {
-    id: 'sizes',
-    name: 'גדלים',
-    nameEn: 'Sizes',
+
+  // Level 4: Toppings
+  'toppings': {
+    id: 'toppings',
+    name: 'להוסיף תוספות?',
+    nameEn: 'Add Toppings?',
+    parentBoardId: 'flavors-cup',
+    cells: [
+      cell('sprinkles', 'סוכריות צבעוניות', 'Sprinkles', 'people', '🌈'),
+      cell('hot-chocolate', 'שוקולד חם', 'Hot Chocolate', 'people', '🍫'),
+      cell('nuts', 'אגוזים', 'Nuts', 'people', '🥜'),
+      cell('whipped-cream', 'קצפת', 'Whipped Cream', 'people', '🥛'),
+      cell('caramel', 'קרמל', 'Caramel', 'people', '🍯'),
+      cell('no-toppings', 'בלי תוספות', 'No Toppings', 'descriptors', '✖️'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+
+  // Level 4: Yogurt Toppings
+  'yogurt-toppings': {
+    id: 'yogurt-toppings',
+    name: 'בחר תוספות',
+    nameEn: 'Choose Toppings',
+    parentBoardId: 'yogurt-type',
+    cells: [
+      cell('granola', 'גרנולה', 'Granola', 'people', '🥣'),
+      cell('fresh-fruit', 'פירות טריים', 'Fresh Fruit', 'people', '🍓'),
+      cell('honey', 'דבש', 'Honey', 'people', '🍯'),
+      cell('chocolate-chips', 'שבבי שוקולד', 'Chocolate Chips', 'people', '🍫'),
+      cell('nuts', 'אגוזים', 'Nuts', 'people', '🥜'),
+      cell('no-toppings', 'בלי תוספות', 'No Toppings', 'descriptors', '✖️'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+
+  // Desserts sub-board
+  'desserts': {
+    id: 'desserts',
+    name: 'קינוחים',
+    nameEn: 'Desserts',
     parentBoardId: 'main',
     cells: [
-      cell('small', 'קטן', 'Small', 'descriptors', '🔹'),
-      cell('medium', 'בינוני', 'Medium', 'descriptors', '🔶'),
-      cell('large', 'גדול', 'Large', 'descriptors', '⬛'),
-      cell('scoop', 'כדור', 'Scoop', 'people', '🍦'),
-      cell('cup', 'גביע', 'Cup', 'people', '🥤'),
-      cell('cone', 'גלידה על מקל', 'Cone', 'people', '🍦'),
+      cell('waffle', 'וופל', 'Waffle', 'people', '🧇'),
+      cell('crepe', 'קרפ', 'Crepe', 'people', '🥞'),
+      cell('brownie', 'בראוני', 'Brownie', 'people', '🍫'),
+      cell('milkshake', 'מילקשייק', 'Milkshake', 'people', '🥤'),
+      cell('sundae', 'סאנדיי', 'Sundae', 'people', '🍨'),
+      cell('banana-split', 'בננה ספליט', 'Banana Split', 'people', '🍌'),
     ],
     gridSize: { cols: 3, rows: 2 },
   },

@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AACCell, AACBoard, BoardNavigationState } from '@/types/aac';
 import { AACCard } from './AACCard';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface AACBoardViewProps {
@@ -11,9 +11,10 @@ interface AACBoardViewProps {
   rootBoardId: string;
   onCellClick?: (cell: AACCell) => void;
   className?: string;
+  isCustomerMode?: boolean;
 }
 
-export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AACBoardViewProps) {
+export function AACBoardView({ boards, rootBoardId, onCellClick, className, isCustomerMode }: AACBoardViewProps) {
   const { language, direction } = useLanguage();
   const [navState, setNavState] = useState<BoardNavigationState>({
     currentBoardId: rootBoardId,
@@ -21,8 +22,17 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AA
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Reset to root when rootBoardId changes
+  useEffect(() => {
+    setNavState({
+      currentBoardId: rootBoardId,
+      breadcrumbs: [],
+    });
+  }, [rootBoardId]);
+
   const currentBoard = boards[navState.currentBoardId];
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
+  const isAtRoot = navState.breadcrumbs.length === 0;
 
   const navigateToBoard = useCallback((boardId: string, boardName: string, boardNameEn: string) => {
     setIsTransitioning(true);
@@ -61,17 +71,22 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AA
     }, 150);
   }, [navState.breadcrumbs, rootBoardId]);
 
+  const navigateToRoot = useCallback(() => {
+    if (isAtRoot) return;
+    
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setNavState({
+        currentBoardId: rootBoardId,
+        breadcrumbs: [],
+      });
+      setIsTransitioning(false);
+    }, 150);
+  }, [rootBoardId, isAtRoot]);
+
   const navigateToBreadcrumb = useCallback((targetIndex: number) => {
     if (targetIndex === -1) {
-      // Navigate to root
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setNavState({
-          currentBoardId: rootBoardId,
-          breadcrumbs: [],
-        });
-        setIsTransitioning(false);
-      }, 150);
+      navigateToRoot();
       return;
     }
 
@@ -83,7 +98,7 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AA
       }));
       setIsTransitioning(false);
     }, 150);
-  }, [rootBoardId]);
+  }, [navigateToRoot]);
 
   const handleCellClick = useCallback((cell: AACCell) => {
     if (cell.linkToBoardId && boards[cell.linkToBoardId]) {
@@ -102,7 +117,7 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AA
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       {/* Navigation Header */}
-      {navState.breadcrumbs.length > 0 && (
+      {!isAtRoot && (
         <div className="flex items-center gap-2 flex-wrap">
           {/* Back Button */}
           <Button
@@ -114,6 +129,19 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AA
             <BackIcon className="h-4 w-4" />
             {language === 'he' ? 'חזור' : 'Back'}
           </Button>
+
+          {/* Start Over / Home Button - Only show when nested deep */}
+          {navState.breadcrumbs.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={navigateToRoot}
+              className="gap-2 shrink-0 text-primary border-primary hover:bg-primary/10"
+            >
+              <RotateCcw className="h-4 w-4" />
+              {language === 'he' ? 'התחל מחדש' : 'Start Over'}
+            </Button>
+          )}
 
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-1 text-sm overflow-x-auto">
@@ -150,7 +178,7 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AA
       )}
 
       {/* Board Title (when at root) */}
-      {navState.breadcrumbs.length === 0 && (
+      {isAtRoot && (
         <div className="text-center">
           <h2 className="text-xl font-semibold text-foreground">
             {language === 'he' ? currentBoard.name : currentBoard.nameEn}
@@ -178,6 +206,7 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className }: AA
             imageUrl={cell.imageUrl}
             isFolder={!!cell.linkToBoardId}
             onClick={() => handleCellClick(cell)}
+            size={isCustomerMode ? 'lg' : 'md'}
           />
         ))}
       </div>
