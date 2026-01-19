@@ -6,8 +6,9 @@ import { CoreVocabularySidebar } from './CoreVocabularySidebar';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { BoardEditModal } from './BoardEditModal';
+import { CustomerModeOverlay } from './CustomerModeOverlay';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
@@ -52,6 +53,10 @@ export function AACDashboard({
   const [isEditMode, setIsEditMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCell, setEditingCell] = useState<AACCell | null>(null);
+  
+  // Customer Communication Mode
+  const [isCustomerMode, setIsCustomerMode] = useState(false);
+  const [selectedCell, setSelectedCell] = useState<AACCell | null>(null);
 
   const currentBoard = activeBoards[navState.currentBoardId];
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
@@ -126,6 +131,16 @@ export function AACDashboard({
   const handleCellClick = useCallback((cell: AACCell) => {
     if (isEditMode) return;
     
+    // Customer Mode: Show enlarged cell with TTS
+    if (isCustomerMode) {
+      if (!cell.linkToBoardId) {
+        setSelectedCell(cell);
+      } else if (activeBoards[cell.linkToBoardId]) {
+        navigateToBoard(cell.linkToBoardId);
+      }
+      return;
+    }
+    
     if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
       navigateToBoard(cell.linkToBoardId);
     } else {
@@ -134,7 +149,7 @@ export function AACDashboard({
       speak(text);
       setSelectedWords(prev => [...prev, text]);
     }
-  }, [activeBoards, navigateToBoard, language, speak, isEditMode]);
+  }, [activeBoards, navigateToBoard, language, speak, isEditMode, isCustomerMode]);
 
   const handleCoreWordClick = useCallback((word: { textKey: string }) => {
     const text = t(word.textKey);
@@ -269,8 +284,34 @@ export function AACDashboard({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Customer Mode Toggle */}
+          <Button
+            variant={isCustomerMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setIsCustomerMode(!isCustomerMode);
+              if (isEditMode) setIsEditMode(false);
+            }}
+            className={cn(
+              "gap-2",
+              isCustomerMode && "bg-green-600 hover:bg-green-700 text-white"
+            )}
+          >
+            {isCustomerMode ? (
+              <>
+                <X className="h-4 w-4" />
+                {language === 'he' ? 'צא ממצב לקוח' : 'Exit Customer Mode'}
+              </>
+            ) : (
+              <>
+                <MessageCircle className="h-4 w-4" />
+                {language === 'he' ? 'אני רוצה לדבר' : 'I Want To Talk'}
+              </>
+            )}
+          </Button>
+
           {/* Edit Mode Toggle */}
-          {allowEdit && (
+          {allowEdit && !isCustomerMode && (
             <Button
               variant={isEditMode ? "default" : "outline"}
               size="sm"
@@ -293,6 +334,18 @@ export function AACDashboard({
           <LanguageSwitcher variant="compact" />
         </div>
       </header>
+
+      {/* Customer Mode Indicator Bar */}
+      {isCustomerMode && !isEditMode && (
+        <div className="flex items-center justify-center gap-3 p-3 bg-green-600/20 border-b border-green-600/30">
+          <MessageCircle className="h-5 w-5 text-green-700" />
+          <p className="text-sm text-green-800 dark:text-green-300 font-medium">
+            {language === 'he' 
+              ? '🎯 מצב לקוח: לחץ על פריט כדי להציג ולהקריא אותו' 
+              : '🎯 Customer Mode: Tap an item to display and speak it'}
+          </p>
+        </div>
+      )}
 
       {/* Edit Mode Bar */}
       {isEditMode && (
@@ -348,8 +401,8 @@ export function AACDashboard({
 
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Core Vocabulary Sidebar */}
-        {!isEditMode && <CoreVocabularySidebar onWordClick={handleCoreWordClick} />}
+        {/* Core Vocabulary Sidebar - hidden in customer mode for cleaner UI */}
+        {!isEditMode && !isCustomerMode && <CoreVocabularySidebar onWordClick={handleCoreWordClick} />}
 
         {/* Main Grid Area */}
         <main className="flex-1 p-6 overflow-auto">
@@ -412,6 +465,14 @@ export function AACDashboard({
         editingCell={editingCell}
         onUpdateCell={handleUpdateCell}
       />
+
+      {/* Customer Mode Overlay */}
+      {isCustomerMode && (
+        <CustomerModeOverlay 
+          cell={selectedCell} 
+          onClose={() => setSelectedCell(null)} 
+        />
+      )}
     </div>
   );
 }
