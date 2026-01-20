@@ -76,6 +76,54 @@ export function useMenuScanner() {
     }
   };
 
+  const processMenuUrl = async (url: string): Promise<boolean> => {
+    setIsProcessing(true);
+    
+    try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please sign in to use the URL import feature',
+          variant: 'destructive',
+        });
+        return false;
+      }
+
+      const { data, error } = await supabase.functions.invoke('process-menu-url', {
+        body: { url },
+      });
+
+      if (error) {
+        if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+          throw new Error('Authentication required. Please sign in again.');
+        }
+        throw new Error(error.message);
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to process URL');
+      }
+
+      const menuData: MenuData = data.data;
+      const boards = convertMenuToBoards(menuData);
+      setGeneratedBoards(boards);
+      
+      return true;
+    } catch (error) {
+      console.error('Error processing URL:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to process URL',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const convertMenuToBoards = (menuData: MenuData): Record<string, AACBoard> => {
     const boards: Record<string, AACBoard> = {};
 
@@ -144,6 +192,10 @@ export function useMenuScanner() {
     if (lowerName.includes('pasta')) return '🍝';
     if (lowerName.includes('snack')) return '🍿';
     if (lowerName.includes('ice cream')) return '🍦';
+    if (lowerName.includes('appetizer') || lowerName.includes('starter')) return '🥗';
+    if (lowerName.includes('side')) return '🍟';
+    if (lowerName.includes('meat') || lowerName.includes('grill')) return '🥩';
+    if (lowerName.includes('fish') || lowerName.includes('seafood')) return '🐟';
     return '🍽️';
   };
 
@@ -156,6 +208,7 @@ export function useMenuScanner() {
     isProcessing,
     generatedBoards,
     processMenuImage,
+    processMenuUrl,
     setGeneratedBoards,
     reset,
   };
