@@ -6,12 +6,17 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Sparkles, Link, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AACCard } from '@/components/aac/AACCard';
 import { businessPreviewCards, BusinessType, getBoardsForBusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
+import { UrlImportModal } from '@/components/menu-scanner/UrlImportModal';
+import { MenuScannerModal } from '@/components/menu-scanner/MenuScannerModal';
+import { ProcessingOverlay } from '@/components/menu-scanner/ProcessingOverlay';
+import { BoardReviewEditor } from '@/components/menu-scanner/BoardReviewEditor';
+import { useMenuScanner } from '@/hooks/useMenuScanner';
 
 const businessTypes = [
   { key: 'iceCream', icon: '🍦' },
@@ -92,6 +97,11 @@ const CreateBoard = () => {
     menuItems: '',
   });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [showBoardReview, setShowBoardReview] = useState(false);
+  
+  const { isProcessing, generatedBoards, processMenuUrl, processMenuImage, setGeneratedBoards, reset: resetScanner } = useMenuScanner();
 
   const steps = [
     { num: 1, key: 'step1' },
@@ -387,6 +397,39 @@ const CreateBoard = () => {
                       className="text-lg"
                     />
                   </div>
+
+                  {/* Import Options */}
+                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                    <label className="block text-sm font-medium text-card-foreground mb-3">
+                      {language === 'he' ? 'ייבוא אוטומטי (אופציונלי)' : 'Auto Import (optional)'}
+                    </label>
+                    <div className="flex gap-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 gap-2"
+                        onClick={() => setShowUrlModal(true)}
+                      >
+                        <Link className="h-4 w-4" />
+                        {language === 'he' ? 'ייבוא מקישור' : 'Import from URL'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 gap-2"
+                        onClick={() => setShowImageModal(true)}
+                      >
+                        <Camera className="h-4 w-4" />
+                        {language === 'he' ? 'סריקת תמונה' : 'Scan Image'}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {language === 'he'
+                        ? 'סרקו תפריט מאתר אינטרנט או תמונה - הבינה המלאכותית תחלץ את הפריטים'
+                        : 'Scan a menu from a website or image - AI will extract the items'}
+                    </p>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-card-foreground mb-2">
                       {language === 'he' 
@@ -531,6 +574,77 @@ const CreateBoard = () => {
       </main>
 
       <Footer />
+
+      {/* URL Import Modal */}
+      <UrlImportModal
+        open={showUrlModal}
+        onClose={() => setShowUrlModal(false)}
+        onUrlSubmit={async (url) => {
+          const success = await processMenuUrl(url);
+          if (success) {
+            setShowUrlModal(false);
+            setShowBoardReview(true);
+          }
+        }}
+        isProcessing={isProcessing}
+      />
+
+      {/* Image Scanner Modal */}
+      <MenuScannerModal
+        open={showImageModal}
+        onClose={() => setShowImageModal(false)}
+        onImageSelected={async (imageBase64) => {
+          setShowImageModal(false);
+          const success = await processMenuImage(imageBase64);
+          if (success) {
+            setShowBoardReview(true);
+          }
+        }}
+      />
+
+      {/* Processing Overlay */}
+      <ProcessingOverlay 
+        isProcessing={isProcessing} 
+        onCancel={() => resetScanner()}
+      />
+
+      {/* Board Review Editor - Full page overlay */}
+      {generatedBoards && showBoardReview && (
+        <div className="fixed inset-0 z-50 bg-background overflow-auto">
+          <BoardReviewEditor
+            boards={generatedBoards}
+            onBack={() => {
+              setShowBoardReview(false);
+              resetScanner();
+            }}
+            onPreview={(boards) => {
+              // Store temporarily and navigate to preview
+              sessionStorage.setItem('generatedBoards', JSON.stringify(boards));
+              sessionStorage.setItem('generatedBoardsType', formData.businessType || 'other');
+              sessionStorage.setItem('generatedBoardsName', boards.main?.name || 'Custom Board');
+              navigate(`/board/custom?type=${formData.businessType || 'other'}&preview=true`);
+            }}
+            onSave={(boards) => {
+              // Save boards and navigate
+              sessionStorage.setItem('generatedBoards', JSON.stringify(boards));
+              sessionStorage.setItem('generatedBoardsType', formData.businessType || 'other');
+              sessionStorage.setItem('generatedBoardsName', boards.main?.name || 'Custom Board');
+              
+              setShowBoardReview(false);
+              resetScanner();
+              
+              toast({
+                title: language === 'he' ? 'הלוח נוצר בהצלחה!' : 'Board created successfully!',
+                description: language === 'he' 
+                  ? 'מועברים לתצוגת הלוח שלך'
+                  : 'Redirecting to your board',
+              });
+              
+              navigate(`/board/custom?type=${formData.businessType || 'other'}&edit=true`);
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };
