@@ -59,10 +59,13 @@ export function CustomerModeOverlay({ cell, onClose }: CustomerModeOverlayProps)
           className={cn(
             'flex flex-col items-center justify-center gap-6 p-8 md:p-12 rounded-3xl shadow-2xl w-full',
             'bg-gradient-to-br from-card via-card to-card/95 border-4',
+            'transition-all duration-300',
             cell.category === 'people' && 'border-[hsl(var(--fitzgerald-yellow))]',
             cell.category === 'verbs' && 'border-[hsl(var(--fitzgerald-green))]',
             cell.category === 'descriptors' && 'border-[hsl(var(--fitzgerald-blue))]',
             cell.category === 'social' && 'border-[hsl(var(--fitzgerald-pink))]',
+            // Speaking animation
+            isSpeaking && 'ring-4 ring-primary/50 animate-pulse shadow-primary/20 shadow-xl',
           )}
         >
           {/* Dual Visual Representation */}

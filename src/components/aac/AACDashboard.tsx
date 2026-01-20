@@ -7,8 +7,9 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { BoardEditModal } from './BoardEditModal';
 import { CustomerModeOverlay } from './CustomerModeOverlay';
+import { VoiceSettingsModal } from '@/components/settings/VoiceSettingsModal';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
@@ -41,8 +42,9 @@ export function AACDashboard({
   
   const activeBoards = localBoards;
   const { language, direction, t } = useLanguage();
-  const { speak, isSpeaking, isSupported } = useTextToSpeech();
+  const { speak, isSpeaking, speakingCellId, isSupported } = useTextToSpeech();
   const { toast } = useToast();
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   
   const [navState, setNavState] = useState<BoardNavigationState>({
     currentBoardId: rootBoardId,
@@ -144,9 +146,9 @@ export function AACDashboard({
     if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
       navigateToBoard(cell.linkToBoardId);
     } else {
-      // Speak the word and add to selected words
+      // Speak the word with cell ID for visual feedback
       const text = language === 'he' || language === 'ar' ? cell.text : cell.textEn;
-      speak(text);
+      speak(text, undefined, cell.id);
       setSelectedWords(prev => [...prev, text]);
     }
   }, [activeBoards, navigateToBoard, language, speak, isEditMode, isCustomerMode]);
@@ -331,6 +333,18 @@ export function AACDashboard({
               )}
             </Button>
           )}
+
+          {/* Voice Settings Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowVoiceSettings(true)}
+            className="shrink-0"
+            aria-label={language === 'he' ? 'הגדרות קול' : 'Voice Settings'}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+
           <LanguageSwitcher variant="compact" />
         </div>
       </header>
@@ -435,6 +449,7 @@ export function AACDashboard({
                 onClick={() => handleCellClick(cell)}
                 size="lg"
                 isEditMode={isEditMode}
+                isSpeaking={speakingCellId === cell.id}
                 onDelete={() => handleDeleteCell(cell.id)}
                 onEdit={() => handleEditCell(cell)}
               />
@@ -473,6 +488,12 @@ export function AACDashboard({
           onClose={() => setSelectedCell(null)} 
         />
       )}
+
+      {/* Voice Settings Modal */}
+      <VoiceSettingsModal
+        open={showVoiceSettings}
+        onClose={() => setShowVoiceSettings(false)}
+      />
     </div>
   );
 }

@@ -16,6 +16,7 @@ interface AACCardProps {
   style?: CSSProperties;
   disabled?: boolean;
   isEditMode?: boolean;
+  isSpeaking?: boolean; // NEW: Visual feedback during speech
   onDelete?: () => void;
   onEdit?: () => void;
 }
@@ -34,7 +35,7 @@ const sizeStyles = {
 };
 
 export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
-  ({ text, category, icon, imageUrl, size = 'md', isFolder, onClick, className, style, disabled, isEditMode, onDelete, onEdit }, ref) => {
+  ({ text, category, icon, imageUrl, size = 'md', isFolder, onClick, className, style, disabled, isEditMode, isSpeaking, onDelete, onEdit }, ref) => {
     return (
       <button
         ref={ref}
@@ -53,6 +54,8 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
           // Stacked card appearance for folders
           isFolder && 'before:absolute before:inset-1 before:-z-10 before:rounded-xl before:bg-inherit before:opacity-60 before:translate-x-1 before:translate-y-1',
           isEditMode && 'ring-2 ring-dashed ring-foreground/30 cursor-pointer',
+          // Speaking indicator - pulse animation
+          isSpeaking && 'ring-4 ring-primary animate-pulse shadow-lg shadow-primary/30',
           className
         )}
         aria-label={isFolder ? `${text} - folder` : text}

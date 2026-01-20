@@ -1,6 +1,31 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 
+// Voice profile settings - pitch and rate adjustments
+export type VoiceProfile = 'man' | 'woman' | 'boy' | 'girl';
+
+export interface VoiceSettings {
+  profile: VoiceProfile;
+  rate: number;
+  pitch: number;
+  volume: number;
+}
+
+const DEFAULT_VOICE_SETTINGS: VoiceSettings = {
+  profile: 'man',
+  rate: 0.9,
+  pitch: 1.0,
+  volume: 1.0,
+};
+
+// Profile pitch/rate modifiers to simulate different voice types
+const PROFILE_MODIFIERS: Record<VoiceProfile, { pitchMod: number; rateMod: number; preferFemale: boolean }> = {
+  man: { pitchMod: 0, rateMod: 0, preferFemale: false },
+  woman: { pitchMod: 0, rateMod: 0, preferFemale: true },
+  boy: { pitchMod: 0.4, rateMod: 0.05, preferFemale: false }, // Higher pitch for child voice
+  girl: { pitchMod: 0.6, rateMod: 0.05, preferFemale: true }, // Even higher pitch for girl voice
+};
+
 // Map app languages to BCP-47 language tags for speech synthesis
 const languageToVoiceMap: Record<Language, string> = {
   he: 'he-IL',
@@ -9,11 +34,34 @@ const languageToVoiceMap: Record<Language, string> = {
   ru: 'ru-RU',
 };
 
+const STORAGE_KEY = 'talkbiz-voice-settings';
+
 export function useTextToSpeech() {
   const { language } = useLanguage();
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingCellId, setSpeakingCellId] = useState<string | null>(null);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [settings, setSettings] = useState<VoiceSettings>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        return { ...DEFAULT_VOICE_SETTINGS, ...JSON.parse(stored) };
+      }
+    } catch (e) {
+      console.warn('Failed to load voice settings:', e);
+    }
+    return DEFAULT_VOICE_SETTINGS;
+  });
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Persist settings
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch (e) {
+      console.warn('Failed to save voice settings:', e);
+    }
+  }, [settings]);
 
   // Load available voices
   useEffect(() => {
@@ -34,26 +82,41 @@ export function useTextToSpeech() {
     };
   }, []);
 
-  // Find the best voice for a given language
-  const findBestVoice = useCallback((lang: string): SpeechSynthesisVoice | undefined => {
-    // First try to find an exact match
-    let voice = voices.find(v => v.lang === lang);
-    
-    // If no exact match, try to find a voice that starts with the language code
-    if (!voice) {
-      const langCode = lang.split('-')[0];
-      voice = voices.find(v => v.lang.startsWith(langCode));
+  // Find the best voice for a given language and profile
+  const findBestVoice = useCallback((lang: string, preferFemale: boolean): SpeechSynthesisVoice | undefined => {
+    // Filter voices by language
+    const langCode = lang.split('-')[0];
+    const matchingVoices = voices.filter(v => 
+      v.lang === lang || v.lang.startsWith(langCode)
+    );
+
+    if (matchingVoices.length === 0) {
+      return voices.find(v => v.default) || voices[0];
     }
+
+    // Try to find a voice matching gender preference
+    const genderKeywords = preferFemale 
+      ? ['female', 'woman', 'girl', 'נקבה', 'أنثى', 'женщина']
+      : ['male', 'man', 'boy', 'זכר', 'ذكر', 'мужчина'];
     
-    // Fallback to default voice
-    if (!voice) {
-      voice = voices.find(v => v.default) || voices[0];
+    // Also check for voices with gender in the name
+    let preferredVoice = matchingVoices.find(v => 
+      genderKeywords.some(keyword => v.name.toLowerCase().includes(keyword))
+    );
+
+    // If no gender-specific voice found, use the first matching voice
+    if (!preferredVoice) {
+      preferredVoice = matchingVoices[0];
     }
-    
-    return voice;
+
+    return preferredVoice;
   }, [voices]);
 
-  const speak = useCallback((text: string, overrideLang?: Language) => {
+  const updateSettings = useCallback((updates: Partial<VoiceSettings>) => {
+    setSettings(prev => ({ ...prev, ...updates }));
+  }, []);
+
+  const speak = useCallback((text: string, overrideLang?: Language, cellId?: string) => {
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
@@ -67,35 +130,52 @@ export function useTextToSpeech() {
     const voiceLang = languageToVoiceMap[targetLang];
     utterance.lang = voiceLang;
 
-    // Find and set the best voice for this language
-    const voice = findBestVoice(voiceLang);
+    // Get profile modifiers
+    const profileMod = PROFILE_MODIFIERS[settings.profile];
+
+    // Find and set the best voice for this language and profile
+    const voice = findBestVoice(voiceLang, profileMod.preferFemale);
     if (voice) {
       utterance.voice = voice;
     }
 
-    // Configure speech parameters
-    utterance.rate = 0.9; // Slightly slower for clarity
-    utterance.pitch = 1;
-    utterance.volume = 1;
+    // Apply settings with profile modifiers
+    utterance.rate = Math.min(2, Math.max(0.5, settings.rate + profileMod.rateMod));
+    utterance.pitch = Math.min(2, Math.max(0.5, settings.pitch + profileMod.pitchMod));
+    utterance.volume = settings.volume;
 
     // Event handlers
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      if (cellId) setSpeakingCellId(cellId);
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setSpeakingCellId(null);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setSpeakingCellId(null);
+    };
 
     // Speak!
     window.speechSynthesis.speak(utterance);
-  }, [language, findBestVoice]);
+  }, [language, findBestVoice, settings]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
+    setSpeakingCellId(null);
   }, []);
 
   return {
     speak,
     stop,
     isSpeaking,
+    speakingCellId,
     isSupported: typeof window !== 'undefined' && 'speechSynthesis' in window,
+    settings,
+    updateSettings,
+    availableVoices: voices,
   };
 }
