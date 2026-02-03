@@ -5,6 +5,7 @@ import jsPDF from 'jspdf';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Download, QrCode, FileText, Printer, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -318,6 +319,8 @@ export function BoardExportModal({
             </div>
           </TabsContent>
         </Tabs>
+
+        <ModalFooter />
       </DialogContent>
     </Dialog>
   );

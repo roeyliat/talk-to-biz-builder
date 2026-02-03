@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTextToSpeech, VoiceProfile } from '@/hooks/useTextToSpeech';
 import { cn } from '@/lib/utils';
@@ -251,6 +252,8 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
               {t.testVoice}
             </Button>
           </div>
+
+          <ModalFooter />
         </div>
       </DialogContent>
     </Dialog>
