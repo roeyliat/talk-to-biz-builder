@@ -20,11 +20,18 @@ import { CategoryItemsEditor, MenuCategory, MenuItem } from '@/components/create
 
 const businessTypes = [
   { key: 'iceCream', icon: '🍦' },
+  { key: 'pizza', icon: '🍕' },
   { key: 'cafe', icon: '☕' },
   { key: 'restaurant', icon: '🍽️' },
-  { key: 'pharmacy', icon: '💊' },
   { key: 'bakery', icon: '🥐' },
+  { key: 'pharmacy', icon: '💊' },
   { key: 'supermarket', icon: '🛒' },
+  { key: 'laundromat', icon: '🧺' },
+  { key: 'partySupplies', icon: '🎈' },
+  { key: 'toyStore', icon: '🧸' },
+  { key: 'hairSalon', icon: '✂️' },
+  { key: 'shoeStore', icon: '👟' },
+  { key: 'clothingStore', icon: '👕' },
   { key: 'other', icon: '🏪' },
 ];
 
@@ -77,7 +84,10 @@ const CreateBoard = () => {
     try {
       // Get base boards for the business type
       const businessType = formData.businessType;
-      const validBusinessTypes: BusinessType[] = ['pharmacy', 'supermarket', 'iceCream', 'cafe', 'restaurant', 'bakery'];
+      const validBusinessTypes: BusinessType[] = [
+        'pharmacy', 'supermarket', 'iceCream', 'cafe', 'restaurant', 'bakery',
+        'pizza', 'laundromat', 'partySupplies', 'toyStore', 'hairSalon', 'shoeStore', 'clothingStore'
+      ];
       const actualType: BusinessType = validBusinessTypes.includes(businessType as BusinessType) 
         ? (businessType as BusinessType) 
         : 'cafe';

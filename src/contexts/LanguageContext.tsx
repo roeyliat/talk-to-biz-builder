@@ -62,11 +62,18 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Business Types
     'business.iceCream': 'גלידריה',
+    'business.pizza': 'פיצריה',
     'business.cafe': 'בית קפה',
     'business.restaurant': 'מסעדה',
     'business.pharmacy': 'בית מרקחת',
     'business.bakery': 'מאפייה',
     'business.supermarket': 'סופרמרקט',
+    'business.laundromat': 'מכבסה',
+    'business.partySupplies': 'חנות מסיבות',
+    'business.toyStore': 'חנות צעצועים',
+    'business.hairSalon': 'מספרה',
+    'business.shoeStore': 'חנות נעליים',
+    'business.clothingStore': 'חנות בגדים',
     'business.other': 'אחר',
     
     // Fitzgerald Categories
@@ -162,11 +169,18 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Business Types
     'business.iceCream': 'Ice Cream Shop',
+    'business.pizza': 'Pizzeria',
     'business.cafe': 'Cafe',
     'business.restaurant': 'Restaurant',
     'business.pharmacy': 'Pharmacy',
     'business.bakery': 'Bakery',
     'business.supermarket': 'Supermarket',
+    'business.laundromat': 'Laundromat',
+    'business.partySupplies': 'Party Supplies',
+    'business.toyStore': 'Toy Store',
+    'business.hairSalon': 'Hair Salon',
+    'business.shoeStore': 'Shoe Store',
+    'business.clothingStore': 'Clothing Store',
     'business.other': 'Other',
     
     // Fitzgerald Categories
@@ -262,11 +276,18 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Business Types
     'business.iceCream': 'محل آيس كريم',
+    'business.pizza': 'بيتزا',
     'business.cafe': 'مقهى',
     'business.restaurant': 'مطعم',
     'business.pharmacy': 'صيدلية',
     'business.bakery': 'مخبز',
     'business.supermarket': 'سوبرماركت',
+    'business.laundromat': 'مغسلة',
+    'business.partySupplies': 'مستلزمات الحفلات',
+    'business.toyStore': 'متجر ألعاب',
+    'business.hairSalon': 'صالون تجميل',
+    'business.shoeStore': 'متجر أحذية',
+    'business.clothingStore': 'متجر ملابس',
     'business.other': 'أخرى',
     
     // Fitzgerald Categories
@@ -362,11 +383,18 @@ const translations: Record<Language, Record<string, string>> = {
     
     // Business Types
     'business.iceCream': 'Мороженое',
+    'business.pizza': 'Пиццерия',
     'business.cafe': 'Кафе',
     'business.restaurant': 'Ресторан',
     'business.pharmacy': 'Аптека',
     'business.bakery': 'Пекарня',
     'business.supermarket': 'Супермаркет',
+    'business.laundromat': 'Прачечная',
+    'business.partySupplies': 'Товары для праздников',
+    'business.toyStore': 'Магазин игрушек',
+    'business.hairSalon': 'Парикмахерская',
+    'business.shoeStore': 'Обувной магазин',
+    'business.clothingStore': 'Магазин одежды',
     'business.other': 'Другое',
     
     // Fitzgerald Categories
