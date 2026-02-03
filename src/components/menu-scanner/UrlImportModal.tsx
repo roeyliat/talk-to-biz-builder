@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Link, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -135,6 +136,8 @@ export function UrlImportModal({ open, onClose, onUrlSubmit, isProcessing }: Url
               )}
             </Button>
           </div>
+
+          <ModalFooter />
         </form>
       </DialogContent>
     </Dialog>

@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Upload, Camera, X, Image } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -203,6 +204,8 @@ export function MenuScannerModal({ open, onClose, onImageSelected }: MenuScanner
               </div>
             </>
           )}
+
+          <ModalFooter />
         </div>
       </DialogContent>
     </Dialog>

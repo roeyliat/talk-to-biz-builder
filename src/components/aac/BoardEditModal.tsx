@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AACCell, FitzgeraldCategory } from '@/types/aac';
 import { cn } from '@/lib/utils';
@@ -210,6 +211,8 @@ export function BoardEditModal({
               {isEditing ? t.save : t.add}
             </Button>
           </div>
+
+          <ModalFooter />
         </div>
       </DialogContent>
     </Dialog>
