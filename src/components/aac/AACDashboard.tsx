@@ -8,12 +8,14 @@ import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { BoardEditModal } from './BoardEditModal';
 import { CustomerModeOverlay } from './CustomerModeOverlay';
 import { VoiceSettingsModal } from '@/components/settings/VoiceSettingsModal';
+import { GuestWatermark } from './GuestWatermark';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AACDashboardProps {
   boards?: Record<string, AACBoard>;
@@ -44,6 +46,7 @@ export function AACDashboard({
   const { language, direction, t } = useLanguage();
   const { speak, isSpeaking, speakingCellId, isSupported } = useTextToSpeech();
   const { toast } = useToast();
+  const { isGuest } = useAuth();
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   
   const [navState, setNavState] = useState<BoardNavigationState>({
@@ -494,6 +497,9 @@ export function AACDashboard({
         open={showVoiceSettings}
         onClose={() => setShowVoiceSettings(false)}
       />
+
+      {/* Guest Watermark */}
+      {isGuest && <GuestWatermark />}
     </div>
   );
 }
