@@ -1,6 +1,19 @@
 import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
 
-export type BusinessType = 'pharmacy' | 'supermarket' | 'iceCream' | 'cafe' | 'restaurant' | 'bakery';
+export type BusinessType = 
+  | 'pharmacy' 
+  | 'supermarket' 
+  | 'iceCream' 
+  | 'cafe' 
+  | 'restaurant' 
+  | 'bakery'
+  | 'pizza'
+  | 'laundromat'
+  | 'partySupplies'
+  | 'toyStore'
+  | 'hairSalon'
+  | 'shoeStore'
+  | 'clothingStore';
 
 // Helper to create cells with proper typing
 const cell = (
@@ -239,10 +252,9 @@ const supermarketBoards: Record<string, AACBoard> = {
 };
 
 // =============================================================================
-// ICE CREAM SHOP BOARDS - Multi-Level Hierarchical Demo
+// ICE CREAM SHOP BOARDS - Multi-Level Hierarchical
 // =============================================================================
 const iceCreamBoards: Record<string, AACBoard> = {
-  // Level 1: Main Menu
   'main': {
     id: 'main',
     name: 'גלידריה',
@@ -253,15 +265,18 @@ const iceCreamBoards: Record<string, AACBoard> = {
       cell('yogurt', 'יוגורט קפוא', 'Frozen Yogurt', 'people', '🥛', 'yogurt-type'),
       cell('coffee', 'קפה', 'Coffee', 'people', '☕'),
       cell('desserts', 'קינוחים', 'Desserts', 'people', '🍰', 'desserts'),
+      cell('hot-drinks', 'משקאות חמים', 'Hot Drinks', 'people', '☕'),
       cell('want', 'רוצה', 'Want', 'verbs', '👆'),
       cell('taste', 'לטעום', 'Taste', 'verbs', '👅'),
+      cell('small', 'קטן', 'Small', 'descriptors', '🔹'),
+      cell('medium', 'בינוני', 'Medium', 'descriptors', '🔶'),
+      cell('large', 'גדול', 'Large', 'descriptors', '⬛'),
+      cell('how-much', 'כמה עולה?', 'How much?', 'social', '💰'),
       cell('please', 'בבקשה', 'Please', 'social', '🙏'),
       cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
     ],
-    gridSize: { cols: 3, rows: 3 },
+    gridSize: { cols: 4, rows: 4 },
   },
-
-  // Level 2: Cup or Cone selection for Ice Cream
   'ice-cream-type': {
     id: 'ice-cream-type',
     name: 'גביע או גלידה?',
@@ -273,8 +288,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 2, rows: 1 },
   },
-
-  // Level 2: Cup or Cone selection for Sorbet
   'sorbet-type': {
     id: 'sorbet-type',
     name: 'גביע או גלידה?',
@@ -286,8 +299,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 2, rows: 1 },
   },
-
-  // Level 2: Cup selection for Frozen Yogurt
   'yogurt-type': {
     id: 'yogurt-type',
     name: 'בחר גודל',
@@ -300,8 +311,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 3, rows: 1 },
   },
-
-  // Level 3: Ice Cream Flavors (Cup)
   'flavors-cup': {
     id: 'flavors-cup',
     name: 'בחר טעם',
@@ -319,8 +328,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 4, rows: 2 },
   },
-
-  // Level 3: Ice Cream Flavors (Cone)
   'flavors-cone': {
     id: 'flavors-cone',
     name: 'בחר טעם',
@@ -338,8 +345,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 4, rows: 2 },
   },
-
-  // Level 3: Sorbet Flavors
   'sorbet-flavors': {
     id: 'sorbet-flavors',
     name: 'בחר טעם סורבה',
@@ -355,8 +360,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 3, rows: 2 },
   },
-
-  // Level 4: Toppings
   'toppings': {
     id: 'toppings',
     name: 'להוסיף תוספות?',
@@ -372,8 +375,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 3, rows: 2 },
   },
-
-  // Level 4: Yogurt Toppings
   'yogurt-toppings': {
     id: 'yogurt-toppings',
     name: 'בחר תוספות',
@@ -389,8 +390,6 @@ const iceCreamBoards: Record<string, AACBoard> = {
     ],
     gridSize: { cols: 3, rows: 2 },
   },
-
-  // Desserts sub-board
   'desserts': {
     id: 'desserts',
     name: 'קינוחים',
@@ -660,6 +659,703 @@ const bakeryBoards: Record<string, AACBoard> = {
 };
 
 // =============================================================================
+// PIZZA PLACE / PIZZERIA BOARDS
+// =============================================================================
+const pizzaBoards: Record<string, AACBoard> = {
+  'main': {
+    id: 'main',
+    name: 'פיצריה',
+    nameEn: 'Pizzeria',
+    cells: [
+      cell('pizza', 'פיצה', 'Pizza', 'people', '🍕', 'pizza-size'),
+      cell('salad', 'סלט', 'Salad', 'people', '🥗', 'salads'),
+      cell('drinks', 'משקאות', 'Drinks', 'people', '🥤', 'drinks'),
+      cell('desserts', 'קינוחים', 'Desserts', 'people', '🍰', 'desserts'),
+      cell('hot', 'חם', 'Hot', 'descriptors', '🔥'),
+      cell('spicy', 'חריף', 'Spicy', 'descriptors', '🌶️'),
+      cell('vegetarian', 'צמחוני', 'Vegetarian', 'descriptors', '🥬'),
+      cell('vegan', 'טבעוני', 'Vegan', 'descriptors', '🌱'),
+      cell('takeaway', 'לקחת', 'Takeaway', 'verbs', '📦'),
+      cell('eat-here', 'לאכול פה', 'Eat Here', 'verbs', '🍽️'),
+      cell('want', 'רוצה', 'Want', 'verbs', '👆'),
+      cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
+    ],
+    gridSize: { cols: 4, rows: 3 },
+  },
+  'pizza-size': {
+    id: 'pizza-size',
+    name: 'בחר גודל פיצה',
+    nameEn: 'Choose Pizza Size',
+    parentBoardId: 'main',
+    cells: [
+      cell('personal', 'אישית', 'Personal', 'descriptors', '🔹', 'pizza-toppings'),
+      cell('medium', 'משפחתית', 'Family', 'descriptors', '🔶', 'pizza-toppings'),
+      cell('large', 'גדולה', 'Large', 'descriptors', '⬛', 'pizza-toppings'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'pizza-toppings': {
+    id: 'pizza-toppings',
+    name: 'בחר תוספות',
+    nameEn: 'Choose Toppings',
+    parentBoardId: 'pizza-size',
+    cells: [
+      cell('cheese', 'גבינה', 'Cheese', 'people', '🧀', 'pizza-crust'),
+      cell('pepperoni', 'פפרוני', 'Pepperoni', 'people', '🍖', 'pizza-crust'),
+      cell('olives', 'זיתים', 'Olives', 'people', '🫒', 'pizza-crust'),
+      cell('mushrooms', 'פטריות', 'Mushrooms', 'people', '🍄', 'pizza-crust'),
+      cell('vegetables', 'ירקות', 'Vegetables', 'people', '🥬', 'pizza-crust'),
+      cell('onions', 'בצל', 'Onions', 'people', '🧅', 'pizza-crust'),
+      cell('corn', 'תירס', 'Corn', 'people', '🌽', 'pizza-crust'),
+      cell('tuna', 'טונה', 'Tuna', 'people', '🐟', 'pizza-crust'),
+    ],
+    gridSize: { cols: 4, rows: 2 },
+  },
+  'pizza-crust': {
+    id: 'pizza-crust',
+    name: 'סוג בצק',
+    nameEn: 'Crust Type',
+    parentBoardId: 'pizza-toppings',
+    cells: [
+      cell('thin', 'דק', 'Thin', 'descriptors', '📄'),
+      cell('thick', 'עבה', 'Thick', 'descriptors', '📚'),
+      cell('stuffed', 'ממולא', 'Stuffed', 'descriptors', '🧀'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'salads': {
+    id: 'salads',
+    name: 'סלטים',
+    nameEn: 'Salads',
+    parentBoardId: 'main',
+    cells: [
+      cell('caesar', 'סיזר', 'Caesar', 'people', '🥗'),
+      cell('greek', 'יווני', 'Greek', 'people', '🥗'),
+      cell('garden', 'גן', 'Garden', 'people', '🥬'),
+      cell('tuna-salad', 'סלט טונה', 'Tuna Salad', 'people', '🐟'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+  'drinks': {
+    id: 'drinks',
+    name: 'משקאות',
+    nameEn: 'Drinks',
+    parentBoardId: 'main',
+    cells: [
+      cell('cola', 'קולה', 'Cola', 'people', '🥤'),
+      cell('water', 'מים', 'Water', 'people', '💧'),
+      cell('juice', 'מיץ', 'Juice', 'people', '🧃'),
+      cell('beer', 'בירה', 'Beer', 'people', '🍺'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+  'desserts': {
+    id: 'desserts',
+    name: 'קינוחים',
+    nameEn: 'Desserts',
+    parentBoardId: 'main',
+    cells: [
+      cell('ice-cream', 'גלידה', 'Ice Cream', 'people', '🍨'),
+      cell('tiramisu', 'טירמיסו', 'Tiramisu', 'people', '🍰'),
+      cell('chocolate-cake', 'עוגת שוקולד', 'Chocolate Cake', 'people', '🍫'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+};
+
+// =============================================================================
+// LAUNDROMAT / DRY CLEANING BOARDS
+// =============================================================================
+const laundromatBoards: Record<string, AACBoard> = {
+  'main': {
+    id: 'main',
+    name: 'מכבסה',
+    nameEn: 'Laundromat',
+    cells: [
+      cell('wash', 'לכבס', 'Wash', 'verbs', '🧺', 'wash-temp'),
+      cell('dry', 'לייבש', 'Dry', 'verbs', '💨', 'dry-options'),
+      cell('fold', 'לקפל', 'Fold', 'verbs', '👕'),
+      cell('dry-clean', 'ניקוי יבש', 'Dry Cleaning', 'people', '🧥', 'dry-clean-items'),
+      cell('special', 'פריטים מיוחדים', 'Special Items', 'people', '👗', 'special-items'),
+      cell('dirty', 'מלוכלך', 'Dirty', 'descriptors', '💩'),
+      cell('clean', 'נקי', 'Clean', 'descriptors', '✨'),
+      cell('stain', 'כתם', 'Stain', 'descriptors', '🫗'),
+      cell('lost', 'אבד', 'Lost', 'descriptors', '❓'),
+      cell('damaged', 'נזק', 'Damaged', 'descriptors', '⚠️'),
+      cell('change', 'עודף', 'Change', 'verbs', '💰'),
+      cell('help', 'עזרה', 'Help', 'social', '🙋'),
+    ],
+    gridSize: { cols: 4, rows: 3 },
+  },
+  'wash-temp': {
+    id: 'wash-temp',
+    name: 'טמפרטורת כביסה',
+    nameEn: 'Wash Temperature',
+    parentBoardId: 'main',
+    cells: [
+      cell('cold', 'קר', 'Cold', 'descriptors', '❄️', 'wash-detergent'),
+      cell('warm', 'חמים', 'Warm', 'descriptors', '🌡️', 'wash-detergent'),
+      cell('hot', 'חם', 'Hot', 'descriptors', '🔥', 'wash-detergent'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'wash-detergent': {
+    id: 'wash-detergent',
+    name: 'סבון כביסה',
+    nameEn: 'Detergent',
+    parentBoardId: 'wash-temp',
+    cells: [
+      cell('yes', 'כן, צריך', 'Yes, need', 'social', '✅', 'wash-cycle'),
+      cell('no', 'לא צריך', 'No, don\'t need', 'social', '❌', 'wash-cycle'),
+      cell('own', 'הבאתי משלי', 'Brought my own', 'descriptors', '🧴', 'wash-cycle'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'wash-cycle': {
+    id: 'wash-cycle',
+    name: 'סוג מחזור',
+    nameEn: 'Cycle Type',
+    parentBoardId: 'wash-detergent',
+    cells: [
+      cell('regular', 'רגיל', 'Regular', 'descriptors', '🔄'),
+      cell('delicate', 'עדין', 'Delicate', 'descriptors', '🌸'),
+      cell('heavy', 'חזק', 'Heavy Duty', 'descriptors', '💪'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'dry-options': {
+    id: 'dry-options',
+    name: 'אפשרויות ייבוש',
+    nameEn: 'Dry Options',
+    parentBoardId: 'main',
+    cells: [
+      cell('low-heat', 'חום נמוך', 'Low Heat', 'descriptors', '🌡️'),
+      cell('medium-heat', 'חום בינוני', 'Medium Heat', 'descriptors', '🔥'),
+      cell('high-heat', 'חום גבוה', 'High Heat', 'descriptors', '♨️'),
+      cell('no-heat', 'בלי חום', 'No Heat', 'descriptors', '❄️'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+  'dry-clean-items': {
+    id: 'dry-clean-items',
+    name: 'פריטים לניקוי יבש',
+    nameEn: 'Dry Clean Items',
+    parentBoardId: 'main',
+    cells: [
+      cell('suit', 'חליפה', 'Suit', 'people', '🤵'),
+      cell('dress', 'שמלה', 'Dress', 'people', '👗'),
+      cell('coat', 'מעיל', 'Coat', 'people', '🧥'),
+      cell('blanket', 'שמיכה', 'Blanket', 'people', '🛏️'),
+      cell('curtains', 'וילונות', 'Curtains', 'people', '🪟'),
+    ],
+    gridSize: { cols: 5, rows: 1 },
+  },
+  'special-items': {
+    id: 'special-items',
+    name: 'פריטים מיוחדים',
+    nameEn: 'Special Items',
+    parentBoardId: 'main',
+    cells: [
+      cell('leather', 'עור', 'Leather', 'people', '👞'),
+      cell('silk', 'משי', 'Silk', 'people', '🎀'),
+      cell('wool', 'צמר', 'Wool', 'people', '🧶'),
+      cell('wedding-dress', 'שמלת כלה', 'Wedding Dress', 'people', '👰'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+};
+
+// =============================================================================
+// PARTY SUPPLIES STORE BOARDS
+// =============================================================================
+const partySuppliesBoards: Record<string, AACBoard> = {
+  'main': {
+    id: 'main',
+    name: 'חנות מסיבות',
+    nameEn: 'Party Supplies',
+    cells: [
+      cell('plates', 'צלחות', 'Plates', 'people', '🍽️', 'plates-options'),
+      cell('cups', 'כוסות', 'Cups', 'people', '🥤', 'cups-options'),
+      cell('napkins', 'מפיות', 'Napkins', 'people', '🧻'),
+      cell('balloons', 'בלונים', 'Balloons', 'people', '🎈', 'balloons-color'),
+      cell('decorations', 'קישוטים', 'Decorations', 'people', '🎉', 'decorations'),
+      cell('candles', 'נרות', 'Candles', 'people', '🕯️'),
+      cell('themes', 'ערכות נושא', 'Party Themes', 'people', '🎭', 'themes'),
+      cell('birthday', 'יום הולדת', 'Birthday', 'descriptors', '🎂'),
+      cell('party', 'מסיבה', 'Party', 'descriptors', '🎉'),
+      cell('event', 'אירוע', 'Event', 'descriptors', '📅'),
+      cell('kids', 'ילדים', 'Kids', 'descriptors', '👧'),
+      cell('adults', 'מבוגרים', 'Adults', 'descriptors', '👨'),
+      cell('many', 'הרבה', 'Many', 'descriptors', '📦'),
+      cell('few', 'קצת', 'Few', 'descriptors', '📎'),
+      cell('want', 'רוצה', 'Want', 'verbs', '👆'),
+      cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
+    ],
+    gridSize: { cols: 4, rows: 4 },
+  },
+  'balloons-color': {
+    id: 'balloons-color',
+    name: 'צבע בלונים',
+    nameEn: 'Balloon Color',
+    parentBoardId: 'main',
+    cells: [
+      cell('red', 'אדום', 'Red', 'descriptors', '🔴', 'balloons-shape'),
+      cell('blue', 'כחול', 'Blue', 'descriptors', '🔵', 'balloons-shape'),
+      cell('yellow', 'צהוב', 'Yellow', 'descriptors', '🟡', 'balloons-shape'),
+      cell('green', 'ירוק', 'Green', 'descriptors', '🟢', 'balloons-shape'),
+      cell('pink', 'ורוד', 'Pink', 'descriptors', '💗', 'balloons-shape'),
+      cell('gold', 'זהב', 'Gold', 'descriptors', '🟨', 'balloons-shape'),
+      cell('silver', 'כסף', 'Silver', 'descriptors', '⚪', 'balloons-shape'),
+      cell('mixed', 'מעורב', 'Mixed', 'descriptors', '🌈', 'balloons-shape'),
+    ],
+    gridSize: { cols: 4, rows: 2 },
+  },
+  'balloons-shape': {
+    id: 'balloons-shape',
+    name: 'צורת בלונים',
+    nameEn: 'Balloon Shape',
+    parentBoardId: 'balloons-color',
+    cells: [
+      cell('round', 'עגול', 'Round', 'descriptors', '🎈', 'balloons-helium'),
+      cell('number', 'מספר', 'Number', 'descriptors', '🔢', 'balloons-helium'),
+      cell('letter', 'אות', 'Letter', 'descriptors', '🔤', 'balloons-helium'),
+      cell('animal', 'חיה', 'Animal', 'descriptors', '🐕', 'balloons-helium'),
+      cell('heart', 'לב', 'Heart', 'descriptors', '❤️', 'balloons-helium'),
+      cell('star', 'כוכב', 'Star', 'descriptors', '⭐', 'balloons-helium'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+  'balloons-helium': {
+    id: 'balloons-helium',
+    name: 'הליום?',
+    nameEn: 'Helium?',
+    parentBoardId: 'balloons-shape',
+    cells: [
+      cell('yes-helium', 'כן, עם הליום', 'Yes, with Helium', 'social', '✅'),
+      cell('no-helium', 'לא, בלי הליום', 'No, without Helium', 'social', '❌'),
+    ],
+    gridSize: { cols: 2, rows: 1 },
+  },
+  'plates-options': {
+    id: 'plates-options',
+    name: 'סוגי צלחות',
+    nameEn: 'Plate Types',
+    parentBoardId: 'main',
+    cells: [
+      cell('small-plates', 'צלחות קטנות', 'Small Plates', 'people', '🔹'),
+      cell('large-plates', 'צלחות גדולות', 'Large Plates', 'people', '🔶'),
+      cell('bowls', 'קערות', 'Bowls', 'people', '🥣'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'cups-options': {
+    id: 'cups-options',
+    name: 'סוגי כוסות',
+    nameEn: 'Cup Types',
+    parentBoardId: 'main',
+    cells: [
+      cell('small-cups', 'כוסות קטנות', 'Small Cups', 'people', '🥛'),
+      cell('large-cups', 'כוסות גדולות', 'Large Cups', 'people', '🥤'),
+      cell('wine-glasses', 'כוסות יין', 'Wine Glasses', 'people', '🍷'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'decorations': {
+    id: 'decorations',
+    name: 'קישוטים',
+    nameEn: 'Decorations',
+    parentBoardId: 'main',
+    cells: [
+      cell('banner', 'באנר', 'Banner', 'people', '🎏'),
+      cell('streamers', 'סרטים', 'Streamers', 'people', '🎊'),
+      cell('confetti', 'קונפטי', 'Confetti', 'people', '🎊'),
+      cell('garland', 'שרשרת', 'Garland', 'people', '📿'),
+      cell('centerpiece', 'מרכז שולחן', 'Centerpiece', 'people', '🏵️'),
+    ],
+    gridSize: { cols: 5, rows: 1 },
+  },
+  'themes': {
+    id: 'themes',
+    name: 'ערכות נושא',
+    nameEn: 'Party Themes',
+    parentBoardId: 'main',
+    cells: [
+      cell('princess', 'נסיכה', 'Princess', 'people', '👸'),
+      cell('superhero', 'גיבור-על', 'Superhero', 'people', '🦸'),
+      cell('unicorn', 'חד קרן', 'Unicorn', 'people', '🦄'),
+      cell('dinosaur', 'דינוזאור', 'Dinosaur', 'people', '🦕'),
+      cell('sports', 'ספורט', 'Sports', 'people', '⚽'),
+      cell('jungle', "ג'ונגל", 'Jungle', 'people', '🌴'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+};
+
+// =============================================================================
+// TOY STORE BOARDS
+// =============================================================================
+const toyStoreBoards: Record<string, AACBoard> = {
+  'main': {
+    id: 'main',
+    name: 'חנות צעצועים',
+    nameEn: 'Toy Store',
+    cells: [
+      cell('action-figures', 'דמויות פעולה', 'Action Figures', 'people', '🦸', 'action-figures'),
+      cell('dolls', 'בובות', 'Dolls', 'people', '🎎', 'dolls'),
+      cell('building', 'לגו ובנייה', 'Building Blocks', 'people', '🧱', 'building'),
+      cell('board-games', 'משחקי קופסה', 'Board Games', 'people', '🎲', 'board-games'),
+      cell('puzzles', 'פאזלים', 'Puzzles', 'people', '🧩'),
+      cell('outdoor', 'משחקי חוץ', 'Outdoor Toys', 'people', '🏀', 'outdoor'),
+      cell('baby-toys', 'צעצועי תינוקות', 'Baby Toys', 'people', '🍼', 'baby-toys'),
+      cell('new', 'חדש', 'New', 'descriptors', '✨'),
+      cell('play', 'לשחק', 'Play', 'verbs', '🎮'),
+      cell('gift', 'מתנה', 'Gift', 'descriptors', '🎁'),
+      cell('boy', 'בן', 'Boy', 'descriptors', '👦'),
+      cell('girl', 'בת', 'Girl', 'descriptors', '👧'),
+      cell('want', 'רוצה', 'Want', 'verbs', '👆'),
+      cell('show', 'להראות', 'Show me', 'verbs', '👀'),
+      cell('how-much', 'כמה עולה?', 'How much?', 'social', '💰'),
+      cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
+    ],
+    gridSize: { cols: 4, rows: 4 },
+  },
+  'action-figures': {
+    id: 'action-figures',
+    name: 'דמויות פעולה',
+    nameEn: 'Action Figures',
+    parentBoardId: 'main',
+    cells: [
+      cell('hero', 'גיבור', 'Hero', 'people', '🦸'),
+      cell('villain', 'נבל', 'Villain', 'people', '🦹'),
+      cell('animal', 'חיה', 'Animal', 'people', '🦁'),
+      cell('vehicle', 'רכב', 'Vehicle', 'people', '🚗'),
+      cell('robot', 'רובוט', 'Robot', 'people', '🤖'),
+      cell('dinosaur', 'דינוזאור', 'Dinosaur', 'people', '🦖'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+  'dolls': {
+    id: 'dolls',
+    name: 'בובות',
+    nameEn: 'Dolls',
+    parentBoardId: 'main',
+    cells: [
+      cell('baby-doll', 'בובת תינוק', 'Baby Doll', 'people', '👶'),
+      cell('fashion-doll', 'בובת אופנה', 'Fashion Doll', 'people', '💃'),
+      cell('princess', 'נסיכה', 'Princess', 'people', '👸'),
+      cell('doll-house', 'בית בובות', 'Doll House', 'people', '🏠'),
+      cell('accessories', 'אביזרים', 'Accessories', 'people', '👜'),
+    ],
+    gridSize: { cols: 5, rows: 1 },
+  },
+  'building': {
+    id: 'building',
+    name: 'לגו ובנייה',
+    nameEn: 'Building Blocks',
+    parentBoardId: 'main',
+    cells: [
+      cell('lego', 'לגו', 'Lego', 'people', '🧱'),
+      cell('duplo', 'דופלו', 'Duplo', 'people', '🟥'),
+      cell('magnetic', 'מגנטים', 'Magnetic', 'people', '🧲'),
+      cell('wood-blocks', 'קוביות עץ', 'Wood Blocks', 'people', '🪵'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+  'board-games': {
+    id: 'board-games',
+    name: 'משחקי קופסה',
+    nameEn: 'Board Games',
+    parentBoardId: 'main',
+    cells: [
+      cell('family-game', 'משחק משפחתי', 'Family Game', 'people', '👨‍👩‍👧'),
+      cell('strategy', 'אסטרטגיה', 'Strategy', 'people', '♟️'),
+      cell('cards', 'קלפים', 'Cards', 'people', '🃏'),
+      cell('trivia', 'טריוויה', 'Trivia', 'people', '❓'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+  'outdoor': {
+    id: 'outdoor',
+    name: 'משחקי חוץ',
+    nameEn: 'Outdoor Toys',
+    parentBoardId: 'main',
+    cells: [
+      cell('ball', 'כדור', 'Ball', 'people', '⚽'),
+      cell('bike', 'אופניים', 'Bike', 'people', '🚲'),
+      cell('scooter', 'קורקינט', 'Scooter', 'people', '🛴'),
+      cell('water-toys', 'צעצועי מים', 'Water Toys', 'people', '💦'),
+      cell('sandbox', 'ארגז חול', 'Sandbox', 'people', '🏖️'),
+    ],
+    gridSize: { cols: 5, rows: 1 },
+  },
+  'baby-toys': {
+    id: 'baby-toys',
+    name: 'צעצועי תינוקות',
+    nameEn: 'Baby Toys',
+    parentBoardId: 'main',
+    cells: [
+      cell('rattle', 'רעשן', 'Rattle', 'people', '🔔'),
+      cell('teether', 'נשכן', 'Teether', 'people', '🦷'),
+      cell('mobile', 'מובייל', 'Mobile', 'people', '🌙'),
+      cell('soft-toy', 'בובה רכה', 'Soft Toy', 'people', '🧸'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+};
+
+// =============================================================================
+// HAIR SALON / BARBERSHOP BOARDS
+// =============================================================================
+const hairSalonBoards: Record<string, AACBoard> = {
+  'main': {
+    id: 'main',
+    name: 'מספרה',
+    nameEn: 'Hair Salon',
+    cells: [
+      cell('haircut', 'תספורת', 'Haircut', 'verbs', '✂️', 'haircut-type'),
+      cell('color', 'צביעה', 'Color', 'verbs', '🎨', 'color-options'),
+      cell('wash', 'חפיפה', 'Wash', 'verbs', '🚿'),
+      cell('style', 'עיצוב', 'Style', 'verbs', '💇', 'style-options'),
+      cell('beard', 'זקן', 'Beard Trim', 'people', '🧔', 'beard-options'),
+      cell('pain', 'כואב', 'Pain', 'descriptors', '😣'),
+      cell('hot', 'חם', 'Hot', 'descriptors', '🔥'),
+      cell('cold', 'קר', 'Cold', 'descriptors', '❄️'),
+      cell('dry', 'יבש', 'Dry', 'descriptors', '💨'),
+      cell('wet', 'רטוב', 'Wet', 'descriptors', '💧'),
+      cell('good', 'טוב', 'Good', 'descriptors', '👍'),
+      cell('bad', 'רע', 'Bad', 'descriptors', '👎'),
+      cell('what-is-this', 'מה זה?', 'What is this?', 'social', '❓'),
+      cell('wait', 'לחכות', 'Wait', 'verbs', '⏳'),
+      cell('help', 'עזרה', 'Help', 'social', '🙋'),
+      cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
+    ],
+    gridSize: { cols: 4, rows: 4 },
+  },
+  'haircut-type': {
+    id: 'haircut-type',
+    name: 'סוג תספורת',
+    nameEn: 'Haircut Type',
+    parentBoardId: 'main',
+    cells: [
+      cell('short', 'קצר', 'Short', 'descriptors', '📏'),
+      cell('long', 'ארוך', 'Long', 'descriptors', '📐'),
+      cell('trim-ends', 'לגזור קצוות', 'Trim Ends Only', 'verbs', '✂️'),
+      cell('bangs', 'פוני', 'Bangs', 'people', '👧'),
+      cell('layered', 'שכבות', 'Layered', 'descriptors', '📚'),
+      cell('shaved', 'מגולח', 'Shaved', 'descriptors', '🪒'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+  'color-options': {
+    id: 'color-options',
+    name: 'אפשרויות צבע',
+    nameEn: 'Color Options',
+    parentBoardId: 'main',
+    cells: [
+      cell('blonde', 'בלונד', 'Blonde', 'descriptors', '🟡'),
+      cell('brown', 'חום', 'Brown', 'descriptors', '🟤'),
+      cell('black', 'שחור', 'Black', 'descriptors', '⚫'),
+      cell('red', 'אדום', 'Red', 'descriptors', '🔴'),
+      cell('highlights', 'גוונים', 'Highlights', 'descriptors', '✨'),
+      cell('roots', 'שורשים', 'Roots', 'people', '🌱'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+  'style-options': {
+    id: 'style-options',
+    name: 'אפשרויות עיצוב',
+    nameEn: 'Style Options',
+    parentBoardId: 'main',
+    cells: [
+      cell('blow-dry', 'פן', 'Blow Dry', 'verbs', '💨'),
+      cell('straighten', 'להחליק', 'Straighten', 'verbs', '➖'),
+      cell('curl', 'תלתלים', 'Curl', 'verbs', '➰'),
+      cell('updo', 'תסרוקת', 'Updo', 'verbs', '👰'),
+      cell('braid', 'צמה', 'Braid', 'verbs', '🪢'),
+    ],
+    gridSize: { cols: 5, rows: 1 },
+  },
+  'beard-options': {
+    id: 'beard-options',
+    name: 'אפשרויות זקן',
+    nameEn: 'Beard Options',
+    parentBoardId: 'main',
+    cells: [
+      cell('trim', 'לגזום', 'Trim', 'verbs', '✂️'),
+      cell('shape', 'לעצב', 'Shape', 'verbs', '📐'),
+      cell('shave', 'לגלח', 'Shave', 'verbs', '🪒'),
+      cell('mustache', 'שפם', 'Mustache', 'people', '👨'),
+    ],
+    gridSize: { cols: 4, rows: 1 },
+  },
+};
+
+// =============================================================================
+// SHOE STORE BOARDS
+// =============================================================================
+const shoeStoreBoards: Record<string, AACBoard> = {
+  'main': {
+    id: 'main',
+    name: 'חנות נעליים',
+    nameEn: 'Shoe Store',
+    cells: [
+      cell('men', 'גברים', 'Men\'s Shoes', 'people', '👞', 'shoes-size'),
+      cell('women', 'נשים', 'Women\'s Shoes', 'people', '👠', 'shoes-size'),
+      cell('kids', 'ילדים', 'Kids\' Shoes', 'people', '👟', 'shoes-size'),
+      cell('sports', 'ספורט', 'Sports Shoes', 'people', '🏃', 'shoes-size'),
+      cell('boots', 'מגפיים', 'Boots', 'people', '🥾', 'shoes-size'),
+      cell('sandals', 'סנדלים', 'Sandals', 'people', '🩴', 'shoes-size'),
+      cell('try-on', 'למדוד', 'Try on', 'verbs', '👣'),
+      cell('fits', 'מתאים', 'Fits', 'descriptors', '✅'),
+      cell('too-small', 'קטן מדי', 'Too small', 'descriptors', '📉'),
+      cell('too-big', 'גדול מדי', 'Too big', 'descriptors', '📈'),
+      cell('comfortable', 'נוח', 'Comfortable', 'descriptors', '😊'),
+      cell('walk', 'ללכת', 'Walk', 'verbs', '🚶'),
+      cell('run', 'לרוץ', 'Run', 'verbs', '🏃'),
+      cell('different', 'אחר', 'Different', 'descriptors', '🔄'),
+      cell('how-much', 'כמה עולה?', 'How much?', 'social', '💰'),
+      cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
+    ],
+    gridSize: { cols: 4, rows: 4 },
+  },
+  'shoes-size': {
+    id: 'shoes-size',
+    name: 'מידה',
+    nameEn: 'Size',
+    parentBoardId: 'main',
+    cells: [
+      cell('size-36', '36', '36', 'descriptors', '3️⃣', 'shoes-color'),
+      cell('size-37', '37', '37', 'descriptors', '3️⃣', 'shoes-color'),
+      cell('size-38', '38', '38', 'descriptors', '3️⃣', 'shoes-color'),
+      cell('size-39', '39', '39', 'descriptors', '3️⃣', 'shoes-color'),
+      cell('size-40', '40', '40', 'descriptors', '4️⃣', 'shoes-color'),
+      cell('size-41', '41', '41', 'descriptors', '4️⃣', 'shoes-color'),
+      cell('size-42', '42', '42', 'descriptors', '4️⃣', 'shoes-color'),
+      cell('size-43', '43', '43', 'descriptors', '4️⃣', 'shoes-color'),
+      cell('size-44', '44', '44', 'descriptors', '4️⃣', 'shoes-color'),
+      cell('size-45', '45', '45', 'descriptors', '4️⃣', 'shoes-color'),
+    ],
+    gridSize: { cols: 5, rows: 2 },
+  },
+  'shoes-color': {
+    id: 'shoes-color',
+    name: 'צבע',
+    nameEn: 'Color',
+    parentBoardId: 'shoes-size',
+    cells: [
+      cell('black', 'שחור', 'Black', 'descriptors', '⚫', 'shoes-material'),
+      cell('white', 'לבן', 'White', 'descriptors', '⚪', 'shoes-material'),
+      cell('brown', 'חום', 'Brown', 'descriptors', '🟤', 'shoes-material'),
+      cell('blue', 'כחול', 'Blue', 'descriptors', '🔵', 'shoes-material'),
+      cell('red', 'אדום', 'Red', 'descriptors', '🔴', 'shoes-material'),
+      cell('pink', 'ורוד', 'Pink', 'descriptors', '💗', 'shoes-material'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+  'shoes-material': {
+    id: 'shoes-material',
+    name: 'חומר',
+    nameEn: 'Material',
+    parentBoardId: 'shoes-color',
+    cells: [
+      cell('leather', 'עור', 'Leather', 'descriptors', '🐄'),
+      cell('fabric', 'בד', 'Fabric', 'descriptors', '🧵'),
+      cell('synthetic', 'סינתטי', 'Synthetic', 'descriptors', '♻️'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+};
+
+// =============================================================================
+// CLOTHING STORE BOARDS
+// =============================================================================
+const clothingStoreBoards: Record<string, AACBoard> = {
+  'main': {
+    id: 'main',
+    name: 'חנות בגדים',
+    nameEn: 'Clothing Store',
+    cells: [
+      cell('shirts', 'חולצות', 'Shirts', 'people', '👕', 'clothing-size'),
+      cell('pants', 'מכנסיים', 'Pants', 'people', '👖', 'clothing-size'),
+      cell('dresses', 'שמלות', 'Dresses', 'people', '👗', 'clothing-size'),
+      cell('skirts', 'חצאיות', 'Skirts', 'people', '🩱', 'clothing-size'),
+      cell('jackets', 'מעילים', 'Jackets', 'people', '🧥', 'clothing-size'),
+      cell('accessories', 'אביזרים', 'Accessories', 'people', '👜', 'accessories'),
+      cell('fitting-room', 'חדר מדידות', 'Fitting Room', 'verbs', '🚪'),
+      cell('different-size', 'מידה אחרת', 'Different size', 'verbs', '📏'),
+      cell('different-color', 'צבע אחר', 'Different color', 'verbs', '🎨'),
+      cell('how-much', 'כמה עולה?', 'How much?', 'social', '💰'),
+      cell('like', 'אוהב', 'Like', 'descriptors', '❤️'),
+      cell('dont-like', 'לא אוהב', 'Don\'t like', 'descriptors', '💔'),
+      cell('casual', 'יומיומי', 'Casual', 'descriptors', '👕'),
+      cell('formal', 'רשמי', 'Formal', 'descriptors', '👔'),
+      cell('sporty', 'ספורטיבי', 'Sporty', 'descriptors', '🏃'),
+      cell('thanks', 'תודה', 'Thank you', 'social', '🙏'),
+    ],
+    gridSize: { cols: 4, rows: 4 },
+  },
+  'clothing-size': {
+    id: 'clothing-size',
+    name: 'מידה',
+    nameEn: 'Size',
+    parentBoardId: 'main',
+    cells: [
+      cell('xs', 'XS', 'XS', 'descriptors', '🔹', 'clothing-color'),
+      cell('s', 'S', 'S', 'descriptors', '🔹', 'clothing-color'),
+      cell('m', 'M', 'M', 'descriptors', '🔶', 'clothing-color'),
+      cell('l', 'L', 'L', 'descriptors', '🔶', 'clothing-color'),
+      cell('xl', 'XL', 'XL', 'descriptors', '⬛', 'clothing-color'),
+      cell('xxl', 'XXL', 'XXL', 'descriptors', '⬛', 'clothing-color'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+  'clothing-color': {
+    id: 'clothing-color',
+    name: 'צבע',
+    nameEn: 'Color',
+    parentBoardId: 'clothing-size',
+    cells: [
+      cell('black', 'שחור', 'Black', 'descriptors', '⚫', 'clothing-style'),
+      cell('white', 'לבן', 'White', 'descriptors', '⚪', 'clothing-style'),
+      cell('blue', 'כחול', 'Blue', 'descriptors', '🔵', 'clothing-style'),
+      cell('red', 'אדום', 'Red', 'descriptors', '🔴', 'clothing-style'),
+      cell('green', 'ירוק', 'Green', 'descriptors', '🟢', 'clothing-style'),
+      cell('gray', 'אפור', 'Gray', 'descriptors', '🩶', 'clothing-style'),
+      cell('pink', 'ורוד', 'Pink', 'descriptors', '💗', 'clothing-style'),
+      cell('brown', 'חום', 'Brown', 'descriptors', '🟤', 'clothing-style'),
+    ],
+    gridSize: { cols: 4, rows: 2 },
+  },
+  'clothing-style': {
+    id: 'clothing-style',
+    name: 'סגנון',
+    nameEn: 'Style',
+    parentBoardId: 'clothing-color',
+    cells: [
+      cell('casual', 'יומיומי', 'Casual', 'descriptors', '👕'),
+      cell('formal', 'רשמי', 'Formal', 'descriptors', '👔'),
+      cell('sporty', 'ספורטיבי', 'Sporty', 'descriptors', '🏃'),
+    ],
+    gridSize: { cols: 3, rows: 1 },
+  },
+  'accessories': {
+    id: 'accessories',
+    name: 'אביזרים',
+    nameEn: 'Accessories',
+    parentBoardId: 'main',
+    cells: [
+      cell('bag', 'תיק', 'Bag', 'people', '👜'),
+      cell('belt', 'חגורה', 'Belt', 'people', '🪢'),
+      cell('hat', 'כובע', 'Hat', 'people', '🎩'),
+      cell('scarf', 'צעיף', 'Scarf', 'people', '🧣'),
+      cell('watch', 'שעון', 'Watch', 'people', '⌚'),
+      cell('sunglasses', 'משקפי שמש', 'Sunglasses', 'people', '🕶️'),
+    ],
+    gridSize: { cols: 3, rows: 2 },
+  },
+};
+
+// =============================================================================
 // EXPORT ALL BOARDS BY BUSINESS TYPE
 // =============================================================================
 export const businessBoardsData: Record<BusinessType, Record<string, AACBoard>> = {
@@ -669,6 +1365,13 @@ export const businessBoardsData: Record<BusinessType, Record<string, AACBoard>> 
   cafe: cafeBoards,
   restaurant: restaurantBoards,
   bakery: bakeryBoards,
+  pizza: pizzaBoards,
+  laundromat: laundromatBoards,
+  partySupplies: partySuppliesBoards,
+  toyStore: toyStoreBoards,
+  hairSalon: hairSalonBoards,
+  shoeStore: shoeStoreBoards,
+  clothingStore: clothingStoreBoards,
 };
 
 // Helper function to get boards for a specific business type
@@ -702,11 +1405,11 @@ export const businessPreviewCards: Record<BusinessType, PreviewCard[]> = {
     { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
   ],
   iceCream: [
-    { text: 'טעמים', textEn: 'Flavors', category: 'people', icon: '🍦' },
+    { text: 'גלידה', textEn: 'Ice Cream', category: 'people', icon: '🍦' },
     { text: 'תוספות', textEn: 'Toppings', category: 'people', icon: '🍫' },
-    { text: 'גדלים', textEn: 'Sizes', category: 'people', icon: '📏' },
+    { text: 'גדלים', textEn: 'Sizes', category: 'descriptors', icon: '📏' },
     { text: 'רוצה', textEn: 'Want', category: 'verbs', icon: '👆' },
-    { text: 'מתוק', textEn: 'Sweet', category: 'descriptors', icon: '🍬' },
+    { text: 'כמה עולה?', textEn: 'How much?', category: 'social', icon: '💰' },
     { text: 'בבקשה', textEn: 'Please', category: 'social', icon: '🙏' },
   ],
   cafe: [
@@ -732,5 +1435,61 @@ export const businessPreviewCards: Record<BusinessType, PreviewCard[]> = {
     { text: 'רוצה', textEn: 'Want', category: 'verbs', icon: '👆' },
     { text: 'טרי', textEn: 'Fresh', category: 'descriptors', icon: '✨' },
     { text: 'בבקשה', textEn: 'Please', category: 'social', icon: '🙏' },
+  ],
+  pizza: [
+    { text: 'פיצה', textEn: 'Pizza', category: 'people', icon: '🍕' },
+    { text: 'תוספות', textEn: 'Toppings', category: 'people', icon: '🧀' },
+    { text: 'סלט', textEn: 'Salad', category: 'people', icon: '🥗' },
+    { text: 'לקחת', textEn: 'Takeaway', category: 'verbs', icon: '📦' },
+    { text: 'חריף', textEn: 'Spicy', category: 'descriptors', icon: '🌶️' },
+    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
+  ],
+  laundromat: [
+    { text: 'לכבס', textEn: 'Wash', category: 'verbs', icon: '🧺' },
+    { text: 'לייבש', textEn: 'Dry', category: 'verbs', icon: '💨' },
+    { text: 'ניקוי יבש', textEn: 'Dry Clean', category: 'people', icon: '🧥' },
+    { text: 'כתם', textEn: 'Stain', category: 'descriptors', icon: '🫗' },
+    { text: 'נקי', textEn: 'Clean', category: 'descriptors', icon: '✨' },
+    { text: 'עזרה', textEn: 'Help', category: 'social', icon: '🙋' },
+  ],
+  partySupplies: [
+    { text: 'בלונים', textEn: 'Balloons', category: 'people', icon: '🎈' },
+    { text: 'קישוטים', textEn: 'Decorations', category: 'people', icon: '🎉' },
+    { text: 'צלחות', textEn: 'Plates', category: 'people', icon: '🍽️' },
+    { text: 'יום הולדת', textEn: 'Birthday', category: 'descriptors', icon: '🎂' },
+    { text: 'הרבה', textEn: 'Many', category: 'descriptors', icon: '📦' },
+    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
+  ],
+  toyStore: [
+    { text: 'דמויות פעולה', textEn: 'Action Figures', category: 'people', icon: '🦸' },
+    { text: 'בובות', textEn: 'Dolls', category: 'people', icon: '🎎' },
+    { text: 'משחקי קופסה', textEn: 'Board Games', category: 'people', icon: '🎲' },
+    { text: 'לשחק', textEn: 'Play', category: 'verbs', icon: '🎮' },
+    { text: 'מתנה', textEn: 'Gift', category: 'descriptors', icon: '🎁' },
+    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
+  ],
+  hairSalon: [
+    { text: 'תספורת', textEn: 'Haircut', category: 'verbs', icon: '✂️' },
+    { text: 'צביעה', textEn: 'Color', category: 'verbs', icon: '🎨' },
+    { text: 'עיצוב', textEn: 'Style', category: 'verbs', icon: '💇' },
+    { text: 'קצר', textEn: 'Short', category: 'descriptors', icon: '📏' },
+    { text: 'טוב', textEn: 'Good', category: 'descriptors', icon: '👍' },
+    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
+  ],
+  shoeStore: [
+    { text: 'נעלי גברים', textEn: 'Men\'s Shoes', category: 'people', icon: '👞' },
+    { text: 'נעלי נשים', textEn: 'Women\'s Shoes', category: 'people', icon: '👠' },
+    { text: 'ספורט', textEn: 'Sports', category: 'people', icon: '🏃' },
+    { text: 'למדוד', textEn: 'Try on', category: 'verbs', icon: '👣' },
+    { text: 'נוח', textEn: 'Comfortable', category: 'descriptors', icon: '😊' },
+    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
+  ],
+  clothingStore: [
+    { text: 'חולצות', textEn: 'Shirts', category: 'people', icon: '👕' },
+    { text: 'מכנסיים', textEn: 'Pants', category: 'people', icon: '👖' },
+    { text: 'שמלות', textEn: 'Dresses', category: 'people', icon: '👗' },
+    { text: 'חדר מדידות', textEn: 'Fitting Room', category: 'verbs', icon: '🚪' },
+    { text: 'אוהב', textEn: 'Like', category: 'descriptors', icon: '❤️' },
+    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
   ],
 };
