@@ -1,60 +1,73 @@
 
 
-# Fix: TTS (Text-to-Speech) Not Producing Sound
+# Fix: TTS Still Not Producing Sound
 
-## Problem Analysis
+## Root Cause (Confirmed)
 
-After reviewing the code and session replay, I identified several issues causing the TTS to fail silently:
+The previous fix introduced a `setTimeout(..., 50)` delay between `cancel()` and `speak()` to work around a Chrome bug. However, this **breaks the user gesture chain**. Modern browsers require `speechSynthesis.speak()` to be called **synchronously** inside a click handler. The `setTimeout` makes it asynchronous, so the browser silently blocks the audio.
 
-1. **Chrome `cancel()` timing bug**: The `speak` function calls `window.speechSynthesis.cancel()` immediately before `speak()`. Chrome has a known bug where calling `speak()` right after `cancel()` causes the utterance to be silently dropped. The session replay confirms this -- the pulse animation briefly appears (meaning `onstart` fires) but ends almost instantly with no audio.
-
-2. **Voices may not be loaded**: The `findBestVoice` function may return `undefined` if browser voices haven't loaded yet, causing the utterance to fail silently on some devices.
-
-3. **Edit mode blocks clicks**: The user is currently on `?edit=true`, and `handleCellClick` has `if (isEditMode) return;` at the top, which blocks all speech from tile taps in edit mode. (This is less critical but worth noting.)
+Additionally, `CustomerModeOverlay` auto-speaks inside a `useEffect` (no user gesture at all), which will always be blocked.
 
 ## Solution
 
-### 1. Fix `useTextToSpeech.ts` - Add delay after cancel
+### 1. Remove setTimeout from speak() in `useTextToSpeech.ts`
 
-Add a small timeout (50ms) between `cancel()` and `speak()` to work around the Chrome bug. Also add a resume workaround for the known Chrome pause bug, and better error logging.
+Call `speechSynthesis.speak()` synchronously to preserve the user gesture context. For the Chrome cancel-then-speak bug, instead of delaying, we simply avoid calling `cancel()` unless speech is actually in progress.
 
 ```typescript
 const speak = useCallback((text: string, overrideLang?: Language, cellId?: string) => {
-  window.speechSynthesis.cancel();
-  
+  // Only cancel if actually speaking (avoids Chrome cancel-then-speak bug)
+  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+    window.speechSynthesis.cancel();
+  }
+
   if (!text.trim()) return;
 
-  // Chrome bug workaround: small delay after cancel()
-  setTimeout(() => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    // ... rest of setup ...
-    window.speechSynthesis.speak(utterance);
-    
-    // Chrome bug workaround: keep synthesis alive
-    const keepAlive = setInterval(() => {
-      if (!window.speechSynthesis.speaking) {
-        clearInterval(keepAlive);
-      } else {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      }
-    }, 5000);
-  }, 50);
-}, [...]);
+  // Load voices synchronously if needed
+  let currentVoices = voices;
+  if (currentVoices.length === 0) {
+    currentVoices = window.speechSynthesis.getVoices();
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  // ... voice selection, settings, event handlers (same as before) ...
+
+  // Speak SYNCHRONOUSLY - no setTimeout!
+  window.speechSynthesis.speak(utterance);
+
+  // Keep-alive workaround remains the same
+}, [language, voices, settings]);
 ```
 
-### 2. Fix `VoiceSettingsModal.tsx` - Add `forwardRef` to `ModalFooter`
+### 2. Fix CustomerModeOverlay auto-speak
 
-The console shows a warning about `ModalFooter` not supporting refs. Update `modal-footer.tsx` to use `forwardRef`.
+Remove the `useEffect` auto-speak (it cannot work without a gesture). Instead, trigger speech from the parent component (`AACDashboard`) at click time, before setting the selected cell.
 
-### 3. Ensure voices are loaded before first speak
+In `AACDashboard.tsx`, update `handleCellClick` for customer mode:
+```typescript
+if (isCustomerMode) {
+  if (!cell.linkToBoardId) {
+    // Speak immediately during user gesture
+    const text = language === 'he' || language === 'ar' ? cell.text : cell.textEn;
+    speak(text);
+    setSelectedCell(cell);
+  }
+}
+```
 
-Add a check that retries voice loading if the voices array is empty when `speak` is called.
+In `CustomerModeOverlay.tsx`, remove the auto-speak `useEffect` and keep only the manual "Repeat" button.
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/hooks/useTextToSpeech.ts` | Add delay after `cancel()`, add Chrome keep-alive workaround, add voice reload fallback |
-| `src/components/ui/modal-footer.tsx` | Wrap with `forwardRef` to fix console warning |
+| `src/hooks/useTextToSpeech.ts` | Remove `setTimeout` wrapper; call `speak()` synchronously; only call `cancel()` when speech is active |
+| `src/components/aac/AACDashboard.tsx` | Call `speak()` in `handleCellClick` for customer mode before setting selected cell |
+| `src/components/aac/CustomerModeOverlay.tsx` | Remove `useEffect` auto-speak; keep only manual Repeat button |
+
+## Technical Details
+
+- The `setTimeout` is removed entirely -- the Chrome cancel bug is avoided by conditionally calling `cancel()` only when speech is active
+- The keep-alive `setInterval` with `pause()/resume()` is preserved for long utterances
+- The "Repeat" button in the overlay will still work because it is triggered by a direct user click
 
