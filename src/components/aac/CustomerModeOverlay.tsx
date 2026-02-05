@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { AACCell } from '@/types/aac';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
@@ -18,13 +18,6 @@ export function CustomerModeOverlay({ cell, onClose }: CustomerModeOverlayProps)
   const displayText = cell 
     ? (language === 'he' || language === 'ar' ? cell.text : cell.textEn)
     : '';
-
-  // Auto-speak when cell is selected
-  useEffect(() => {
-    if (cell && isSupported) {
-      speak(displayText);
-    }
-  }, [cell, displayText, speak, isSupported]);
 
   const handleRepeat = useCallback(() => {
     if (displayText) {
