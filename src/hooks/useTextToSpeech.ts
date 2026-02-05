@@ -116,51 +116,104 @@ export function useTextToSpeech() {
     setSettings(prev => ({ ...prev, ...updates }));
   }, []);
 
+  const keepAliveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const speak = useCallback((text: string, overrideLang?: Language, cellId?: string) => {
+    // Clear any previous keep-alive interval
+    if (keepAliveRef.current) {
+      clearInterval(keepAliveRef.current);
+      keepAliveRef.current = null;
+    }
+
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
     if (!text.trim()) return;
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utteranceRef.current = utterance;
+    // Chrome bug workaround: small delay after cancel() to prevent silent drop
+    setTimeout(() => {
+      // Ensure voices are loaded
+      let currentVoices = voices;
+      if (currentVoices.length === 0) {
+        currentVoices = window.speechSynthesis.getVoices();
+      }
 
-    // Set language
-    const targetLang = overrideLang || language;
-    const voiceLang = languageToVoiceMap[targetLang];
-    utterance.lang = voiceLang;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utteranceRef.current = utterance;
 
-    // Get profile modifiers
-    const profileMod = PROFILE_MODIFIERS[settings.profile];
+      // Set language
+      const targetLang = overrideLang || language;
+      const voiceLang = languageToVoiceMap[targetLang];
+      utterance.lang = voiceLang;
 
-    // Find and set the best voice for this language and profile
-    const voice = findBestVoice(voiceLang, profileMod.preferFemale);
-    if (voice) {
-      utterance.voice = voice;
-    }
+      // Get profile modifiers
+      const profileMod = PROFILE_MODIFIERS[settings.profile];
 
-    // Apply settings with profile modifiers
-    utterance.rate = Math.min(2, Math.max(0.5, settings.rate + profileMod.rateMod));
-    utterance.pitch = Math.min(2, Math.max(0.5, settings.pitch + profileMod.pitchMod));
-    utterance.volume = settings.volume;
+      // Find and set the best voice for this language and profile
+      const langCode = voiceLang.split('-')[0];
+      const matchingVoices = currentVoices.filter(v =>
+        v.lang === voiceLang || v.lang.startsWith(langCode)
+      );
+      let voice: SpeechSynthesisVoice | undefined;
+      if (matchingVoices.length > 0) {
+        const genderKeywords = profileMod.preferFemale
+          ? ['female', 'woman', 'girl', 'נקבה', 'أنثى', 'женщина']
+          : ['male', 'man', 'boy', 'זכר', 'ذكر', 'мужчина'];
+        voice = matchingVoices.find(v =>
+          genderKeywords.some(kw => v.name.toLowerCase().includes(kw))
+        ) || matchingVoices[0];
+      } else {
+        voice = currentVoices.find(v => v.default) || currentVoices[0];
+      }
+      if (voice) {
+        utterance.voice = voice;
+      }
 
-    // Event handlers
-    utterance.onstart = () => {
-      setIsSpeaking(true);
-      if (cellId) setSpeakingCellId(cellId);
-    };
-    utterance.onend = () => {
-      setIsSpeaking(false);
-      setSpeakingCellId(null);
-    };
-    utterance.onerror = () => {
-      setIsSpeaking(false);
-      setSpeakingCellId(null);
-    };
+      // Apply settings with profile modifiers
+      utterance.rate = Math.min(2, Math.max(0.5, settings.rate + profileMod.rateMod));
+      utterance.pitch = Math.min(2, Math.max(0.5, settings.pitch + profileMod.pitchMod));
+      utterance.volume = settings.volume;
 
-    // Speak!
-    window.speechSynthesis.speak(utterance);
-  }, [language, findBestVoice, settings]);
+      // Event handlers
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        if (cellId) setSpeakingCellId(cellId);
+      };
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setSpeakingCellId(null);
+        if (keepAliveRef.current) {
+          clearInterval(keepAliveRef.current);
+          keepAliveRef.current = null;
+        }
+      };
+      utterance.onerror = (e) => {
+        console.warn('TTS error:', e.error);
+        setIsSpeaking(false);
+        setSpeakingCellId(null);
+        if (keepAliveRef.current) {
+          clearInterval(keepAliveRef.current);
+          keepAliveRef.current = null;
+        }
+      };
+
+      // Speak
+      window.speechSynthesis.speak(utterance);
+
+      // Chrome bug workaround: keep synthesis alive with periodic pause/resume
+      keepAliveRef.current = setInterval(() => {
+        if (!window.speechSynthesis.speaking) {
+          if (keepAliveRef.current) {
+            clearInterval(keepAliveRef.current);
+            keepAliveRef.current = null;
+          }
+        } else {
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        }
+      }, 5000);
+    }, 50);
+  }, [language, voices, settings]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();
