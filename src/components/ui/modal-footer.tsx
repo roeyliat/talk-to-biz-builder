@@ -1,6 +1,7 @@
+import { forwardRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-export function ModalFooter() {
+export const ModalFooter = forwardRef<HTMLDivElement>((_, ref) => {
   const { language } = useLanguage();
   const currentYear = new Date().getFullYear();
 
@@ -12,10 +13,12 @@ export function ModalFooter() {
   };
 
   return (
-    <div className="pt-4 mt-4 border-t border-border/50">
+    <div ref={ref} className="pt-4 mt-4 border-t border-border/50">
       <p className="text-xs text-center text-muted-foreground">
         © {currentYear} TalkBiz. {texts[language] || texts.en}
       </p>
     </div>
   );
-}
+});
+
+ModalFooter.displayName = 'ModalFooter';
