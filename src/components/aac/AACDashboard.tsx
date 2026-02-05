@@ -139,6 +139,9 @@ export function AACDashboard({
     // Customer Mode: Show enlarged cell with TTS
     if (isCustomerMode) {
       if (!cell.linkToBoardId) {
+        // Speak immediately during user gesture (must be synchronous)
+        const text = language === 'he' || language === 'ar' ? cell.text : cell.textEn;
+        speak(text, undefined, cell.id);
         setSelectedCell(cell);
       } else if (activeBoards[cell.linkToBoardId]) {
         navigateToBoard(cell.linkToBoardId);
