@@ -1,73 +1,32 @@
 
 
-# Fix: TTS Still Not Producing Sound
+# Update Click Sound Effect
 
-## Root Cause (Confirmed)
+## Current State
 
-The previous fix introduced a `setTimeout(..., 50)` delay between `cancel()` and `speak()` to work around a Chrome bug. However, this **breaks the user gesture chain**. Modern browsers require `speechSynthesis.speak()` to be called **synchronously** inside a click handler. The `setTimeout` makes it asynchronous, so the browser silently blocks the audio.
+The file `src/hooks/useClickSound.ts` does not exist yet -- the previous plan to add click sounds was approved but not yet implemented. I'll create the hook with the new sound URL and integrate it into the AAC Dashboard.
 
-Additionally, `CustomerModeOverlay` auto-speaks inside a `useEffect` (no user gesture at all), which will always be blocked.
+## Changes
 
-## Solution
+### 1. Create `src/hooks/useClickSound.ts`
 
-### 1. Remove setTimeout from speak() in `useTextToSpeech.ts`
-
-Call `speechSynthesis.speak()` synchronously to preserve the user gesture context. For the Chrome cancel-then-speak bug, instead of delaying, we simply avoid calling `cancel()` unless speech is actually in progress.
+Create a new hook with the requested sound URL:
 
 ```typescript
-const speak = useCallback((text: string, overrideLang?: Language, cellId?: string) => {
-  // Only cancel if actually speaking (avoids Chrome cancel-then-speak bug)
-  if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-    window.speechSynthesis.cancel();
-  }
-
-  if (!text.trim()) return;
-
-  // Load voices synchronously if needed
-  let currentVoices = voices;
-  if (currentVoices.length === 0) {
-    currentVoices = window.speechSynthesis.getVoices();
-  }
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  // ... voice selection, settings, event handlers (same as before) ...
-
-  // Speak SYNCHRONOUSLY - no setTimeout!
-  window.speechSynthesis.speak(utterance);
-
-  // Keep-alive workaround remains the same
-}, [language, voices, settings]);
+const CLICK_SOUND_URL = "http://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a";
 ```
 
-### 2. Fix CustomerModeOverlay auto-speak
+The hook will export a `playClickSound` function that creates a new `Audio` instance and plays it at reduced volume (0.3).
 
-Remove the `useEffect` auto-speak (it cannot work without a gesture). Instead, trigger speech from the parent component (`AACDashboard`) at click time, before setting the selected cell.
+### 2. Update `src/components/aac/AACDashboard.tsx`
 
-In `AACDashboard.tsx`, update `handleCellClick` for customer mode:
-```typescript
-if (isCustomerMode) {
-  if (!cell.linkToBoardId) {
-    // Speak immediately during user gesture
-    const text = language === 'he' || language === 'ar' ? cell.text : cell.textEn;
-    speak(text);
-    setSelectedCell(cell);
-  }
-}
-```
+- Import and use the `useClickSound` hook
+- Call `playClickSound()` at the start of `handleCellClick` and `handleCoreWordClick`
 
-In `CustomerModeOverlay.tsx`, remove the auto-speak `useEffect` and keep only the manual "Repeat" button.
+## Files
 
-## Files to Modify
-
-| File | Change |
+| File | Action |
 |------|--------|
-| `src/hooks/useTextToSpeech.ts` | Remove `setTimeout` wrapper; call `speak()` synchronously; only call `cancel()` when speech is active |
-| `src/components/aac/AACDashboard.tsx` | Call `speak()` in `handleCellClick` for customer mode before setting selected cell |
-| `src/components/aac/CustomerModeOverlay.tsx` | Remove `useEffect` auto-speak; keep only manual Repeat button |
-
-## Technical Details
-
-- The `setTimeout` is removed entirely -- the Chrome cancel bug is avoided by conditionally calling `cancel()` only when speech is active
-- The keep-alive `setInterval` with `pause()/resume()` is preserved for long utterances
-- The "Repeat" button in the overlay will still work because it is triggered by a direct user click
+| `src/hooks/useClickSound.ts` | Create -- new hook with the sound URL |
+| `src/components/aac/AACDashboard.tsx` | Edit -- import hook, call on tile clicks |
 
