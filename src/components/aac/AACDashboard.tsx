@@ -16,6 +16,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useClickSound } from '@/hooks/useClickSound';
 
 interface AACDashboardProps {
   boards?: Record<string, AACBoard>;
@@ -47,6 +48,7 @@ export function AACDashboard({
   const { speak, isSpeaking, speakingCellId, isSupported } = useTextToSpeech();
   const { toast } = useToast();
   const { isGuest } = useAuth();
+  const { playClickSound } = useClickSound();
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   
   const [navState, setNavState] = useState<BoardNavigationState>({
@@ -135,6 +137,7 @@ export function AACDashboard({
 
   const handleCellClick = useCallback((cell: AACCell) => {
     if (isEditMode) return;
+    playClickSound();
     
     // Customer Mode: Show enlarged cell with TTS
     if (isCustomerMode) {
@@ -160,6 +163,7 @@ export function AACDashboard({
   }, [activeBoards, navigateToBoard, language, speak, isEditMode, isCustomerMode]);
 
   const handleCoreWordClick = useCallback((word: { textKey: string }) => {
+    playClickSound();
     const text = t(word.textKey);
     speak(text);
     setSelectedWords(prev => [...prev, text]);
