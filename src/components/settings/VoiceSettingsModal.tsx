@@ -5,7 +5,8 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTextToSpeech, VoiceProfile } from '@/hooks/useTextToSpeech';
 import { cn } from '@/lib/utils';
-import { Volume2, RotateCcw, Play, User } from 'lucide-react';
+import { Volume2, RotateCcw, Play, User, MousePointerClick } from 'lucide-react';
+import { useClickSound } from '@/hooks/useClickSound';
 
 interface VoiceSettingsModalProps {
   open: boolean;
@@ -22,9 +23,11 @@ const voiceProfiles: { key: VoiceProfile; icon: string }[] = [
 export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
   const { language } = useLanguage();
   const { speak, isSpeaking, settings, updateSettings } = useTextToSpeech();
+  const { playClickSound, clickVolume, setClickVolume } = useClickSound();
 
   const resetSettings = () => {
     updateSettings({ profile: 'man', rate: 0.9, pitch: 1.0, volume: 1.0 });
+    setClickVolume(0.3);
   };
 
   const isRtl = language === 'he' || language === 'ar';
@@ -50,6 +53,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'שלום, אני רוצה להזמין',
       reset: 'איפוס',
       close: 'סגור',
+      clickSound: 'צליל לחיצה',
     },
     en: {
       title: 'Voice Settings',
@@ -71,6 +75,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'Hello, I would like to order',
       reset: 'Reset',
       close: 'Close',
+      clickSound: 'Click Sound',
     },
     ar: {
       title: 'إعدادات الصوت',
@@ -92,6 +97,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'مرحبًا، أريد أن أطلب',
       reset: 'إعادة تعيين',
       close: 'إغلاق',
+      clickSound: 'صوت النقر',
     },
     ru: {
       title: 'Настройки голоса',
@@ -113,6 +119,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'Привет, я хотел бы заказать',
       reset: 'Сброс',
       close: 'Закрыть',
+      clickSound: 'Звук нажатия',
     },
   };
 
@@ -223,6 +230,32 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
                 max={1.0}
                 step={0.1}
                 onValueChange={([value]) => updateSettings({ volume: value })}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground w-10 text-end">{t.loud}</span>
+            </div>
+          </div>
+
+          {/* Click Sound Volume */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <MousePointerClick className="h-4 w-4" />
+                {t.clickSound}
+              </label>
+              <span className="text-xs text-muted-foreground">
+                {Math.round(clickVolume * 100)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-10">{t.quiet}</span>
+              <Slider
+                value={[clickVolume]}
+                min={0}
+                max={1.0}
+                step={0.1}
+                onValueChange={([value]) => setClickVolume(value)}
+                onValueCommit={() => playClickSound()}
                 className="flex-1"
               />
               <span className="text-xs text-muted-foreground w-10 text-end">{t.loud}</span>
