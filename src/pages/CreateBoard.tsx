@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, ArrowRight, Check, Sparkles, Link, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AACCard } from '@/components/aac/AACCard';
-import { businessPreviewCards, BusinessType, getBoardsForBusinessType } from '@/data/businessBoards';
+import { businessPreviewCards, BusinessType, getBoardsForBusinessType, getSupermarketBaseCategories } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
 import { UrlImportModal } from '@/components/menu-scanner/UrlImportModal';
