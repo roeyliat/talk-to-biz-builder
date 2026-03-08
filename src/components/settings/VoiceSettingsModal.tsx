@@ -23,9 +23,11 @@ const voiceProfiles: { key: VoiceProfile; icon: string }[] = [
 export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
   const { language } = useLanguage();
   const { speak, isSpeaking, settings, updateSettings } = useTextToSpeech();
+  const { playClickSound, clickVolume, setClickVolume } = useClickSound();
 
   const resetSettings = () => {
     updateSettings({ profile: 'man', rate: 0.9, pitch: 1.0, volume: 1.0 });
+    setClickVolume(0.3);
   };
 
   const isRtl = language === 'he' || language === 'ar';
