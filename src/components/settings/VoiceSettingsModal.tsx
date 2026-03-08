@@ -53,6 +53,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'שלום, אני רוצה להזמין',
       reset: 'איפוס',
       close: 'סגור',
+      clickSound: 'צליל לחיצה',
     },
     en: {
       title: 'Voice Settings',
