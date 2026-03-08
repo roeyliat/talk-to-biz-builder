@@ -97,6 +97,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'مرحبًا، أريد أن أطلب',
       reset: 'إعادة تعيين',
       close: 'إغلاق',
+      clickSound: 'صوت النقر',
     },
     ru: {
       title: 'Настройки голоса',
