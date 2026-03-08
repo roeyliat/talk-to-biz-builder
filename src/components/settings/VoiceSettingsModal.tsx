@@ -75,6 +75,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'Hello, I would like to order',
       reset: 'Reset',
       close: 'Close',
+      clickSound: 'Click Sound',
     },
     ar: {
       title: 'إعدادات الصوت',
