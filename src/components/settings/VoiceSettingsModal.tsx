@@ -5,7 +5,8 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTextToSpeech, VoiceProfile } from '@/hooks/useTextToSpeech';
 import { cn } from '@/lib/utils';
-import { Volume2, RotateCcw, Play, User } from 'lucide-react';
+import { Volume2, RotateCcw, Play, User, MousePointerClick } from 'lucide-react';
+import { useClickSound } from '@/hooks/useClickSound';
 
 interface VoiceSettingsModalProps {
   open: boolean;
