@@ -1462,6 +1462,49 @@ export function getBoardsForBusinessType(businessType: BusinessType): Record<str
   return businessBoardsData[businessType] || cafeBoards;
 }
 
+// Helper to generate base supermarket categories for the creation wizard
+export function getSupermarketBaseCategories() {
+  const boards = supermarketBoards;
+  const mainBoard = boards['main'];
+  if (!mainBoard) return [];
+
+  // Convert each main-level folder into a MenuCategory with its items
+  return mainBoard.cells
+    .filter(c => c.linkToBoardId)
+    .map(folderCell => {
+      const subBoard = boards[folderCell.linkToBoardId!];
+      if (!subBoard) return null;
+
+      // Collect items from this sub-board (non-folder cells only)
+      const items = subBoard.cells
+        .filter(c => !c.linkToBoardId)
+        .map(c => ({
+          id: c.id,
+          text: c.text,
+          textEn: c.textEn,
+          icon: c.icon || '📦',
+          category: c.category,
+        }));
+
+      return {
+        id: folderCell.id,
+        name: folderCell.text,
+        nameEn: folderCell.textEn,
+        icon: folderCell.icon || '📁',
+        items,
+        isOpen: false,
+      };
+    })
+    .filter(Boolean) as Array<{
+      id: string;
+      name: string;
+      nameEn: string;
+      icon: string;
+      items: Array<{ id: string; text: string; textEn: string; icon: string; category: import('@/types/aac').FitzgeraldCategory }>;
+      isOpen: boolean;
+    }>;
+}
+
 // Preview cards for each business type (for CreateBoard preview)
 interface PreviewCard {
   text: string;
@@ -1480,12 +1523,12 @@ export const businessPreviewCards: Record<BusinessType, PreviewCard[]> = {
     { text: 'עזרה', textEn: 'Help', category: 'social', icon: '🙋' },
   ],
   supermarket: [
-    { text: 'מוצרי חלב', textEn: 'Dairy', category: 'people', icon: '🥛' },
-    { text: 'ירקות', textEn: 'Vegetables', category: 'people', icon: '🥬' },
-    { text: 'פירות', textEn: 'Fruits', category: 'people', icon: '🍎' },
-    { text: 'חטיפים', textEn: 'Snacks', category: 'people', icon: '🍿' },
-    { text: 'איפה', textEn: 'Where', category: 'verbs', icon: '🔍' },
-    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
+    { text: 'עזרה ממוכר', textEn: 'Staff Help', category: 'social', icon: '🙋‍♂️' },
+    { text: 'קופה ותשלום', textEn: 'Checkout', category: 'social', icon: '💳' },
+    { text: 'מעדנייה', textEn: 'Deli', category: 'people', icon: '🧀' },
+    { text: 'קצבייה ודגים', textEn: 'Butcher & Fish', category: 'people', icon: '🥩' },
+    { text: 'מאפייה', textEn: 'Bakery', category: 'people', icon: '🥖' },
+    { text: 'פירות וירקות', textEn: 'Produce', category: 'people', icon: '🍏' },
   ],
   iceCream: [
     { text: 'גלידה', textEn: 'Ice Cream', category: 'people', icon: '🍦' },

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, ArrowRight, Check, Sparkles, Link, Camera } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AACCard } from '@/components/aac/AACCard';
-import { businessPreviewCards, BusinessType, getBoardsForBusinessType } from '@/data/businessBoards';
+import { businessPreviewCards, BusinessType, getBoardsForBusinessType, getSupermarketBaseCategories } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
 import { UrlImportModal } from '@/components/menu-scanner/UrlImportModal';
@@ -525,7 +525,14 @@ const CreateBoard = () => {
               </Button>
               {step < 4 && (
                 <Button
-                  onClick={() => setStep(step + 1)}
+                  onClick={() => {
+                    const nextStep = step + 1;
+                    // Pre-populate categories for supermarket when entering step 3
+                    if (nextStep === 3 && formData.businessType === 'supermarket' && categories.length === 0 && standaloneItems.length === 0) {
+                      setCategories(getSupermarketBaseCategories());
+                    }
+                    setStep(nextStep);
+                  }}
                   disabled={!canProceed()}
                   className="gap-2"
                 >
