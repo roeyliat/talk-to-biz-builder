@@ -236,6 +236,32 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
             </div>
           </div>
 
+          {/* Click Sound Volume */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <MousePointerClick className="h-4 w-4" />
+                {t.clickSound}
+              </label>
+              <span className="text-xs text-muted-foreground">
+                {Math.round(clickVolume * 100)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-10">{t.quiet}</span>
+              <Slider
+                value={[clickVolume]}
+                min={0}
+                max={1.0}
+                step={0.1}
+                onValueChange={([value]) => setClickVolume(value)}
+                onValueCommit={() => playClickSound()}
+                className="flex-1"
+              />
+              <span className="text-xs text-muted-foreground w-10 text-end">{t.loud}</span>
+            </div>
+          </div>
+
           {/* Test & Reset Buttons */}
           <div className="flex gap-3 pt-2">
             <Button
