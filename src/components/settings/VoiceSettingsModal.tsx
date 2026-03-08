@@ -119,6 +119,7 @@ export function VoiceSettingsModal({ open, onClose }: VoiceSettingsModalProps) {
       testPhrase: 'Привет, я хотел бы заказать',
       reset: 'Сброс',
       close: 'Закрыть',
+      clickSound: 'Звук нажатия',
     },
   };
 
