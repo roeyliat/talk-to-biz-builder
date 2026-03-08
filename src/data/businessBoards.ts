@@ -1480,12 +1480,12 @@ export const businessPreviewCards: Record<BusinessType, PreviewCard[]> = {
     { text: 'עזרה', textEn: 'Help', category: 'social', icon: '🙋' },
   ],
   supermarket: [
-    { text: 'מוצרי חלב', textEn: 'Dairy', category: 'people', icon: '🥛' },
-    { text: 'ירקות', textEn: 'Vegetables', category: 'people', icon: '🥬' },
-    { text: 'פירות', textEn: 'Fruits', category: 'people', icon: '🍎' },
-    { text: 'חטיפים', textEn: 'Snacks', category: 'people', icon: '🍿' },
-    { text: 'איפה', textEn: 'Where', category: 'verbs', icon: '🔍' },
-    { text: 'תודה', textEn: 'Thanks', category: 'social', icon: '🙏' },
+    { text: 'עזרה ממוכר', textEn: 'Staff Help', category: 'social', icon: '🙋‍♂️' },
+    { text: 'קופה ותשלום', textEn: 'Checkout', category: 'social', icon: '💳' },
+    { text: 'מעדנייה', textEn: 'Deli', category: 'people', icon: '🧀' },
+    { text: 'קצבייה ודגים', textEn: 'Butcher & Fish', category: 'people', icon: '🥩' },
+    { text: 'מאפייה', textEn: 'Bakery', category: 'people', icon: '🥖' },
+    { text: 'פירות וירקות', textEn: 'Produce', category: 'people', icon: '🍏' },
   ],
   iceCream: [
     { text: 'גלידה', textEn: 'Ice Cream', category: 'people', icon: '🍦' },

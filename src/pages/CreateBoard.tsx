@@ -525,7 +525,14 @@ const CreateBoard = () => {
               </Button>
               {step < 4 && (
                 <Button
-                  onClick={() => setStep(step + 1)}
+                  onClick={() => {
+                    const nextStep = step + 1;
+                    // Pre-populate categories for supermarket when entering step 3
+                    if (nextStep === 3 && formData.businessType === 'supermarket' && categories.length === 0 && standaloneItems.length === 0) {
+                      setCategories(getSupermarketBaseCategories());
+                    }
+                    setStep(nextStep);
+                  }}
                   disabled={!canProceed()}
                   className="gap-2"
                 >
