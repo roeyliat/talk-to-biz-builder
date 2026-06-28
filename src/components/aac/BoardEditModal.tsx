@@ -7,6 +7,7 @@ import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AACCell, FitzgeraldCategory } from '@/types/aac';
 import { cn } from '@/lib/utils';
+import { ArasaacPicker } from '@/components/aac/ArasaacPicker';
 
 interface BoardEditModalProps {
   open: boolean;
@@ -38,6 +39,7 @@ export function BoardEditModal({
   const [text, setText] = useState(editingCell?.text || '');
   const [textEn, setTextEn] = useState(editingCell?.textEn || '');
   const [icon, setIcon] = useState(editingCell?.icon || '😊');
+  const [imageUrl, setImageUrl] = useState<string | undefined>(editingCell?.imageUrl);
   const [category, setCategory] = useState<FitzgeraldCategory>(editingCell?.category || 'people');
 
   const isEditing = !!editingCell;
@@ -49,6 +51,7 @@ export function BoardEditModal({
       textHe: 'טקסט בעברית',
       textEn: 'טקסט באנגלית',
       icon: 'אייקון',
+      picto: 'סמל ARASAAC',
       category: 'קטגוריה (צבע)',
       add: 'הוסף',
       save: 'שמור',
@@ -60,6 +63,7 @@ export function BoardEditModal({
       textHe: 'Hebrew Text',
       textEn: 'English Text',
       icon: 'Icon',
+      picto: 'ARASAAC pictogram',
       category: 'Category (Color)',
       add: 'Add',
       save: 'Save',
@@ -78,6 +82,7 @@ export function BoardEditModal({
         text: text.trim(),
         textEn: textEn.trim(),
         icon,
+        imageUrl,
         category,
       });
     } else {
@@ -85,6 +90,7 @@ export function BoardEditModal({
         text: text.trim(),
         textEn: textEn.trim(),
         icon,
+        imageUrl,
         category,
       });
     }
@@ -93,6 +99,7 @@ export function BoardEditModal({
     setText('');
     setTextEn('');
     setIcon('😊');
+    setImageUrl(undefined);
     setCategory('people');
     onClose();
   };
@@ -127,6 +134,23 @@ export function BoardEditModal({
               placeholder="e.g., Coffee"
               dir="ltr"
             />
+          </div>
+
+          {/* ARASAAC Pictogram */}
+          <div className="space-y-2">
+            <Label>{t.picto}</Label>
+            <div className="flex items-center gap-2">
+              <ArasaacPicker
+                imageUrl={imageUrl}
+                icon={icon}
+                seedQuery={textEn || text}
+                onSelect={(url) => setImageUrl(url)}
+                onClear={() => setImageUrl(undefined)}
+              />
+              <span className="text-sm text-muted-foreground">
+                {isRTL ? 'בחר סמל מ-ARASAAC (גובר על האימוג׳י)' : 'Pick a pictogram (overrides emoji)'}
+              </span>
+            </div>
           </div>
 
           {/* Icon Selection */}
@@ -197,7 +221,11 @@ export function BoardEditModal({
                 categoryColors[category].bg
               )}
             >
-              <span className="text-2xl">{icon}</span>
+              {imageUrl ? (
+                <img src={imageUrl} alt="" className="h-10 w-10 object-contain" />
+              ) : (
+                <span className="text-2xl">{icon}</span>
+              )}
               <span className="font-medium">{isRTL ? text || '---' : textEn || '---'}</span>
             </div>
           </div>

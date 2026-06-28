@@ -13,6 +13,7 @@ interface MenuCategory {
     textEn: string;
     category: FitzgeraldCategory;
     icon: string;
+    imageUrl?: string;
   }>;
 }
 
@@ -156,6 +157,7 @@ export function useMenuScanner() {
         textEn: item.textEn,
         category: item.category,
         icon: item.icon,
+        imageUrl: item.imageUrl,
       }));
 
       boards[category.id] = {

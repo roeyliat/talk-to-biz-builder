@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enrichMenuWithArasaac } from "../_shared/arasaac.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -257,6 +258,9 @@ Be thorough but practical - focus on the main items visible in the menu.`
 
     const menuData = JSON.parse(toolCall.function.arguments);
     console.log(`Menu data parsed successfully for user ${userId}: ${menuData.businessName}`);
+
+    // Attach free ARASAAC pictograms to each item where available.
+    await enrichMenuWithArasaac(menuData);
 
     return new Response(
       JSON.stringify({ success: true, data: menuData }),

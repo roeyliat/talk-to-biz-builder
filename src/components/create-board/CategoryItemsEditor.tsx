@@ -17,12 +17,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { ArasaacPicker } from '@/components/aac/ArasaacPicker';
 
 export interface MenuItem {
   id: string;
   text: string;
   textEn: string;
   icon: string;
+  imageUrl?: string;
   category: FitzgeraldCategory;
 }
 
@@ -375,6 +377,13 @@ function ItemRow({ item, onUpdate, onDelete, t }: ItemRowProps) {
       fitzgeraldColors[item.category].bg,
       fitzgeraldColors[item.category].border
     )}>
+      <ArasaacPicker
+        imageUrl={item.imageUrl}
+        icon={item.icon}
+        seedQuery={item.textEn || item.text}
+        onSelect={(imageUrl) => onUpdate({ imageUrl })}
+        onClear={() => onUpdate({ imageUrl: undefined })}
+      />
       <Select value={item.icon} onValueChange={(icon) => onUpdate({ icon })}>
         <SelectTrigger className="w-14 h-10 bg-white/80">
           <SelectValue>{item.icon}</SelectValue>
