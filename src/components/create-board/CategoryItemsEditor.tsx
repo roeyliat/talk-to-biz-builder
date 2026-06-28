@@ -47,8 +47,8 @@ interface CategoryItemsEditorProps {
 const fitzgeraldColors: Record<FitzgeraldCategory, { bg: string; border: string }> = {
   people: { bg: 'bg-yellow-100', border: 'border-yellow-400' },
   verbs: { bg: 'bg-green-100', border: 'border-green-400' },
-  descriptors: { bg: 'bg-blue-100', border: 'border-blue-400' },
-  social: { bg: 'bg-pink-100', border: 'border-pink-400' },
+  descriptors: { bg: 'bg-pink-100', border: 'border-pink-400' },
+  social: { bg: 'bg-blue-100', border: 'border-blue-400' },
 };
 
 const commonEmojis = ['☕', '🍕', '🍔', '🥗', '🍦', '🧁', '🥐', '🍝', '🍜', '🥩', '🍰', '🍪', '💊', '🩹', '📦', '🛒'];

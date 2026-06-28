@@ -24,8 +24,8 @@ interface BoardReviewEditorProps {
 const fitzgeraldColors: Record<FitzgeraldCategory, string> = {
   people: 'bg-yellow-100 border-yellow-400 text-yellow-900',
   verbs: 'bg-green-100 border-green-400 text-green-900',
-  descriptors: 'bg-blue-100 border-blue-400 text-blue-900',
-  social: 'bg-pink-100 border-pink-400 text-pink-900',
+  descriptors: 'bg-pink-100 border-pink-400 text-pink-900',
+  social: 'bg-blue-100 border-blue-400 text-blue-900',
 };
 
 export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardReviewEditorProps) {
