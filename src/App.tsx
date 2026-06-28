@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import CreateBoard from "./pages/CreateBoard";
 import BoardDemo from "./pages/BoardDemo";
 import AACBoard from "./pages/AACBoard";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/create" element={<CreateBoard />} />
             <Route path="/demo" element={<BoardDemo />} />
             <Route path="/board" element={<AACBoard />} />
