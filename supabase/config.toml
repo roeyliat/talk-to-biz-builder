@@ -2,3 +2,6 @@ project_id = "aqtpzssjyvlixunxqqci"
 
 [functions.process-menu]
 verify_jwt = false
+
+[functions.process-menu-url]
+verify_jwt = false
