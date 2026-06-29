@@ -24,8 +24,8 @@ interface AACCardProps {
 const categoryStyles: Record<FitzgeraldCategory, string> = {
   people: 'fitzgerald-yellow',
   verbs: 'fitzgerald-green',
-  descriptors: 'fitzgerald-blue',
-  social: 'fitzgerald-pink',
+  descriptors: 'fitzgerald-pink',
+  social: 'fitzgerald-blue',
 };
 
 const sizeStyles = {

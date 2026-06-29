@@ -114,6 +114,19 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className, isCu
 
   const gridCols = currentBoard.gridSize.cols;
 
+  // Fitzgerald column order. With RTL + column flow the first group lands on the
+  // right, so: intentions/social → verbs → nouns → adjectives (right to left).
+  const categoryOrder: Record<AACCell['category'], number> = {
+    social: 0,
+    verbs: 1,
+    people: 2,
+    descriptors: 3,
+  };
+  const orderedCells = [...currentBoard.cells].sort(
+    (a, b) => categoryOrder[a.category] - categoryOrder[b.category],
+  );
+  const gridRows = Math.max(1, Math.ceil(orderedCells.length / gridCols));
+
   return (
     <div className={cn('flex flex-col gap-4', className)}>
       {/* Navigation Header */}
@@ -194,10 +207,12 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className, isCu
           !isTransitioning && 'opacity-100 scale-100'
         )}
         style={{
-          gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${gridRows}, minmax(0, 1fr))`,
+          gridAutoFlow: 'column',
+          gridAutoColumns: 'minmax(0, 1fr)',
         }}
       >
-        {currentBoard.cells.map((cell) => (
+        {orderedCells.map((cell) => (
           <AACCard
             key={cell.id}
             text={language === 'he' ? cell.text : cell.textEn}

@@ -1,5 +1,6 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AACCard } from '@/components/aac/AACCard';
+import { FitzgeraldCategory } from '@/types/aac';
 
 const categories = [
   {
@@ -22,7 +23,7 @@ const categories = [
   },
   {
     key: 'descriptors',
-    color: 'fitzgerald-blue',
+    color: 'fitzgerald-pink',
     examples: [
       { text: 'קר', textEn: 'Cold', icon: '❄️' },
       { text: 'גדול', textEn: 'Large', icon: '📏' },
@@ -31,7 +32,7 @@ const categories = [
   },
   {
     key: 'social',
-    color: 'fitzgerald-pink',
+    color: 'fitzgerald-blue',
     examples: [
       { text: 'שלום', textEn: 'Hello', icon: '👋' },
       { text: 'תודה', textEn: 'Thank you', icon: '🙏' },
@@ -74,7 +75,7 @@ export function FitzgeraldKeySection() {
                   <AACCard
                     key={index}
                     text={language === 'he' ? example.text : example.textEn}
-                    category={category.key as any}
+                    category={category.key as FitzgeraldCategory}
                     icon={example.icon}
                     size="sm"
                   />

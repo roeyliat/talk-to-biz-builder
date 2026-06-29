@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ArasaacPicker } from '@/components/aac/ArasaacPicker';
 
 interface BoardReviewEditorProps {
   boards: Record<string, AACBoard>;
@@ -23,18 +24,19 @@ interface BoardReviewEditorProps {
 const fitzgeraldColors: Record<FitzgeraldCategory, string> = {
   people: 'bg-yellow-100 border-yellow-400 text-yellow-900',
   verbs: 'bg-green-100 border-green-400 text-green-900',
-  descriptors: 'bg-blue-100 border-blue-400 text-blue-900',
-  social: 'bg-pink-100 border-pink-400 text-pink-900',
+  descriptors: 'bg-pink-100 border-pink-400 text-pink-900',
+  social: 'bg-blue-100 border-blue-400 text-blue-900',
 };
 
 export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardReviewEditorProps) {
   const { language } = useLanguage();
   const [editableBoards, setEditableBoards] = useState<Record<string, AACBoard>>({ ...boards });
   const [editingCell, setEditingCell] = useState<{ boardId: string; cellId: string } | null>(null);
-  const [editForm, setEditForm] = useState<{ text: string; textEn: string; icon: string; category: FitzgeraldCategory }>({
+  const [editForm, setEditForm] = useState<{ text: string; textEn: string; icon: string; imageUrl?: string; category: FitzgeraldCategory }>({
     text: '',
     textEn: '',
     icon: '',
+    imageUrl: undefined,
     category: 'people',
   });
 
@@ -113,6 +115,7 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
       text: cell.text,
       textEn: cell.textEn,
       icon: cell.icon || '',
+      imageUrl: cell.imageUrl,
       category: cell.category,
     });
   };
@@ -126,7 +129,7 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
         ...prev[editingCell.boardId],
         cells: prev[editingCell.boardId].cells.map(c =>
           c.id === editingCell.cellId
-            ? { ...c, text: editForm.text, textEn: editForm.textEn, icon: editForm.icon, category: editForm.category }
+            ? { ...c, text: editForm.text, textEn: editForm.textEn, icon: editForm.icon, imageUrl: editForm.imageUrl, category: editForm.category }
             : c
         ),
       },
@@ -256,8 +259,8 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
 interface CellCardProps {
   cell: AACCell;
   isEditing: boolean;
-  editForm: { text: string; textEn: string; icon: string; category: FitzgeraldCategory };
-  setEditForm: React.Dispatch<React.SetStateAction<{ text: string; textEn: string; icon: string; category: FitzgeraldCategory }>>;
+  editForm: { text: string; textEn: string; icon: string; imageUrl?: string; category: FitzgeraldCategory };
+  setEditForm: React.Dispatch<React.SetStateAction<{ text: string; textEn: string; icon: string; imageUrl?: string; category: FitzgeraldCategory }>>;
   onEdit: () => void;
   onDelete: () => void;
   onSaveEdit: () => void;
@@ -299,6 +302,15 @@ function CellCard({
           placeholder="🍕"
           className="text-sm text-center"
         />
+        <div className="flex justify-center">
+          <ArasaacPicker
+            imageUrl={editForm.imageUrl}
+            icon={editForm.icon}
+            seedQuery={editForm.textEn || editForm.text}
+            onSelect={(url) => setEditForm(prev => ({ ...prev, imageUrl: url }))}
+            onClear={() => setEditForm(prev => ({ ...prev, imageUrl: undefined }))}
+          />
+        </div>
         <Select
           value={editForm.category}
           onValueChange={(value) => setEditForm(prev => ({ ...prev, category: value as FitzgeraldCategory }))}
@@ -331,7 +343,11 @@ function CellCard({
       fitzgeraldColors[cell.category]
     )}>
       <div className="text-center">
-        <div className="text-2xl mb-1">{cell.icon}</div>
+        {cell.imageUrl ? (
+          <img src={cell.imageUrl} alt="" className="h-10 w-10 mx-auto mb-1 object-contain" />
+        ) : (
+          <div className="text-2xl mb-1">{cell.icon}</div>
+        )}
         <div className="text-sm font-medium truncate">
           {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
         </div>

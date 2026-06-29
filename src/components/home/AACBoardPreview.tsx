@@ -68,11 +68,11 @@ export function AACBoardPreview() {
             <span className="text-muted-foreground">{language === 'he' ? 'פעולות' : 'Verbs'}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-3 w-3 rounded border-2 border-fitzgerald-blue bg-fitzgerald-blue-light" />
+            <div className="h-3 w-3 rounded border-2 border-fitzgerald-pink bg-fitzgerald-pink-light" />
             <span className="text-muted-foreground">{language === 'he' ? 'תיאורים' : 'Descriptors'}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-3 w-3 rounded border-2 border-fitzgerald-pink bg-fitzgerald-pink-light" />
+            <div className="h-3 w-3 rounded border-2 border-fitzgerald-blue bg-fitzgerald-blue-light" />
             <span className="text-muted-foreground">{language === 'he' ? 'חברתי' : 'Social'}</span>
           </div>
         </div>

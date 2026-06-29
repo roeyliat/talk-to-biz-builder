@@ -113,6 +113,7 @@ const CreateBoard = () => {
               textEn: item.textEn,
               category: item.category,
               icon: item.icon,
+              imageUrl: item.imageUrl,
             });
           }
         });
@@ -140,6 +141,7 @@ const CreateBoard = () => {
             textEn: item.textEn,
             category: item.category,
             icon: item.icon,
+            imageUrl: item.imageUrl,
           }));
           
           customBoards[subBoardId] = {

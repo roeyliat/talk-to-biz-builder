@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { enrichMenuWithArasaac } from "../_shared/arasaac.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -127,22 +128,22 @@ serve(async (req) => {
       .trim()
       .substring(0, 50000); // Limit for AI processing
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("Configuration error: LOVABLE_API_KEY is not set");
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    if (!GROQ_API_KEY) {
+      console.error("Configuration error: GROQ_API_KEY is not set");
+      throw new Error("GROQ_API_KEY is not configured");
     }
 
     console.log(`Processing menu content with AI for user ${user.id}...`);
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "llama-3.3-70b-versatile",
         messages: [
           {
             role: "system",
@@ -275,6 +276,9 @@ ${textContent}`
 
     const menuData = JSON.parse(toolCall.function.arguments);
     console.log(`Menu data parsed successfully for user ${user.id}: ${menuData.businessName}, ${menuData.categories?.length || 0} categories`);
+
+    // Attach free ARASAAC pictograms to each item where available.
+    await enrichMenuWithArasaac(menuData);
 
     return new Response(
       JSON.stringify({ success: true, data: menuData }),

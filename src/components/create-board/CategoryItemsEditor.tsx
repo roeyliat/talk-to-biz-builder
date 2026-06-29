@@ -17,12 +17,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { ArasaacPicker } from '@/components/aac/ArasaacPicker';
 
 export interface MenuItem {
   id: string;
   text: string;
   textEn: string;
   icon: string;
+  imageUrl?: string;
   category: FitzgeraldCategory;
 }
 
@@ -45,8 +47,8 @@ interface CategoryItemsEditorProps {
 const fitzgeraldColors: Record<FitzgeraldCategory, { bg: string; border: string }> = {
   people: { bg: 'bg-yellow-100', border: 'border-yellow-400' },
   verbs: { bg: 'bg-green-100', border: 'border-green-400' },
-  descriptors: { bg: 'bg-blue-100', border: 'border-blue-400' },
-  social: { bg: 'bg-pink-100', border: 'border-pink-400' },
+  descriptors: { bg: 'bg-pink-100', border: 'border-pink-400' },
+  social: { bg: 'bg-blue-100', border: 'border-blue-400' },
 };
 
 const commonEmojis = ['☕', '🍕', '🍔', '🥗', '🍦', '🧁', '🥐', '🍝', '🍜', '🥩', '🍰', '🍪', '💊', '🩹', '📦', '🛒'];
@@ -375,6 +377,13 @@ function ItemRow({ item, onUpdate, onDelete, t }: ItemRowProps) {
       fitzgeraldColors[item.category].bg,
       fitzgeraldColors[item.category].border
     )}>
+      <ArasaacPicker
+        imageUrl={item.imageUrl}
+        icon={item.icon}
+        seedQuery={item.textEn || item.text}
+        onSelect={(imageUrl) => onUpdate({ imageUrl })}
+        onClear={() => onUpdate({ imageUrl: undefined })}
+      />
       <Select value={item.icon} onValueChange={(icon) => onUpdate({ icon })}>
         <SelectTrigger className="w-14 h-10 bg-white/80">
           <SelectValue>{item.icon}</SelectValue>

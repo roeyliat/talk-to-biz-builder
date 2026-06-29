@@ -9,33 +9,12 @@ import { useToast } from '@/hooks/use-toast';
 export function Header() {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const { user, isGuest, signInAsGuest, signOut, loading } = useAuth();
+  const { user, isGuest, signOut, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const toggleLanguage = () => {
     setLanguage(language === 'he' ? 'en' : 'he');
-  };
-
-  const handleGuestLogin = async () => {
-    setIsLoggingIn(true);
-    const { error } = await signInAsGuest();
-    setIsLoggingIn(false);
-    
-    if (error) {
-      toast({
-        title: language === 'he' ? 'שגיאה' : 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: language === 'he' ? 'ברוך הבא!' : 'Welcome!',
-        description: language === 'he' ? 'התחברת כאורח' : 'You are now signed in as a guest',
-      });
-      navigate('/dashboard');
-    }
   };
 
   const handleSignOut = async () => {
@@ -119,13 +98,9 @@ export function Header() {
                 <Button 
                   size="sm" 
                   className="hidden md:inline-flex"
-                  onClick={handleGuestLogin}
-                  disabled={isLoggingIn}
+                  onClick={() => navigate('/auth')}
                 >
-                  {isLoggingIn 
-                    ? (language === 'he' ? 'מתחבר...' : 'Connecting...') 
-                    : (language === 'he' ? 'התנסות כאורח' : 'Try as Guest')
-                  }
+                  {language === 'he' ? 'התחברות' : 'Login'}
                 </Button>
               )}
             </>
@@ -189,13 +164,12 @@ export function Header() {
                   ) : (
                     <Button 
                       size="sm" 
-                      onClick={handleGuestLogin}
-                      disabled={isLoggingIn}
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        navigate('/auth');
+                      }}
                     >
-                      {isLoggingIn 
-                        ? (language === 'he' ? 'מתחבר...' : 'Connecting...') 
-                        : (language === 'he' ? 'התנסות כאורח' : 'Try as Guest')
-                      }
+                      {language === 'he' ? 'התחברות' : 'Login'}
                     </Button>
                   )}
                 </>

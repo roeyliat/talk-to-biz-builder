@@ -55,8 +55,8 @@ export function CustomerModeOverlay({ cell, onClose }: CustomerModeOverlayProps)
             'transition-all duration-300',
             cell.category === 'people' && 'border-[hsl(var(--fitzgerald-yellow))]',
             cell.category === 'verbs' && 'border-[hsl(var(--fitzgerald-green))]',
-            cell.category === 'descriptors' && 'border-[hsl(var(--fitzgerald-blue))]',
-            cell.category === 'social' && 'border-[hsl(var(--fitzgerald-pink))]',
+            cell.category === 'descriptors' && 'border-[hsl(var(--fitzgerald-pink))]',
+            cell.category === 'social' && 'border-[hsl(var(--fitzgerald-blue))]',
             // Speaking animation
             isSpeaking && 'ring-4 ring-primary/50 animate-pulse shadow-primary/20 shadow-xl',
           )}
