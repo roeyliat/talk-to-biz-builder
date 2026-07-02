@@ -30,7 +30,7 @@ const Dashboard = () => {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [savedBoards, setSavedBoards] = useState<SavedBoardRecord[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<SavedBoardRecord | null>(null);
-  
+
   useEffect(() => {
     let isMounted = true;
 
@@ -55,7 +55,7 @@ const Dashboard = () => {
       isMounted = false;
     };
   }, [authLoading, user, isGuest]);
-
+  
   const handleOpenExport = (board: SavedBoardRecord) => {
     setSelectedBoard(board);
     setExportModalOpen(true);

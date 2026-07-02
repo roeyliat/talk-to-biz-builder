@@ -39,13 +39,18 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
-            T
-          </div>
-          <span className="font-bold text-xl text-foreground">
-            TalkBiz
-          </span>
-        </Link>
+  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary overflow-hidden">
+    <img
+      src="/favicon.png"
+      alt="TalkBiz Logo"
+      className="h-full w-full object-cover"
+    />
+  </div>
+
+  <span className="font-bold text-xl text-foreground">
+    TalkBiz
+  </span>
+</Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">

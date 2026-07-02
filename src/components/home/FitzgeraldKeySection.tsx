@@ -75,6 +75,7 @@ export function FitzgeraldKeySection() {
                   <AACCard
                     key={index}
                     text={language === 'he' ? example.text : example.textEn}
+                    imageSearchTerms={[example.text, example.textEn]}
                     category={category.key as FitzgeraldCategory}
                     icon={example.icon}
                     size="sm"

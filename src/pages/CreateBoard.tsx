@@ -484,6 +484,7 @@ const CreateBoard = () => {
                         <AACCard
                           key={index}
                           text={language === 'he' ? card.text : card.textEn}
+                          imageSearchTerms={[card.text, card.textEn]}
                           category={card.category}
                           icon={card.icon}
                           size="sm"

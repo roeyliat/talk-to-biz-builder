@@ -6,6 +6,8 @@ import { AACBoard as AACBoardType } from '@/types/aac';
 import { getSavedBoardById, updateSavedBoardBoards } from '@/lib/savedBoards';
 import { useAuth } from '@/hooks/useAuth';
 
+const shouldUseLatestBusinessTemplate = (businessType: BusinessType) => businessType === 'iceCream';
+
 const AACBoard = () => {
   const { boardId } = useParams();
   const [searchParams] = useSearchParams();
@@ -20,6 +22,18 @@ const AACBoard = () => {
 
     const loadBoards = async () => {
       if (authLoading) {
+        return;
+      }
+
+      if (shouldUseLatestBusinessTemplate(businessType)) {
+        const latestBoards = getBoardsForBusinessType(businessType);
+        if (isMounted) {
+          setBoards(latestBoards);
+        }
+
+        if (boardId && boardId !== 'custom') {
+          await updateSavedBoardBoards(boardId, latestBoards, user && !isGuest ? user.id : undefined);
+        }
         return;
       }
 
@@ -71,7 +85,7 @@ const AACBoard = () => {
   };
   
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="min-h-screen w-screen overflow-x-hidden">
       <AACDashboard 
         boards={boards}
         rootBoardId="main"

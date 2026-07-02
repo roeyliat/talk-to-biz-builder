@@ -216,6 +216,7 @@ export function AACBoardView({ boards, rootBoardId, onCellClick, className, isCu
           <AACCard
             key={cell.id}
             text={language === 'he' ? cell.text : cell.textEn}
+            imageSearchTerms={[cell.text, cell.textEn]}
             category={cell.category}
             icon={cell.icon}
             imageUrl={cell.imageUrl}

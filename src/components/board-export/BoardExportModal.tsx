@@ -286,6 +286,7 @@ export function BoardExportModal({
                     <AACCard
                       key={index}
                       text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                      imageSearchTerms={[cell.text, cell.textEn]}
                       category={cell.category}
                       icon={cell.icon}
                       size="md"

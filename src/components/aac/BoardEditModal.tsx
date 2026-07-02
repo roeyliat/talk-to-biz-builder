@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { AACCell, FitzgeraldCategory } from '@/types/aac';
 import { cn } from '@/lib/utils';
 import { ArasaacPicker } from '@/components/aac/ArasaacPicker';
+import { useResolvedAacImage } from '@/hooks/useResolvedAacImage';
 
 interface BoardEditModalProps {
   open: boolean;
@@ -41,6 +42,11 @@ export function BoardEditModal({
   const [icon, setIcon] = useState(editingCell?.icon || '😊');
   const [imageUrl, setImageUrl] = useState<string | undefined>(editingCell?.imageUrl);
   const [category, setCategory] = useState<FitzgeraldCategory>(editingCell?.category || 'people');
+  const resolvedPreviewImageUrl = useResolvedAacImage({
+    text,
+    imageUrl,
+    fallbackTerms: [textEn],
+  });
 
   const isEditing = !!editingCell;
 
@@ -221,8 +227,8 @@ export function BoardEditModal({
                 categoryColors[category].bg
               )}
             >
-              {imageUrl ? (
-                <img src={imageUrl} alt="" className="h-10 w-10 object-contain" />
+              {resolvedPreviewImageUrl ? (
+                <img src={resolvedPreviewImageUrl} alt="" className="h-10 w-10 object-contain" />
               ) : (
                 <span className="text-2xl">{icon}</span>
               )}

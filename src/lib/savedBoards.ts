@@ -1,4 +1,5 @@
 import { AACBoard } from '@/types/aac';
+import { normalizeLocalAssetUrl } from '@/lib/localImageCatalog';
 import { supabase } from '@/integrations/supabase/client';
 import { Json, Tables } from '@/integrations/supabase/types';
 
@@ -15,6 +16,12 @@ export interface SavedBoardRecord {
 }
 
 type BoardRecordRow = Tables<'board_records'>;
+
+const toBoardsJson = (boards: Record<string, AACBoard>): Json =>
+  migrateBoardsData(boards) as unknown as Json;
+
+const fromBoardsJson = (boardsData: Json): Record<string, AACBoard> =>
+  migrateBoardsData(boardsData as unknown as Record<string, AACBoard>);
 
 const STORAGE_KEY = 'talktobiz_saved_boards';
 
@@ -36,14 +43,6 @@ const BUSINESS_TYPE_ICONS: Record<string, string> = {
 };
 
 const canUseStorage = () => typeof window !== 'undefined';
-
-const migrateBoardsData = (boardsData: Record<string, AACBoard>) => boardsData;
-
-const toBoardsJson = (boards: Record<string, AACBoard>): Json =>
-  migrateBoardsData(boards) as unknown as Json;
-
-const fromBoardsJson = (boardsData: Json): Record<string, AACBoard> =>
-  migrateBoardsData(boardsData as unknown as Record<string, AACBoard>);
 
 const mapRowToSavedBoardRecord = (row: BoardRecordRow): SavedBoardRecord => ({
   id: row.id,
@@ -82,6 +81,17 @@ const buildRecord = (input: {
   };
 };
 
+const migrateBoardImages = (board: AACBoard): AACBoard => ({
+  ...board,
+  cells: board.cells.map((cell) => ({
+    ...cell,
+    imageUrl: normalizeLocalAssetUrl(cell.imageUrl) ?? cell.imageUrl,
+  })),
+});
+
+const migrateBoardsData = (boardsData: Record<string, AACBoard>) =>
+  Object.fromEntries(Object.entries(boardsData).map(([boardId, board]) => [boardId, migrateBoardImages(board)]));
+
 const getLocalSavedBoards = (): SavedBoardRecord[] => {
   if (!canUseStorage()) {
     return [];
@@ -98,10 +108,16 @@ const getLocalSavedBoards = (): SavedBoardRecord[] => {
       return [];
     }
 
-    return parsed.map((record) => ({
+    const migratedBoards = parsed.map((record) => ({
       ...record,
       boards_data: migrateBoardsData(record.boards_data),
     }));
+
+    if (JSON.stringify(migratedBoards) !== JSON.stringify(parsed)) {
+      writeSavedBoards(migratedBoards);
+    }
+
+    return migratedBoards;
   } catch {
     return [];
   }

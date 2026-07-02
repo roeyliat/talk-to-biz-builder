@@ -64,6 +64,15 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+## Local AAC images
+
+- Add local AAC images to `src/assets/aac-local/`.
+- Name the file after the term you want to match, for example `תות.png`, `strawberry.png`, or `קפה.svg`.
+- The app now scans filenames automatically and uses a local image first.
+- Multi-word labels also work better now, for example `שוקולד צ'יפס`, `אגוז לוז`, or `טעם תות`.
+- If you only have one big collage image with many flavors together, split it into separate files first; matching works per image file.
+- If no local filename matches the AAC label, it falls back to the cloud `ARASAAC` search.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!

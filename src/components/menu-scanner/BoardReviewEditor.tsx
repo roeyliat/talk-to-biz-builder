@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ArasaacPicker } from '@/components/aac/ArasaacPicker';
+import { useResolvedAacImage } from '@/hooks/useResolvedAacImage';
 
 interface BoardReviewEditorProps {
   boards: Record<string, AACBoard>;
@@ -281,6 +282,12 @@ function CellCard({
   language,
   t,
 }: CellCardProps) {
+  const resolvedImageUrl = useResolvedAacImage({
+    text: cell.text,
+    imageUrl: cell.imageUrl,
+    fallbackTerms: [cell.textEn],
+  });
+
   if (isEditing) {
     return (
       <div className="p-3 rounded-xl border-2 border-primary bg-card space-y-2">
@@ -343,8 +350,8 @@ function CellCard({
       fitzgeraldColors[cell.category]
     )}>
       <div className="text-center">
-        {cell.imageUrl ? (
-          <img src={cell.imageUrl} alt="" className="h-10 w-10 mx-auto mb-1 object-contain" />
+        {resolvedImageUrl ? (
+          <img src={resolvedImageUrl} alt="" className="h-10 w-10 mx-auto mb-1 object-contain" />
         ) : (
           <div className="text-2xl mb-1">{cell.icon}</div>
         )}
