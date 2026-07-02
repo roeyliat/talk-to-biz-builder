@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, ArrowRight, Check, Sparkles, Link, Camera } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Sparkles, Link, Camera, Keyboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AACCard } from '@/components/aac/AACCard';
 import { businessPreviewCards, BusinessType, getBoardsForBusinessType, getSupermarketBaseCategories } from '@/data/businessBoards';
@@ -18,6 +18,8 @@ import { BoardReviewEditor } from '@/components/menu-scanner/BoardReviewEditor';
 import { useAuth } from '@/hooks/useAuth';
 import { useMenuScanner } from '@/hooks/useMenuScanner';
 import { CategoryItemsEditor, MenuCategory, MenuItem } from '@/components/create-board/CategoryItemsEditor';
+import { ManualMenuModal } from '@/components/create-board/ManualMenuModal';
+import { convertMenuToBoards, parseManualMenuText } from '@/lib/menuToBoards';
 import { saveBoardRecord } from '@/lib/savedBoards';
 
 const businessTypes = [
@@ -60,6 +62,7 @@ const CreateBoard = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const [showManualMenuModal, setShowManualMenuModal] = useState(false);
   const [showBoardReview, setShowBoardReview] = useState(false);
   
   const { isProcessing, generatedBoards, processMenuUrl, processMenuImage, setGeneratedBoards, reset: resetScanner } = useMenuScanner();
@@ -78,6 +81,40 @@ const CreateBoard = () => {
       case 3: return !!formData.businessName;
       case 4: return true;
       default: return false;
+    }
+  };
+
+  const handleManualMenuSubmit = (menuText: string) => {
+    try {
+      const menuData = parseManualMenuText(menuText, {
+        businessName: formData.businessName,
+        language,
+      });
+
+      if (menuData.categories.length === 0 && (menuData.standaloneItems?.length ?? 0) === 0) {
+        toast({
+          title: language === 'he' ? 'לא נמצא תוכן בתפריט' : 'No menu content found',
+          description: language === 'he'
+            ? 'הוסיפו לפחות קטגוריה אחת או כמה פריטים בתפריט הידני.'
+            : 'Add at least one category or a few items to the manual menu.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const boards = convertMenuToBoards(menuData);
+      setGeneratedBoards(boards);
+      setShowManualMenuModal(false);
+      setShowBoardReview(true);
+    } catch (error) {
+      console.error('Failed to parse manual menu', error);
+      toast({
+        title: language === 'he' ? 'שגיאה בקריאת התפריט' : 'Failed to parse menu',
+        description: language === 'he'
+          ? 'נסו להזין את התפריט שוב, שורה אחת לכל פריט.'
+          : 'Try entering the menu again, one item per line.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -406,11 +443,20 @@ const CreateBoard = () => {
                         <Camera className="h-4 w-4" />
                         {language === 'he' ? 'סריקת תמונה' : 'Scan Image'}
                       </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 gap-2"
+                        onClick={() => setShowManualMenuModal(true)}
+                      >
+                        <Keyboard className="h-4 w-4" />
+                        {language === 'he' ? 'הקלדה ידנית' : 'Type Manually'}
+                      </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       {language === 'he'
-                        ? 'סרקו תפריט מאתר אינטרנט או תמונה - הבינה המלאכותית תחלץ את הפריטים'
-                        : 'Scan a menu from a website or image - AI will extract the items'}
+                        ? 'סרקו תפריט מאתר או תמונה, או הקלידו אותו ידנית - ותוכלו לעבור מיד לעריכה'
+                        : 'Import from a site or image, or type the menu manually and jump straight to editing'}
                     </p>
                   </div>
 
@@ -578,6 +624,13 @@ const CreateBoard = () => {
             setShowBoardReview(true);
           }
         }}
+      />
+
+      <ManualMenuModal
+        open={showManualMenuModal}
+        onClose={() => setShowManualMenuModal(false)}
+        onSubmit={handleManualMenuSubmit}
+        businessName={formData.businessName}
       />
 
       {/* Processing Overlay */}
