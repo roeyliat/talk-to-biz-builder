@@ -9,14 +9,13 @@ import { CustomerModeOverlay } from './CustomerModeOverlay';
 import { VoiceSettingsModal } from '@/components/settings/VoiceSettingsModal';
 import { GuestWatermark } from './GuestWatermark';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X, Settings, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useClickSound } from '@/hooks/useClickSound';
-import { useNavigate } from 'react-router-dom';
 
 const utilityRailCells: AACCell[] = [
   {
@@ -148,7 +147,6 @@ export function AACDashboard({
   const { toast } = useToast();
   const { isGuest } = useAuth();
   const { playClickSound } = useClickSound();
-  const navigate = useNavigate();
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   
   const [navState, setNavState] = useState<BoardNavigationState>(() =>
@@ -246,10 +244,6 @@ export function AACDashboard({
       setIsTransitioning(false);
     }, 150);
   }, [rootBoardId]);
-
-  const handleReturnToDashboard = useCallback(() => {
-    navigate('/dashboard');
-  }, [navigate]);
 
   const handleCellClick = useCallback((cell: AACCell) => {
     if (isEditMode) return;
@@ -501,16 +495,6 @@ export function AACDashboard({
       {!useIceCreamLayout && (
       <header className="sticky top-16 z-40 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleReturnToDashboard}
-            className="shrink-0 gap-2 border-slate-300 bg-white"
-          >
-            <LayoutGrid className="h-4 w-4" />
-            {language === 'he' ? 'לוח בקרה' : 'Dashboard'}
-          </Button>
-
           {navState.breadcrumbs.length > 0 && (
             <Button
               variant="outline"
@@ -655,19 +639,6 @@ export function AACDashboard({
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-2 md:p-3">
-          {useIceCreamLayout && (
-            <div className="mx-auto mb-3 flex max-w-[1020px] justify-start">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleReturnToDashboard}
-                className="gap-2 border-slate-300 bg-white"
-              >
-                <LayoutGrid className="h-4 w-4" />
-                {language === 'he' ? 'חזרה ללוח בקרה' : 'Back to Dashboard'}
-              </Button>
-            </div>
-          )}
           {useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]">
