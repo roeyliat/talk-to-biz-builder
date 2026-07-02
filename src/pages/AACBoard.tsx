@@ -8,6 +8,20 @@ import { useAuth } from '@/hooks/useAuth';
 
 const shouldUseLatestBusinessTemplate = (businessType: BusinessType) => businessType === 'iceCream';
 
+const shouldRefreshSavedTemplateBoards = (
+  savedBoards: Record<string, AACBoardType>,
+  latestBoards: Record<string, AACBoardType>
+) => {
+  const savedBoardIds = Object.keys(savedBoards);
+  const latestBoardIds = new Set(Object.keys(latestBoards));
+
+  if (savedBoardIds.length === 0) {
+    return false;
+  }
+
+  return savedBoardIds.every((boardId) => latestBoardIds.has(boardId));
+};
+
 const AACBoard = () => {
   const { boardId } = useParams();
   const [searchParams] = useSearchParams();
@@ -22,18 +36,6 @@ const AACBoard = () => {
 
     const loadBoards = async () => {
       if (authLoading) {
-        return;
-      }
-
-      if (shouldUseLatestBusinessTemplate(businessType)) {
-        const latestBoards = getBoardsForBusinessType(businessType);
-        if (isMounted) {
-          setBoards(latestBoards);
-        }
-
-        if (boardId && boardId !== 'custom') {
-          await updateSavedBoardBoards(boardId, latestBoards, user && !isGuest ? user.id : undefined);
-        }
         return;
       }
 
@@ -53,6 +55,20 @@ const AACBoard = () => {
 
       const savedBoard = await getSavedBoardById(boardId, user && !isGuest ? user.id : undefined);
       if (savedBoard) {
+        if (shouldUseLatestBusinessTemplate(businessType)) {
+          const latestBoards = getBoardsForBusinessType(businessType);
+          const shouldRefreshTemplate = shouldRefreshSavedTemplateBoards(savedBoard.boards_data, latestBoards);
+
+          if (shouldRefreshTemplate) {
+            if (isMounted) {
+              setBoards(latestBoards);
+            }
+
+            await updateSavedBoardBoards(boardId!, latestBoards, user && !isGuest ? user.id : undefined);
+            return;
+          }
+        }
+
         if (isMounted) {
           setBoards(savedBoard.boards_data);
         }
