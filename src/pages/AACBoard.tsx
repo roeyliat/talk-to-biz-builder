@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AACDashboard } from '@/components/aac/AACDashboard';
+import { Header } from '@/components/layout/Header';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { AACBoard as AACBoardType } from '@/types/aac';
@@ -101,7 +102,8 @@ const AACBoard = () => {
   };
   
   return (
-    <div className="min-h-screen w-screen overflow-x-hidden">
+    <div className="min-h-screen bg-muted/30">
+      <Header />
       <AACDashboard 
         boards={boards}
         rootBoardId="main"
@@ -109,6 +111,7 @@ const AACBoard = () => {
         showAIUpload={false}
         allowEdit={editMode}
         onBoardsChange={handleBoardsChange}
+        className="min-h-[calc(100vh-4rem)]"
       />
     </div>
   );
