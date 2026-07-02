@@ -207,18 +207,6 @@ const Dashboard = () => {
                 }
               </p>
             </div>
-            <div className="flex gap-3">
-              <Button size="lg" variant="default" onClick={() => setShowScannerModal(true)} className="gap-2">
-                <ScanLine className="h-5 w-5" />
-                {localT.scanMenu}
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/create" className="gap-2">
-                  <Plus className="h-5 w-5" />
-                  {t('dashboard.createNew')}
-                </Link>
-              </Button>
-            </div>
           </div>
 
           {/* Scan Menu CTA Card */}
