@@ -150,7 +150,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
         <div
           className={cn(
             'flex flex-1 self-stretch overflow-hidden',
-            isMockupCard && 'items-start justify-center pt-2 min-h-[112px] md:min-h-[126px]',
+            isMockupCard && 'items-center justify-center pt-1 min-h-[112px] md:min-h-[126px]',
             isRailCard && 'items-start justify-center min-h-[104px] md:min-h-[114px] pt-3',
             isUtilityCard && 'items-start justify-center min-h-[106px] md:min-h-[118px] pt-3',
             !isBoardStyleCard && 'items-center justify-center'
@@ -163,9 +163,9 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               onError={() => setHasImageError(true)}
               className={cn(
                 'max-w-full object-contain transition-transform',
-                isMockupCard && !isLocalCatalogImage && 'h-auto w-full max-h-[170px] object-top -mt-5 md:max-h-[190px] md:-mt-6 scale-[1.08]',
-                isMockupCard && isLocalCatalogImage && !isReducedFlavorImage && 'h-auto w-full max-h-[188px] object-top -mt-8 md:max-h-[208px] md:-mt-9 scale-[1.24]',
-                isMockupCard && isLocalCatalogImage && isReducedFlavorImage && 'h-auto w-[92%] max-h-[132px] object-top -mt-3 md:max-h-[146px] md:-mt-4 scale-[1.08]',
+                isMockupCard && !isLocalCatalogImage && 'h-auto w-full max-h-[150px] object-center md:max-h-[168px] scale-[1.06]',
+                isMockupCard && isLocalCatalogImage && !isReducedFlavorImage && 'h-auto w-full max-h-[164px] object-center md:max-h-[182px] scale-[1.16]',
+                isMockupCard && isLocalCatalogImage && isReducedFlavorImage && 'h-auto w-[92%] max-h-[118px] object-center md:max-h-[130px] scale-[1.04]',
                 isRailCard && !isLocalCatalogImage && 'h-auto w-[78%] max-h-[84px] object-top -mt-1 md:max-h-[92px] scale-[1.02]',
                 isRailCard && isLocalCatalogImage && 'h-auto w-[90%] max-h-[98px] object-top -mt-2 md:max-h-[108px] md:-mt-3 scale-[1.1]',
                 isUtilityCard && !isLocalCatalogImage && 'h-auto w-[80%] max-h-[88px] object-top -mt-1 md:max-h-[96px] scale-[1.04]',
