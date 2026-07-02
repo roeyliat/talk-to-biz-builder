@@ -499,7 +499,7 @@ export function AACDashboard({
     <div className={cn('flex min-h-screen flex-col overflow-x-hidden bg-[#eef2f8] text-base', className)}>
       {/* Top Bar */}
       {!useIceCreamLayout && (
-      <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur-sm">
+      <header className="sticky top-16 z-40 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
