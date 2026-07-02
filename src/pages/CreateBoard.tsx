@@ -15,8 +15,10 @@ import { UrlImportModal } from '@/components/menu-scanner/UrlImportModal';
 import { MenuScannerModal } from '@/components/menu-scanner/MenuScannerModal';
 import { ProcessingOverlay } from '@/components/menu-scanner/ProcessingOverlay';
 import { BoardReviewEditor } from '@/components/menu-scanner/BoardReviewEditor';
+import { useAuth } from '@/hooks/useAuth';
 import { useMenuScanner } from '@/hooks/useMenuScanner';
 import { CategoryItemsEditor, MenuCategory, MenuItem } from '@/components/create-board/CategoryItemsEditor';
+import { saveBoardRecord } from '@/lib/savedBoards';
 
 const businessTypes = [
   { key: 'iceCream', icon: '🍦' },
@@ -46,6 +48,7 @@ const CreateBoard = () => {
   const { t, language, direction } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isGuest } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     businessType: '',
@@ -598,11 +601,13 @@ const CreateBoard = () => {
               sessionStorage.setItem('generatedBoardsName', boards.main?.name || 'Custom Board');
               navigate(`/board/custom?type=${formData.businessType || 'other'}&preview=true`);
             }}
-            onSave={(boards) => {
-              // Save boards and navigate
-              sessionStorage.setItem('generatedBoards', JSON.stringify(boards));
-              sessionStorage.setItem('generatedBoardsType', formData.businessType || 'other');
-              sessionStorage.setItem('generatedBoardsName', boards.main?.name || 'Custom Board');
+            onSave={async (boards) => {
+              const savedBoard = await saveBoardRecord({
+                boards,
+                businessType: formData.businessType || 'other',
+                businessName: boards.main?.name || formData.businessName || 'Custom Board',
+                userId: user && !isGuest ? user.id : undefined,
+              });
               
               setShowBoardReview(false);
               resetScanner();
@@ -614,7 +619,7 @@ const CreateBoard = () => {
                   : 'Redirecting to your board',
               });
               
-              navigate(`/board/custom?type=${formData.businessType || 'other'}&edit=true`);
+              navigate(`/board/${savedBoard.id}?type=${savedBoard.business_type}&edit=true`);
             }}
           />
         </div>

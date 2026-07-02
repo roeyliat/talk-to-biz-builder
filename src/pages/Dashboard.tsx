@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -13,28 +13,8 @@ import { AACDashboard } from '@/components/aac/AACDashboard';
 import { AACBoard } from '@/types/aac';
 import { useToast } from '@/hooks/use-toast';
 import { BoardExportModal } from '@/components/board-export/BoardExportModal';
-import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
-
-const mockBoards = [
-  {
-    id: '1',
-    name: 'גלידריה מתוקה',
-    nameEn: 'Sweet Ice Cream',
-    businessType: 'iceCream',
-    complexity: 2,
-    createdAt: '2024-01-15',
-    icon: '🍦',
-  },
-  {
-    id: '2',
-    name: 'בית קפה הפינה',
-    nameEn: 'Corner Cafe',
-    businessType: 'cafe',
-    complexity: 2,
-    createdAt: '2024-01-10',
-    icon: '☕',
-  },
-];
+import { getSavedBoards, saveBoardRecord, SavedBoardRecord, syncLocalBoardsToCloud } from '@/lib/savedBoards';
+import { useAuth } from '@/hooks/useAuth';
 
 type ViewState = 'dashboard' | 'review' | 'preview';
 
@@ -42,14 +22,41 @@ const Dashboard = () => {
   const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isGuest, loading: authLoading } = useAuth();
   
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [viewState, setViewState] = useState<ViewState>('dashboard');
   const [previewBoards, setPreviewBoards] = useState<Record<string, AACBoard> | null>(null);
   const [exportModalOpen, setExportModalOpen] = useState(false);
-  const [selectedBoard, setSelectedBoard] = useState<typeof mockBoards[0] | null>(null);
+  const [savedBoards, setSavedBoards] = useState<SavedBoardRecord[]>([]);
+  const [selectedBoard, setSelectedBoard] = useState<SavedBoardRecord | null>(null);
   
-  const handleOpenExport = (board: typeof mockBoards[0]) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadBoards = async () => {
+      if (authLoading) {
+        return;
+      }
+
+      if (user && !isGuest) {
+        await syncLocalBoardsToCloud(user.id);
+      }
+
+      const records = await getSavedBoards(user && !isGuest ? user.id : undefined);
+      if (isMounted) {
+        setSavedBoards(records);
+      }
+    };
+
+    void loadBoards();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authLoading, user, isGuest]);
+
+  const handleOpenExport = (board: SavedBoardRecord) => {
     setSelectedBoard(board);
     setExportModalOpen(true);
   };
@@ -73,14 +80,22 @@ const Dashboard = () => {
     reset();
   };
 
-  const handleSaveBoard = (boards: Record<string, AACBoard>) => {
-    // In a full implementation, this would save to the database
+  const handleSaveBoard = async (boards: Record<string, AACBoard>) => {
+    const savedBoard = await saveBoardRecord({
+      boards,
+      businessType: 'other',
+      businessName: boards.main?.name || 'Custom Board',
+      userId: user && !isGuest ? user.id : undefined,
+    });
+
+    setSavedBoards(await getSavedBoards(user && !isGuest ? user.id : undefined));
     toast({
       title: language === 'he' ? 'הלוח נשמר בהצלחה!' : 'Board saved successfully!',
       description: language === 'he' 
         ? 'הלוח החדש נוסף ללוח הבקרה שלך' 
         : 'The new board has been added to your dashboard',
     });
+    setSelectedBoard(savedBoard);
     reset();
     setViewState('dashboard');
   };
@@ -143,7 +158,7 @@ const Dashboard = () => {
           <span className="font-medium text-muted-foreground">
             {language === 'he' ? 'תצוגה מקדימה' : 'Preview Mode'}
           </span>
-          <Button onClick={() => handleSaveBoard(previewBoards)}>
+          <Button onClick={() => void handleSaveBoard(previewBoards)}>
             {language === 'he' ? 'שמור לוח' : 'Save Board'}
           </Button>
         </div>
@@ -165,9 +180,9 @@ const Dashboard = () => {
           open={exportModalOpen}
           onClose={() => setExportModalOpen(false)}
           boardId={selectedBoard.id}
-          boardName={language === 'he' ? selectedBoard.name : selectedBoard.nameEn}
-          businessType={selectedBoard.businessType}
-          boards={getBoardsForBusinessType(selectedBoard.businessType as BusinessType)}
+          boardName={selectedBoard.business_name}
+          businessType={selectedBoard.business_type}
+          boards={selectedBoard.boards_data}
         />
       )}
       
@@ -227,9 +242,9 @@ const Dashboard = () => {
           </div>
 
           {/* Boards Grid */}
-          {mockBoards.length > 0 ? (
+          {savedBoards.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockBoards.map((board) => (
+              {savedBoards.map((board) => (
                 <div
                   key={board.id}
                   className="bg-card rounded-2xl p-6 shadow-sm border border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
@@ -241,10 +256,10 @@ const Dashboard = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-card-foreground">
-                          {language === 'he' ? board.name : board.nameEn}
+                          {board.business_name}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {t(`business.${board.businessType}`)}
+                          {t(`business.${board.business_type}`)}
                         </p>
                       </div>
                     </div>
@@ -256,11 +271,11 @@ const Dashboard = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-1">
                       <LayoutGrid className="h-4 w-4" />
-                      <span>{t(`creator.level${board.complexity}`)}</span>
+                      <span>{Object.keys(board.boards_data).length} {language === 'he' ? 'לוחות' : 'boards'}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <FileText className="h-4 w-4" />
-                      <span>{new Date(board.createdAt).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
+                      <span>{new Date(board.created_at).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US')}</span>
                     </div>
                   </div>
 
@@ -275,13 +290,13 @@ const Dashboard = () => {
                       {language === 'he' ? 'ייצוא' : 'Export'}
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to={`/board/${board.id}?type=${board.businessType}&edit=true`} className="gap-1">
+                      <Link to={`/board/${board.id}?type=${board.business_type}&edit=true`} className="gap-1">
                         <Settings className="h-3.5 w-3.5" />
                         {language === 'he' ? 'עריכה' : 'Edit'}
                       </Link>
                     </Button>
                     <Button size="sm" className="flex-1" asChild>
-                      <Link to={`/board/${board.id}?type=${board.businessType}`}>
+                      <Link to={`/board/${board.id}?type=${board.business_type}`}>
                         {language === 'he' ? 'תצוגה' : 'View'}
                       </Link>
                     </Button>

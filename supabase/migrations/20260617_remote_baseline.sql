@@ -1,0 +1,3 @@
+-- Baseline placeholder for existing remote migration version 20260617.
+-- The linked Supabase project already has this migration recorded remotely.
+-- This file keeps local migration history aligned so newer migrations can be pushed.
