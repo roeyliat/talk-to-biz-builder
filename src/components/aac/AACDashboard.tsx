@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AACBoard, AACCell, BoardNavigationState } from '@/types/aac';
 import { AACCard } from './AACCard';
@@ -117,6 +117,9 @@ const buildInitialNavState = (
   };
 };
 
+const isBuiltInIceCreamBoardSet = (activeBoards: Record<string, AACBoard>) =>
+  ['ice-cream-type', 'flavors-cup', 'flavors-cone'].every((boardId) => Boolean(activeBoards[boardId]));
+
 export function AACDashboard({ 
   boards,
   rootBoardId = 'main',
@@ -156,6 +159,19 @@ export function AACDashboard({
 
   const currentBoard = activeBoards[navState.currentBoardId];
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
+
+  useEffect(() => {
+    const nextBoards = boards ? { ...boards } : { ...getBoardsForBusinessType(businessType) };
+    setLocalBoards(nextBoards);
+
+    setNavState((prev) => {
+      if (nextBoards[prev.currentBoardId]) {
+        return prev;
+      }
+
+      return buildInitialNavState(nextBoards, businessType, rootBoardId);
+    });
+  }, [boards, businessType, rootBoardId]);
 
   const updateBoards = useCallback((newBoards: Record<string, AACBoard>) => {
     setLocalBoards(newBoards);
@@ -388,7 +404,10 @@ export function AACDashboard({
       : language === 'he'
         ? 'בחירה נוספת'
         : 'Another choice';
-  const useIceCreamReferenceLayout = businessType === 'iceCream' && ['flavors-cup', 'flavors-cone'].includes(navState.currentBoardId);
+  const useIceCreamReferenceLayout =
+    businessType === 'iceCream' &&
+    isBuiltInIceCreamBoardSet(activeBoards) &&
+    ['flavors-cup', 'flavors-cone'].includes(navState.currentBoardId);
   const iceCreamPrompt = language === 'he' ? 'בחר טעם גלידה' : 'Choose Ice Cream Flavor';
   const iceCreamTitle = language === 'he' ? 'גלידריה' : 'Ice Cream Shop';
   const iceCreamFlavorCards = displayGridCells.slice(0, 15);
