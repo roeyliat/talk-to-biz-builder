@@ -163,9 +163,9 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               onError={() => setHasImageError(true)}
               className={cn(
                 'max-w-full object-contain transition-transform',
-                isMockupCard && !isLocalCatalogImage && 'h-auto w-[82%] max-h-[118px] object-top -mt-3 md:max-h-[132px] md:-mt-4 scale-[1.02]',
-                isMockupCard && isLocalCatalogImage && !isReducedFlavorImage && 'h-auto w-[95%] max-h-[142px] object-top -mt-5 md:max-h-[158px] md:-mt-6 scale-[1.15]',
-                isMockupCard && isLocalCatalogImage && isReducedFlavorImage && 'h-auto w-[48%] max-h-[68px] object-top mt-1 md:max-h-[76px] md:mt-0 scale-100',
+                isMockupCard && !isLocalCatalogImage && 'h-auto w-full max-h-[170px] object-top -mt-5 md:max-h-[190px] md:-mt-6 scale-[1.08]',
+                isMockupCard && isLocalCatalogImage && !isReducedFlavorImage && 'h-auto w-full max-h-[188px] object-top -mt-8 md:max-h-[208px] md:-mt-9 scale-[1.24]',
+                isMockupCard && isLocalCatalogImage && isReducedFlavorImage && 'h-auto w-[92%] max-h-[132px] object-top -mt-3 md:max-h-[146px] md:-mt-4 scale-[1.08]',
                 isRailCard && !isLocalCatalogImage && 'h-auto w-[78%] max-h-[84px] object-top -mt-1 md:max-h-[92px] scale-[1.02]',
                 isRailCard && isLocalCatalogImage && 'h-auto w-[90%] max-h-[98px] object-top -mt-2 md:max-h-[108px] md:-mt-3 scale-[1.1]',
                 isUtilityCard && !isLocalCatalogImage && 'h-auto w-[80%] max-h-[88px] object-top -mt-1 md:max-h-[96px] scale-[1.04]',
