@@ -120,6 +120,13 @@ const buildInitialNavState = (
 const isBuiltInIceCreamBoardSet = (activeBoards: Record<string, AACBoard>) =>
   ['ice-cream-type', 'flavors-cup', 'flavors-cone'].every((boardId) => Boolean(activeBoards[boardId]));
 
+const normalizeCategoryLabel = (value: string) => value.trim().replace(/[:：]/g, '').toLowerCase();
+
+const matchesAnyLabel = (value: string, labels: string[]) => {
+  const normalizedValue = normalizeCategoryLabel(value);
+  return labels.some((label) => normalizedValue.includes(normalizeCategoryLabel(label)));
+};
+
 export function AACDashboard({ 
   boards,
   rootBoardId = 'main',
@@ -408,8 +415,54 @@ export function AACDashboard({
     businessType === 'iceCream' &&
     isBuiltInIceCreamBoardSet(activeBoards) &&
     ['flavors-cup', 'flavors-cone'].includes(navState.currentBoardId);
+  const manualIceCreamSections = useMemo(() => {
+    if (businessType !== 'iceCream' || navState.currentBoardId !== rootBoardId) {
+      return null;
+    }
+
+    const linkedBoards = currentBoard.cells
+      .filter((cell) => cell.linkToBoardId && activeBoards[cell.linkToBoardId])
+      .map((cell) => {
+        const linkedBoard = activeBoards[cell.linkToBoardId!];
+        return {
+          cell,
+          board: linkedBoard,
+          label: linkedBoard ? linkedBoard.name : cell.text,
+        };
+      });
+
+    const servingSection = linkedBoards.find(({ label, cell }) =>
+      matchesAnyLabel(label, ['איך תרצה', 'איך אתה רוצה', 'סוג הגשה', 'כמות', 'גביע', 'כוס']) ||
+      matchesAnyLabel(cell.text, ['איך תרצה', 'איך אתה רוצה', 'סוג הגשה', 'כמות', 'גביע', 'כוס'])
+    );
+    const flavorsSection = linkedBoards.find(({ label, cell }) =>
+      matchesAnyLabel(label, ['טעמים', 'טעם', 'בחר טעם']) ||
+      matchesAnyLabel(cell.text, ['טעמים', 'טעם', 'בחר טעם'])
+    );
+    const toppingsSection = linkedBoards.find(({ label, cell }) =>
+      matchesAnyLabel(label, ['תוספות', 'תוספת']) ||
+      matchesAnyLabel(cell.text, ['תוספות', 'תוספת'])
+    );
+
+    if (!servingSection && !flavorsSection && !toppingsSection) {
+      return null;
+    }
+
+    return {
+      serving: servingSection?.board.cells ?? [],
+      flavors: flavorsSection?.board.cells ?? [],
+      toppings: toppingsSection?.board.cells ?? [],
+      labels: {
+        serving: servingSection?.label ?? (language === 'he' ? 'איך תרצה?' : 'How would you like it?'),
+        flavors: flavorsSection?.label ?? (language === 'he' ? 'בחר טעם גלידה' : 'Choose a flavor'),
+        toppings: toppingsSection?.label ?? (language === 'he' ? 'תוספות' : 'Toppings'),
+      },
+    };
+  }, [activeBoards, businessType, currentBoard.cells, language, navState.currentBoardId, rootBoardId]);
+  const useManualIceCreamLayout = businessType === 'iceCream' && Boolean(manualIceCreamSections);
+  const useIceCreamLayout = useIceCreamReferenceLayout || useManualIceCreamLayout;
   const iceCreamPrompt = language === 'he' ? 'בחר טעם גלידה' : 'Choose Ice Cream Flavor';
-  const iceCreamTitle = language === 'he' ? 'גלידריה' : 'Ice Cream Shop';
+  const iceCreamTitle = boardTitle || (language === 'he' ? 'גלידריה' : 'Ice Cream Shop');
   const iceCreamFlavorCards = displayGridCells.slice(0, 15);
   const iceCreamRailVisuals: Record<string, { top?: string; center?: string; bottom?: string; accent?: string }> = {
     'utility-need': { center: '🙂☝️' },
@@ -445,7 +498,7 @@ export function AACDashboard({
   return (
     <div className={cn('flex min-h-screen flex-col overflow-x-hidden bg-[#eef2f8] text-base', className)}>
       {/* Top Bar */}
-      {!useIceCreamReferenceLayout && (
+      {!useIceCreamLayout && (
       <header className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Button
@@ -569,7 +622,7 @@ export function AACDashboard({
       )}
 
       {/* Customer Mode Indicator Bar */}
-      {isCustomerMode && !isEditMode && !useIceCreamReferenceLayout && (
+      {isCustomerMode && !isEditMode && !useIceCreamLayout && (
         <div className="flex items-center justify-center gap-2 border-b border-green-600/30 bg-green-600/20 px-3 py-2">
           <MessageCircle className="h-5 w-5 text-green-700" />
           <p className="text-sm text-green-800 dark:text-green-300 font-medium">
@@ -581,7 +634,7 @@ export function AACDashboard({
       )}
 
       {/* Edit Mode Bar */}
-      {isEditMode && !useIceCreamReferenceLayout && (
+      {isEditMode && !useIceCreamLayout && (
         <div className="flex items-center justify-between gap-3 border-b border-primary/20 bg-primary/10 px-3 py-2">
           <p className="text-sm text-primary font-medium">
             {language === 'he' 
@@ -602,7 +655,7 @@ export function AACDashboard({
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         <main className="flex-1 overflow-x-hidden overflow-y-auto p-2 md:p-3">
-          {useIceCreamReferenceLayout && (
+          {useIceCreamLayout && (
             <div className="mx-auto mb-3 flex max-w-[1020px] justify-start">
               <Button
                 variant="outline"
@@ -615,7 +668,7 @@ export function AACDashboard({
               </Button>
             </div>
           )}
-          {useIceCreamReferenceLayout ? (
+          {useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]">
                 <section className="space-y-3">
@@ -633,35 +686,133 @@ export function AACDashboard({
                     </div>
                   </div>
 
-                  <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
-                    <div className="mb-3 text-center">
-                      <h2 className="text-[1.85rem] font-extrabold text-slate-900">
-                        {iceCreamPrompt}
-                      </h2>
-                    </div>
+                  {useManualIceCreamLayout && manualIceCreamSections ? (
+                    <>
+                      <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
+                        <div className="mb-3 text-center">
+                          <h2 className="text-[1.85rem] font-extrabold text-slate-900">
+                            {manualIceCreamSections.labels.serving}
+                          </h2>
+                        </div>
 
-                    <div className="grid grid-cols-5 gap-2.5 md:gap-3">
-                      {iceCreamFlavorCards.map((cell) => (
-                        <AACCard
-                          key={cell.id}
-                          text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
-                          imageSearchTerms={[cell.text, cell.textEn]}
-                          category={cell.category}
-                          icon={cell.icon}
-                          imageUrl={cell.imageUrl}
-                          isFolder={false}
-                          onClick={() => handleCellClick(cell)}
-                          size="lg"
-                          variant="mockup"
-                          labelPosition="top"
-                          isEditMode={isEditMode}
-                          isSpeaking={speakingCellId === cell.id}
-                          onDelete={() => handleDeleteCell(cell.id)}
-                          onEdit={() => handleEditCell(cell)}
-                          className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
-                        />
-                      ))}
+                        <div className={cn('grid gap-3', manualIceCreamSections.serving.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
+                          {manualIceCreamSections.serving.map((cell) => (
+                            <AACCard
+                              key={cell.id}
+                              text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                              imageSearchTerms={[cell.text, cell.textEn]}
+                              category={cell.category}
+                              icon={cell.icon}
+                              imageUrl={cell.imageUrl}
+                              isFolder={false}
+                              onClick={() => handleCellClick(cell)}
+                              size="lg"
+                              variant="mockup"
+                              labelPosition="top"
+                              isEditMode={isEditMode}
+                              isSpeaking={speakingCellId === cell.id}
+                              onDelete={() => handleDeleteCell(cell.id)}
+                              onEdit={() => handleEditCell(cell)}
+                              className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
+                        <div className="mb-3 text-center">
+                          <h2 className="text-[1.85rem] font-extrabold text-slate-900">
+                            {manualIceCreamSections.labels.flavors}
+                          </h2>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-2.5 md:gap-3">
+                          {manualIceCreamSections.flavors.map((cell) => (
+                            <AACCard
+                              key={cell.id}
+                              text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                              imageSearchTerms={[cell.text, cell.textEn]}
+                              category={cell.category}
+                              icon={cell.icon}
+                              imageUrl={cell.imageUrl}
+                              isFolder={false}
+                              onClick={() => handleCellClick(cell)}
+                              size="lg"
+                              variant="mockup"
+                              labelPosition="top"
+                              isEditMode={isEditMode}
+                              isSpeaking={speakingCellId === cell.id}
+                              onDelete={() => handleDeleteCell(cell.id)}
+                              onEdit={() => handleEditCell(cell)}
+                              className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
+                        <div className="mb-3 text-center">
+                          <h2 className="text-[1.85rem] font-extrabold text-slate-900">
+                            {manualIceCreamSections.labels.toppings}
+                          </h2>
+                        </div>
+
+                        <div className={cn('grid gap-3', manualIceCreamSections.toppings.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
+                          {manualIceCreamSections.toppings.map((cell) => (
+                            <AACCard
+                              key={cell.id}
+                              text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                              imageSearchTerms={[cell.text, cell.textEn]}
+                              category={cell.category}
+                              icon={cell.icon}
+                              imageUrl={cell.imageUrl}
+                              isFolder={false}
+                              onClick={() => handleCellClick(cell)}
+                              size="lg"
+                              variant="mockup"
+                              labelPosition="top"
+                              isEditMode={isEditMode}
+                              isSpeaking={speakingCellId === cell.id}
+                              onDelete={() => handleDeleteCell(cell.id)}
+                              onEdit={() => handleEditCell(cell)}
+                              className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
+                      <div className="mb-3 text-center">
+                        <h2 className="text-[1.85rem] font-extrabold text-slate-900">
+                          {iceCreamPrompt}
+                        </h2>
+                      </div>
+
+                      <div className="grid grid-cols-5 gap-2.5 md:gap-3">
+                        {iceCreamFlavorCards.map((cell) => (
+                          <AACCard
+                            key={cell.id}
+                            text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                            imageSearchTerms={[cell.text, cell.textEn]}
+                            category={cell.category}
+                            icon={cell.icon}
+                            imageUrl={cell.imageUrl}
+                            isFolder={false}
+                            onClick={() => handleCellClick(cell)}
+                            size="lg"
+                            variant="mockup"
+                            labelPosition="top"
+                            isEditMode={isEditMode}
+                            isSpeaking={speakingCellId === cell.id}
+                            onDelete={() => handleDeleteCell(cell.id)}
+                            onEdit={() => handleEditCell(cell)}
+                            className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                          />
+                        ))}
+                      </div>
                     </div>
+                  )}
 
                     <div className="mt-3 grid gap-2.5 md:grid-cols-[1fr_1.45fr]">
                       <button
@@ -681,21 +832,23 @@ export function AACDashboard({
                         <Check className="h-8 w-8 text-emerald-600" />
                       </button>
                     </div>
-                  </div>
+                  
 
-                  <div className="grid gap-2.5 md:grid-cols-3">
-                    {iceCreamCategoryButtons.map((button) => (
-                      <button
-                        key={button.id}
-                        type="button"
-                        onClick={button.onClick}
-                        className="flex min-h-[74px] flex-col items-center justify-center rounded-[16px] border-[2.5px] border-[#c6cfdd] bg-white px-4 py-2 text-lg font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]"
-                      >
-                        <span className="mb-1">{button.label}</span>
-                        <span className="text-[2rem] leading-none" aria-hidden="true">{button.icon}</span>
-                      </button>
-                    ))}
-                  </div>
+                  {!useManualIceCreamLayout && (
+                    <div className="grid gap-2.5 md:grid-cols-3">
+                      {iceCreamCategoryButtons.map((button) => (
+                        <button
+                          key={button.id}
+                          type="button"
+                          onClick={button.onClick}
+                          className="flex min-h-[74px] flex-col items-center justify-center rounded-[16px] border-[2.5px] border-[#c6cfdd] bg-white px-4 py-2 text-lg font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]"
+                        >
+                          <span className="mb-1">{button.label}</span>
+                          <span className="text-[2rem] leading-none" aria-hidden="true">{button.icon}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="grid gap-2.5 md:grid-cols-5">
                     <button
@@ -791,34 +944,34 @@ export function AACDashboard({
               <section className="flex min-h-0 flex-col space-y-3">
                 <div className={cn(
                   'border-[3px] border-[#30497a] bg-white text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',
-                  useIceCreamReferenceLayout ? 'rounded-[18px] px-4 py-3 md:px-6 md:py-4' : 'rounded-[22px] px-4 py-3 md:px-5'
+                  useIceCreamLayout ? 'rounded-[18px] px-4 py-3 md:px-6 md:py-4' : 'rounded-[22px] px-4 py-3 md:px-5'
                 )}>
                   <div className="flex items-center justify-center gap-3">
                     <img
                       src="/aac-local/ice-cream.svg"
                       alt=""
                       aria-hidden="true"
-                      className={cn('h-10 w-10 object-contain', useIceCreamReferenceLayout && 'h-14 w-14')}
+                      className={cn('h-10 w-10 object-contain', useIceCreamLayout && 'h-14 w-14')}
                     />
                     <h1 className={cn(
                       'font-extrabold tracking-tight text-slate-900',
-                      useIceCreamReferenceLayout ? 'text-3xl md:text-[3.1rem]' : 'text-xl md:text-[2rem]'
+                      useIceCreamLayout ? 'text-3xl md:text-[3.1rem]' : 'text-xl md:text-[2rem]'
                     )}>
-                      {useIceCreamReferenceLayout ? iceCreamTitle : boardTitle}
+                      {useIceCreamLayout ? iceCreamTitle : boardTitle}
                     </h1>
                   </div>
                 </div>
 
                 <div className={cn(
                   'flex min-h-0 flex-1 flex-col border-[3px] border-[#30497a] bg-white',
-                  useIceCreamReferenceLayout ? 'rounded-[18px] p-3' : 'rounded-[22px] p-3 md:p-3.5'
+                  useIceCreamLayout ? 'rounded-[18px] p-3' : 'rounded-[22px] p-3 md:p-3.5'
                 )}>
                   <div className="mb-3 text-center">
                     <h2 className={cn(
                       'font-extrabold text-slate-800',
-                      useIceCreamReferenceLayout ? 'text-lg md:text-[1.95rem]' : 'text-base md:text-xl'
+                      useIceCreamLayout ? 'text-lg md:text-[1.95rem]' : 'text-base md:text-xl'
                     )}>
-                      {useIceCreamReferenceLayout ? iceCreamPrompt : language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
+                      {useIceCreamLayout ? iceCreamPrompt : language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
                     </h2>
                   </div>
 
@@ -829,10 +982,10 @@ export function AACDashboard({
                       !isTransitioning && 'scale-100 opacity-100'
                     )}
                     style={{
-                      gridTemplateColumns: `repeat(${useIceCreamReferenceLayout ? 5 : effectiveGridCols}, minmax(0, 1fr))`,
+                      gridTemplateColumns: `repeat(${useIceCreamLayout ? 5 : effectiveGridCols}, minmax(0, 1fr))`,
                     }}
                   >
-                    {(useIceCreamReferenceLayout ? iceCreamFlavorCards : displayGridCells).map((cell) => (
+                    {(useIceCreamLayout ? iceCreamFlavorCards : displayGridCells).map((cell) => (
                       <AACCard
                         key={cell.id}
                         text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -840,7 +993,7 @@ export function AACDashboard({
                         category={cell.category}
                         icon={cell.icon}
                         imageUrl={cell.imageUrl}
-                        isFolder={useIceCreamReferenceLayout ? false : !!cell.linkToBoardId}
+                        isFolder={useIceCreamLayout ? false : !!cell.linkToBoardId}
                         onClick={() => handleCellClick(cell)}
                         size="lg"
                         variant="mockup"
@@ -850,7 +1003,7 @@ export function AACDashboard({
                         onDelete={() => handleDeleteCell(cell.id)}
                         onEdit={() => handleEditCell(cell)}
                         className={cn(
-                          useIceCreamReferenceLayout
+                          useIceCreamLayout
                             ? 'min-h-[102px] rounded-[12px] px-2 py-2 md:min-h-[114px]'
                             : 'min-h-[106px] rounded-[16px] px-2 py-2 md:min-h-[118px]'
                         )}
@@ -858,7 +1011,7 @@ export function AACDashboard({
                     ))}
                   </div>
 
-                  {useIceCreamReferenceLayout ? (
+                  {useIceCreamLayout ? (
                     <div className="mt-3 grid gap-2.5 md:grid-cols-[1fr_1.45fr]">
                       <button
                         type="button"
@@ -920,7 +1073,7 @@ export function AACDashboard({
                   </div>
                 )}
 
-                <div className={cn('grid gap-2.5', useIceCreamReferenceLayout ? 'md:grid-cols-5' : 'md:grid-cols-5')}>
+                <div className={cn('grid gap-2.5', useIceCreamLayout ? 'md:grid-cols-5' : 'md:grid-cols-5')}>
                   <button
                     type="button"
                     onClick={clearSelectedWords}
@@ -932,19 +1085,19 @@ export function AACDashboard({
                   <button
                     type="button"
                     onClick={selectedWords.length > 0 ? speakAllWords : undefined}
-                    disabled={!useIceCreamReferenceLayout && (selectedWords.length === 0 || isSpeaking)}
+                    disabled={!useIceCreamLayout && (selectedWords.length === 0 || isSpeaking)}
                     className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)] disabled:opacity-50"
                   >
-                    {useIceCreamReferenceLayout ? <Check className="h-6 w-6 text-emerald-600" /> : <Volume2 className={cn('h-5 w-5', isSpeaking && 'animate-pulse')} />}
-                    {useIceCreamReferenceLayout ? (language === 'he' ? 'כן' : 'Yes') : language === 'he' ? 'השמע' : 'Speak'}
+                    {useIceCreamLayout ? <Check className="h-6 w-6 text-emerald-600" /> : <Volume2 className={cn('h-5 w-5', isSpeaking && 'animate-pulse')} />}
+                    {useIceCreamLayout ? (language === 'he' ? 'כן' : 'Yes') : language === 'he' ? 'השמע' : 'Speak'}
                   </button>
                   <button
                     type="button"
-                    onClick={useIceCreamReferenceLayout ? clearSelectedWords : () => setIsCustomerMode((prev) => !prev)}
+                    onClick={useIceCreamLayout ? clearSelectedWords : () => setIsCustomerMode((prev) => !prev)}
                     className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
                   >
-                    {useIceCreamReferenceLayout ? <X className="h-6 w-6 text-rose-500" /> : <MessageCircle className="h-5 w-5" />}
-                    {useIceCreamReferenceLayout ? (language === 'he' ? 'לא' : 'No') : language === 'he' ? 'דבר' : 'Talk'}
+                    {useIceCreamLayout ? <X className="h-6 w-6 text-rose-500" /> : <MessageCircle className="h-5 w-5" />}
+                    {useIceCreamLayout ? (language === 'he' ? 'לא' : 'No') : language === 'he' ? 'דבר' : 'Talk'}
                   </button>
                   <button
                     type="button"
@@ -965,7 +1118,7 @@ export function AACDashboard({
                   </button>
                 </div>
 
-                {!useIceCreamReferenceLayout && (
+                {!useIceCreamLayout && (
                 <div className="grid gap-2.5 md:grid-cols-[minmax(0,1fr)_220px]">
                   <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-[16px] border-[3px] border-[#c9b4e8] bg-[linear-gradient(180deg,#f3ebff_0%,#e9ddff_100%)] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]">
                     <span className="text-base font-bold text-slate-700 md:text-lg">
@@ -995,7 +1148,7 @@ export function AACDashboard({
               </section>
 
               {showMockupSideRail && (
-                <aside className={cn('space-y-2.5 ps-1', useIceCreamReferenceLayout && 'ps-0')}>
+                <aside className={cn('space-y-2.5 ps-1', useIceCreamLayout && 'ps-0')}>
                   <div className="grid auto-rows-fr gap-2.5">
                   {sideRailCells.map((cell) => (
                     <AACCard
@@ -1013,7 +1166,7 @@ export function AACDashboard({
                       isEditMode={isEditMode}
                       isSpeaking={speakingCellId === cell.id}
                       className={cn(
-                        useIceCreamReferenceLayout
+                        useIceCreamLayout
                           ? 'min-h-[76px] rounded-[14px] px-2 py-2 text-[0.9rem]'
                           : 'min-h-[116px] rounded-[20px] px-2.5 py-3 text-base'
                       )}
@@ -1021,7 +1174,7 @@ export function AACDashboard({
                   ))}
                   </div>
 
-                  {extraSocialCells.length > 0 && !useIceCreamReferenceLayout && (
+                  {extraSocialCells.length > 0 && !useIceCreamLayout && (
                     <div className="rounded-[20px] border-[3px] border-[#d7dfec] bg-white/90 p-2 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
                       <div className="mb-2 px-2 text-center text-sm font-extrabold text-slate-500">
                         {language === 'he' ? 'עוד מסרים' : 'More messages'}
