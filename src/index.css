@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @layer base {
   :root {
@@ -118,9 +118,20 @@
     @apply border-border;
   }
 
+  html {
+    font-size: 16px;
+    height: 100%;
+  }
+
+  body,
+  #root {
+    min-height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', 'Heebo', system-ui, sans-serif;
+    font-size: 1rem;
   }
 
   /* RTL Support */

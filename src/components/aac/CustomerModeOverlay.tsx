@@ -5,6 +5,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { Button } from '@/components/ui/button';
 import { X, Volume2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useResolvedAacImage } from '@/hooks/useResolvedAacImage';
 
 interface CustomerModeOverlayProps {
   cell: AACCell | null;
@@ -18,6 +19,11 @@ export function CustomerModeOverlay({ cell, onClose }: CustomerModeOverlayProps)
   const displayText = cell 
     ? (language === 'he' || language === 'ar' ? cell.text : cell.textEn)
     : '';
+  const resolvedImageUrl = useResolvedAacImage({
+    text: cell?.text,
+    imageUrl: cell?.imageUrl,
+    fallbackTerms: [cell?.textEn, displayText].filter((value): value is string => Boolean(value)),
+  });
 
   const handleRepeat = useCallback(() => {
     if (displayText) {
@@ -73,10 +79,10 @@ export function CustomerModeOverlay({ cell, onClose }: CustomerModeOverlayProps)
             </div>
 
             {/* Secondary Visual: Custom Image (if exists) */}
-            {cell.imageUrl && (
+            {resolvedImageUrl && (
               <div className="flex items-center justify-center h-40 w-40 md:h-56 md:w-56 rounded-2xl bg-muted/30 overflow-hidden">
                 <img 
-                  src={cell.imageUrl} 
+                  src={resolvedImageUrl} 
                   alt={displayText}
                   className="max-h-full max-w-full object-contain"
                 />

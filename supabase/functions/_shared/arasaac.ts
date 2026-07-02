@@ -53,6 +53,7 @@ export async function enrichMenuWithArasaac(menuData: MenuData): Promise<void> {
     const batch = items.slice(i, i + CONCURRENCY);
     await Promise.all(
       batch.map(async (item) => {
+        if (item.imageUrl) return;
         const query = (item.textEn || item.text || "").toString();
         const url = await findPictogram(query);
         if (url) item.imageUrl = url;
