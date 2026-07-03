@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { AACBoard } from '@/types/aac';
 import { useToast } from '@/hooks/use-toast';
-import { convertMenuToBoards, MenuData } from '@/lib/menuToBoards';
+import { convertMenuToBoards, MenuData, sanitizeMenuData } from '@/lib/menuToBoards';
 
 export function useMenuScanner() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,7 +41,7 @@ export function useMenuScanner() {
       }
 
       const menuData: MenuData = data.data;
-      const boards = convertMenuToBoards(menuData);
+      const boards = convertMenuToBoards(sanitizeMenuData(menuData));
       setGeneratedBoards(boards);
       
       return true;
@@ -89,7 +89,7 @@ export function useMenuScanner() {
       }
 
       const menuData: MenuData = data.data;
-      const boards = convertMenuToBoards(menuData);
+      const boards = convertMenuToBoards(sanitizeMenuData(menuData));
       setGeneratedBoards(boards);
       
       return true;

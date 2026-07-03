@@ -1,4 +1,5 @@
 import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
+import { DISCOVERED_LOCAL_IMAGES, normalizeImageKey } from '@/lib/localImageCatalog';
 
 export interface MenuItemData {
   id?: string;
@@ -113,6 +114,155 @@ const buildStandaloneCategoryLabel = (language?: string) => {
   }
 
   return DEFAULT_CATEGORY_LABELS.en;
+};
+
+const tokenizeNormalizedText = (value: string) =>
+  normalizeImageKey(value)
+    .split(' ')
+    .filter(Boolean);
+
+const DESCRIPTOR_FRAGMENTS = new Set([
+  'שחור',
+  'לבן',
+  'מריר',
+  'מלוח',
+  'בלגי',
+  'איטלקי',
+  'black',
+  'white',
+  'dark',
+  'salted',
+  'belgian',
+  'italian',
+]);
+
+const LOCAL_COMPOSITE_ITEM_ENTRIES = DISCOVERED_LOCAL_IMAGES
+  .map((entry) => {
+    const alias = entry.aliases[0] ?? '';
+    const normalized = normalizeImageKey(alias);
+    const tokens = tokenizeNormalizedText(alias);
+
+    return {
+      alias,
+      normalized,
+      imageUrl: entry.imageUrl,
+      tokens,
+    };
+  })
+  .filter((entry) => entry.tokens.length > 1)
+  .sort((first, second) => second.tokens.length - first.tokens.length);
+
+const dedupeAndNormalizeItems = (items: MenuItemData[]) => {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const normalized = normalizeImageKey(item.text);
+    if (!normalized || seen.has(normalized)) {
+      return false;
+    }
+
+    seen.add(normalized);
+    return true;
+  });
+};
+
+const mergeCompositeLocalItems = (items: MenuItemData[]) => {
+  const normalizedItems = items.map((item, index) => ({
+    item,
+    index,
+    normalized: normalizeImageKey(item.text),
+    tokens: tokenizeNormalizedText(item.text),
+  }));
+
+  const consumedIndexes = new Set<number>();
+  const mergedItems: Array<{ item: MenuItemData; index: number }> = [];
+
+  for (const entry of LOCAL_COMPOSITE_ITEM_ENTRIES) {
+    if (normalizedItems.some((candidate) => candidate.normalized === entry.normalized)) {
+      continue;
+    }
+
+    const matchedIndexes: number[] = [];
+    let canMerge = true;
+
+    for (const token of entry.tokens) {
+      const match = normalizedItems.find((candidate) =>
+        !consumedIndexes.has(candidate.index) &&
+        candidate.tokens.length === 1 &&
+        candidate.normalized === token,
+      );
+
+      if (!match) {
+        canMerge = false;
+        break;
+      }
+
+      matchedIndexes.push(match.index);
+    }
+
+    if (!canMerge) {
+      continue;
+    }
+
+    matchedIndexes.forEach((index) => consumedIndexes.add(index));
+
+    const sourceItem = normalizedItems.find((candidate) => candidate.index === matchedIndexes[0])?.item;
+    mergedItems.push({
+      index: Math.min(...matchedIndexes),
+      item: {
+        id: createId('item', entry.alias, Math.min(...matchedIndexes)),
+        text: entry.alias,
+        textEn: entry.alias,
+        category: sourceItem?.category || 'people',
+        icon: sourceItem?.icon || inferItemIcon(entry.alias),
+        imageUrl: entry.imageUrl,
+      },
+    });
+  }
+
+  const filteredItems = normalizedItems
+    .filter((candidate) => !consumedIndexes.has(candidate.index))
+    .map((candidate) => ({ item: candidate.item, index: candidate.index }));
+
+  return [...filteredItems, ...mergedItems]
+    .sort((first, second) => first.index - second.index)
+    .map((entry) => entry.item);
+};
+
+const dropDescriptorFragments = (items: MenuItemData[]) => {
+  const normalizedItems = items.map((item) => ({
+    item,
+    normalized: normalizeImageKey(item.text),
+    tokens: tokenizeNormalizedText(item.text),
+  }));
+
+  return normalizedItems
+    .filter(({ normalized, tokens }) => {
+      if (tokens.length !== 1 || !DESCRIPTOR_FRAGMENTS.has(normalized)) {
+        return true;
+      }
+
+      return !normalizedItems.some((candidate) =>
+        candidate.normalized !== normalized &&
+        candidate.tokens.length > 1 &&
+        candidate.tokens.includes(normalized),
+      );
+    })
+    .map(({ item }) => item);
+};
+
+export const sanitizeMenuData = (menuData: MenuData): MenuData => {
+  const sanitizeItems = (items: MenuItemData[]) =>
+    dropDescriptorFragments(mergeCompositeLocalItems(dedupeAndNormalizeItems(items)));
+
+  return {
+    ...menuData,
+    categories: menuData.categories.map((category) => ({
+      ...category,
+      items: sanitizeItems(category.items),
+    })).filter((category) => category.items.length > 0),
+    standaloneItems: sanitizeItems(menuData.standaloneItems ?? []),
+  };
 };
 
 const parseMenuItemLine = (line: string, index: number): MenuItemData | null => {

@@ -13,8 +13,13 @@ describe('findWholeWordLocalImageMatch', () => {
       tokens: ['קרמל'],
     },
     {
+      alias: normalizeImageKey('קרמל מלוח עם שברי אפרופו'),
+      imageUrl: encodeURI('/aac-local/קרמל מלוח עם שברי אפרופו.png'),
+      tokens: ['קרמל', 'מלוח', 'עם', 'שברי', 'אפרופו'],
+    },
+    {
       alias: normalizeImageKey('שוקולד בלגי'),
-      imageUrl: '/aac-local/שוקולד בלגי.png',
+      imageUrl: encodeURI('/aac-local/שוקולד בלגי.png'),
       tokens: ['שוקולד', 'בלגי'],
     },
   ];
@@ -28,13 +33,13 @@ describe('findWholeWordLocalImageMatch', () => {
   it('matches a local filename when it appears as full words inside a longer requested flavor', () => {
     const result = findWholeWordLocalImageMatch(normalizeImageKey('קרמל מלוח'), customEntries);
 
-    expect(result).toBe('/aac-local/קרמל.png');
+    expect(result).toBe(encodeURI('/aac-local/קרמל מלוח עם שברי אפרופו.png'));
   });
 
   it('prefers the most specific whole-word local match', () => {
     const result = findWholeWordLocalImageMatch(normalizeImageKey('שוקולד בלגי לבן'), customEntries);
 
-    expect(result).toBe('/aac-local/שוקולד בלגי.png');
+    expect(result).toBe(encodeURI('/aac-local/שוקולד בלגי.png'));
   });
 
   it('does not match partial words', () => {
@@ -48,7 +53,7 @@ describe('findLocalImageUrl', () => {
   it('uses the built-in local catalog before any cloud fallback', () => {
     const result = findLocalImageUrl('קרמל מלוח');
 
-    expect(result).toBe('/aac-local/caramel.svg');
+    expect(result).toBe(encodeURI('/aac-local/קרמל מלוח עם שברי אפרופו.png'));
   });
 
   it('does not resolve local images from partial-word overlaps', () => {
