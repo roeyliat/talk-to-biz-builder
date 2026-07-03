@@ -8,9 +8,12 @@ const normalizeImageKey = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const imageModulePaths = Object.keys(
-  import.meta.glob('../assets/aac-local/*.{png,jpg,jpeg,webp,svg,avif}'),
-);
+const imageModules = import.meta.glob('../assets/aac-local/*.{png,jpg,jpeg,webp,svg,avif}', {
+  eager: true,
+  import: 'default',
+}) as Record<string, string>;
+
+const imageModulePaths = Object.keys(imageModules);
 
 const extractFilename = (filePath: string) => {
   const lastSegment = filePath.split('/').pop() ?? filePath;
@@ -19,7 +22,7 @@ const extractFilename = (filePath: string) => {
 
 const extractFileBasename = (filePath: string) => filePath.split('/').pop() ?? filePath;
 
-const toStablePublicImageUrl = (filePath: string) => encodeURI(`/aac-local/${extractFileBasename(filePath)}`);
+const toBundledImageUrl = (filePath: string) => imageModules[filePath] ?? encodeURI(`/aac-local/${extractFileBasename(filePath)}`);
 
 const buildAliasMap = (entries: Array<{ imageUrl: string; aliases: string[] }>) => {
   const aliasMap = new Map<string, string>();
@@ -60,7 +63,7 @@ const hasWholeWordSequenceMatch = (sourceTokens: string[], candidateTokens: stri
 };
 
 const DISCOVERED_LOCAL_IMAGES = imageModulePaths.map((filePath) => ({
-  imageUrl: toStablePublicImageUrl(filePath),
+  imageUrl: toBundledImageUrl(filePath),
   aliases: [extractFilename(filePath)],
 }));
 
@@ -72,10 +75,9 @@ const findDiscoveredImageUrl = (...aliases: string[]) =>
   aliases
     .map((alias) => normalizeImageKey(alias))
     .find(Boolean)
-    ? DISCOVERED_LOCAL_IMAGES.find((entry) => {
-        const normalizedAliases = entry.aliases.map((alias) => normalizeImageKey(alias));
-        return aliases.some((alias) => normalizedAliases.includes(normalizeImageKey(alias)));
-      })?.imageUrl
+    ? aliases
+        .map((alias) => stableDiscoveredImageMap.get(normalizeImageKey(alias)))
+        .find(Boolean)
     : undefined;
 
 const LOCAL_IMAGE_ENTRIES = [
@@ -120,8 +122,8 @@ const LOCAL_IMAGE_ENTRIES = [
     aliases: ['caramel', 'קרמל', 'dulce de leche', 'דולצה למנצ׳ה', 'דולצה למנצה', 'דולצה למנצ׳ה'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('גביע', 'cup') ?? '/aac-local/cup.svg',
-    aliases: ['cup', 'גביע'],
+    imageUrl: findDiscoveredImageUrl('כוס', 'גביע', 'cup') ?? '/aac-local/cup.svg',
+    aliases: ['cup', 'גביע', 'כוס'],
   },
   {
     imageUrl: findDiscoveredImageUrl('קונוס', 'cone') ?? '/aac-local/cone.svg',
