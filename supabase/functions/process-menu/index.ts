@@ -153,6 +153,33 @@ const sanitizeMenuForBusinessType = (menuData: any, businessType?: string) => {
   };
 };
 
+const extractFirstJsonObject = (value: string) => {
+  const trimmed = value.trim();
+  const withoutFence = trimmed
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```$/i, '')
+    .trim();
+
+  const firstBrace = withoutFence.indexOf('{');
+  const lastBrace = withoutFence.lastIndexOf('}');
+
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    throw new Error('No JSON object found in AI response');
+  }
+
+  return withoutFence.slice(firstBrace, lastBrace + 1);
+};
+
+const countExtractedItems = (menuData: any) => {
+  const categoryCount = Array.isArray(menuData?.categories)
+    ? menuData.categories.reduce((sum: number, category: any) => sum + (Array.isArray(category?.items) ? category.items.length : 0), 0)
+    : 0;
+  const standaloneCount = Array.isArray(menuData?.standaloneItems) ? menuData.standaloneItems.length : 0;
+
+  return categoryCount + standaloneCount;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -365,7 +392,7 @@ Be thorough but practical - focus only on the items visibly present in the image
                               },
                               icon: { type: "string" }
                             },
-                            required: ["id", "text", "textEn", "sourceText", "category", "icon"]
+                            required: ["id", "text", "textEn", "category", "icon"]
                           }
                         }
                       },
@@ -405,14 +432,46 @@ Be thorough but practical - focus only on the items visibly present in the image
     const data = await response.json();
     console.log(`AI response received for user ${userId}`);
 
-    // Extract the tool call result
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall) {
-      throw new Error("No tool call response from AI");
+    const message = data.choices?.[0]?.message;
+    const toolCall = message?.tool_calls?.[0];
+
+    let rawMenuData: any;
+
+    try {
+      if (toolCall?.function?.arguments) {
+        rawMenuData = JSON.parse(toolCall.function.arguments);
+      } else if (typeof message?.content === 'string' && message.content.trim()) {
+        rawMenuData = JSON.parse(extractFirstJsonObject(message.content));
+      } else {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "The AI didn't return usable menu data for this image. Please try a clearer image.",
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (parseError) {
+      console.error('Failed to parse AI menu response', parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "The AI response couldn't be read for this image. Please try a clearer image.",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const rawMenuData = JSON.parse(toolCall.function.arguments);
     const menuData = sanitizeMenuForBusinessType(rawMenuData, businessType);
+    if (countExtractedItems(menuData) === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'No clear visible menu items were detected in the image. Please try a clearer or closer photo.',
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     console.log(`Menu data parsed successfully for user ${userId}: ${menuData.businessName}`);
 
     // Attach free ARASAAC pictograms to each item where available.

@@ -177,8 +177,18 @@ if (( DRY_RUN )); then
   print -r -- "+ git -C $MAIN_WORKTREE cherry-pick $source_commit"
 else
   if ! git -C "$MAIN_WORKTREE" cherry-pick "$source_commit"; then
-    git -C "$MAIN_WORKTREE" cherry-pick --abort >/dev/null 2>&1 || true
-    die "Cherry-pick failed. Resolve conflicts in $MAIN_WORKTREE and retry."
+    if git -C "$MAIN_WORKTREE" rev-parse -q --verify CHERRY_PICK_HEAD >/dev/null 2>&1; then
+      cherry_pick_status=$(git -C "$MAIN_WORKTREE" status --short)
+      if [[ -z "$cherry_pick_status" ]]; then
+        log "Cherry-pick is empty; skipping because the changes are already present in $DEPLOY_BRANCH"
+        git -C "$MAIN_WORKTREE" cherry-pick --skip >/dev/null 2>&1 || true
+      else
+        git -C "$MAIN_WORKTREE" cherry-pick --abort >/dev/null 2>&1 || true
+        die "Cherry-pick failed. Resolve conflicts in $MAIN_WORKTREE and retry."
+      fi
+    else
+      die "Cherry-pick failed. Resolve conflicts in $MAIN_WORKTREE and retry."
+    fi
   fi
 fi
 
