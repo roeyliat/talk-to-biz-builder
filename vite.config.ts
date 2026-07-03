@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  assetsInclude: ["**/*.PNG", "**/*.JPG", "**/*.JPEG", "**/*.WEBP", "**/*.SVG", "**/*.AVIF"],
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
