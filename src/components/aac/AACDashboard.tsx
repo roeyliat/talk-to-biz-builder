@@ -692,22 +692,31 @@ export function AACDashboard({
             <div className="sticky top-0 z-20 -mx-2 mb-3 border-b border-slate-200 bg-[#eef2f8]/95 px-2 py-2 backdrop-blur lg:hidden md:-mx-3 md:px-3">
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {sideRailCells.map((cell) => (
-                  <AACCard
+                  <button
                     key={`mobile-${cell.id}`}
-                    text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
-                    imageSearchTerms={[cell.text, cell.textEn]}
-                    category={cell.category}
-                    icon={cell.icon}
-                    imageUrl={cell.imageUrl}
-                    isFolder={!!cell.linkToBoardId}
+                    type="button"
                     onClick={() => handleCellClick(cell)}
-                    size="sm"
-                    variant="utility"
-                    labelPosition="top"
-                    isEditMode={isEditMode}
-                    isSpeaking={speakingCellId === cell.id}
-                    className="h-[104px] min-h-[104px] min-w-[102px] shrink-0 rounded-[18px] px-2 py-2 text-sm"
-                  />
+                    className={cn(
+                      'flex h-[86px] min-w-[76px] shrink-0 flex-col items-center justify-between rounded-[16px] border-[2px] border-[#cad3e4] bg-white px-1.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_2px_6px_rgba(15,23,42,0.06)]',
+                      speakingCellId === cell.id && 'ring-2 ring-primary shadow-lg shadow-primary/20'
+                    )}
+                    aria-label={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                  >
+                    <span className="line-clamp-2 min-h-[1.6rem] text-[0.78rem] font-extrabold leading-tight text-slate-800">
+                      {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                    </span>
+                    <div className="flex flex-1 items-center justify-center pb-0.5">
+                      <span
+                        className={cn(
+                          'leading-none',
+                          cell.id === 'utility-question' ? 'text-[2.1rem]' : 'text-[1.9rem]'
+                        )}
+                        aria-hidden="true"
+                      >
+                        {cell.icon}
+                      </span>
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>
