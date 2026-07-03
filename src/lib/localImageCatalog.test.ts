@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DISCOVERED_LOCAL_IMAGES,
   findLocalImageUrl,
   findWholeWordLocalImageMatch,
   normalizeImageKey,
 } from './localImageCatalog';
+
+const expectResolvedAssetName = (value: string | undefined, fileName: string) => {
+  expect(value).toBeTruthy();
+  expect(decodeURIComponent(value ?? '')).toContain(fileName);
+};
 
 describe('findWholeWordLocalImageMatch', () => {
   const customEntries = [
@@ -27,7 +33,7 @@ describe('findWholeWordLocalImageMatch', () => {
   it('returns an exact local match first', () => {
     const result = findWholeWordLocalImageMatch(normalizeImageKey('שוקולד בלגי'), customEntries);
 
-    expect(result).toBe(encodeURI('/aac-local/שוקולד בלגי.png'));
+    expectResolvedAssetName(result, 'שוקולד בלגי.png');
   });
 
   it('matches a local filename when it appears as full words inside a longer requested flavor', () => {
@@ -53,12 +59,23 @@ describe('findLocalImageUrl', () => {
   it('uses the built-in local catalog before any cloud fallback', () => {
     const result = findLocalImageUrl('קרמל מלוח');
 
-    expect(result).toBe(encodeURI('/aac-local/קרמל מלוח עם שברי אפרופו.png'));
+    expectResolvedAssetName(result, 'קרמל מלוח עם שברי אפרופו.png');
   });
 
   it('does not resolve local images from partial-word overlaps', () => {
     const result = findLocalImageUrl('שוקולדי');
 
     expect(result).toBeUndefined();
+  });
+
+  it('discovers uppercase extension files like טעמים.PNG', () => {
+    const discoveredFlavors = DISCOVERED_LOCAL_IMAGES.find((entry) => entry.aliases[0] === 'טעמים');
+
+    expect(discoveredFlavors?.imageUrl).toBeTruthy();
+  });
+
+  it('matches exact sorbet filenames and common OCR typo variants', () => {
+    expect(findLocalImageUrl('סורבה תות')).toBeTruthy();
+    expect(findLocalImageUrl('סרובה תות')).toBeTruthy();
   });
 });

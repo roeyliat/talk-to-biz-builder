@@ -8,7 +8,10 @@ const normalizeImageKey = (value: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const imageModules = import.meta.glob('../assets/aac-local/*.{png,jpg,jpeg,webp,svg,avif}', {
+const imageModules = import.meta.glob([
+  '../assets/aac-local/*.{png,jpg,jpeg,webp,svg,avif}',
+  '../assets/aac-local/*.{PNG,JPG,JPEG,WEBP,SVG,AVIF}',
+], {
   eager: true,
   import: 'default',
 }) as Record<string, string>;
@@ -136,6 +139,18 @@ const LOCAL_IMAGE_ENTRIES = [
   {
     imageUrl: findDiscoveredImageUrl('תוספות', 'toppings') ?? '/aac-local/toppings.svg',
     aliases: ['toppings', 'תוספות'],
+  },
+  {
+    imageUrl: findDiscoveredImageUrl('טעמים', 'flavors', 'flavours') ?? '/aac-local/ice-cream.svg',
+    aliases: ['טעמים', 'טעם', 'flavors', 'flavours', 'choose flavor'],
+  },
+  {
+    imageUrl: findDiscoveredImageUrl('סורבה תות', 'סרובה תות', 'strawberry sorbet') ?? '/aac-local/strawberry.svg',
+    aliases: ['סורבה תות', 'סרובה תות', 'strawberry sorbet', 'sorbet strawberry'],
+  },
+  {
+    imageUrl: findDiscoveredImageUrl('סורבה', 'סרובה', 'sorbet') ?? '/aac-local/ice-cream.svg',
+    aliases: ['סורבה', 'סרובה', 'sorbet'],
   },
   {
     imageUrl: findDiscoveredImageUrl('סוכריות צבעוניות', 'sprinkles') ?? '/aac-local/sprinkles.svg',
