@@ -102,7 +102,7 @@ const AACBoard = () => {
   };
   
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="h-screen overflow-hidden bg-muted/30">
       <Header />
       <AACDashboard 
         boards={boards}
@@ -111,7 +111,7 @@ const AACBoard = () => {
         showAIUpload={false}
         allowEdit={editMode}
         onBoardsChange={handleBoardsChange}
-        className="min-h-[calc(100vh-4rem)]"
+        className="h-[calc(100vh-4rem)] min-h-0"
       />
     </div>
   );

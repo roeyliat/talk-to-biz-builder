@@ -3,8 +3,9 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
-import { Plus, LayoutGrid, Settings, FileText, ScanLine, QrCode, Share2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Plus, LayoutGrid, Settings, FileText, ScanLine, QrCode, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { MenuScannerModal } from '@/components/menu-scanner/MenuScannerModal';
 import { ProcessingOverlay } from '@/components/menu-scanner/ProcessingOverlay';
 import { BoardReviewEditor } from '@/components/menu-scanner/BoardReviewEditor';
@@ -13,14 +14,13 @@ import { AACDashboard } from '@/components/aac/AACDashboard';
 import { AACBoard } from '@/types/aac';
 import { useToast } from '@/hooks/use-toast';
 import { BoardExportModal } from '@/components/board-export/BoardExportModal';
-import { getSavedBoards, saveBoardRecord, SavedBoardRecord, syncLocalBoardsToCloud } from '@/lib/savedBoards';
+import { deleteSavedBoard, getSavedBoards, saveBoardRecord, SavedBoardRecord, syncLocalBoardsToCloud } from '@/lib/savedBoards';
 import { useAuth } from '@/hooks/useAuth';
 
 type ViewState = 'dashboard' | 'review' | 'preview';
 
 const Dashboard = () => {
   const { t, language } = useLanguage();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { user, isGuest, loading: authLoading } = useAuth();
   
@@ -30,6 +30,8 @@ const Dashboard = () => {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [savedBoards, setSavedBoards] = useState<SavedBoardRecord[]>([]);
   const [selectedBoard, setSelectedBoard] = useState<SavedBoardRecord | null>(null);
+  const [boardPendingDelete, setBoardPendingDelete] = useState<SavedBoardRecord | null>(null);
+  const [isDeletingBoardId, setIsDeletingBoardId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -103,6 +105,34 @@ const Dashboard = () => {
   const handlePreviewBoard = (boards: Record<string, AACBoard>) => {
     setPreviewBoards(boards);
     setViewState('preview');
+  };
+
+  const handleDeleteBoard = async () => {
+    if (!boardPendingDelete) {
+      return;
+    }
+
+    setIsDeletingBoardId(boardPendingDelete.id);
+
+    const deleted = await deleteSavedBoard(boardPendingDelete.id, user && !isGuest ? user.id : undefined);
+
+    if (deleted) {
+      setSavedBoards((currentBoards) => currentBoards.filter((board) => board.id !== boardPendingDelete.id));
+      setSelectedBoard((currentBoard) => (currentBoard?.id === boardPendingDelete.id ? null : currentBoard));
+      toast({
+        title: language === 'he' ? 'הלוח נמחק' : 'Board deleted',
+        description: language === 'he' ? 'הלוח הוסר מלוח הבקרה שלך' : 'The board was removed from your dashboard',
+      });
+      setBoardPendingDelete(null);
+    } else {
+      toast({
+        title: language === 'he' ? 'מחיקת הלוח נכשלה' : 'Failed to delete board',
+        description: language === 'he' ? 'נסו שוב בעוד רגע' : 'Please try again in a moment',
+        variant: 'destructive',
+      });
+    }
+
+    setIsDeletingBoardId(null);
   };
 
   const handleBackFromReview = () => {
@@ -191,6 +221,35 @@ const Dashboard = () => {
         onClose={() => setShowScannerModal(false)}
         onImageSelected={handleImageSelected}
       />
+
+      <AlertDialog open={Boolean(boardPendingDelete)} onOpenChange={(open) => !open && !isDeletingBoardId && setBoardPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {language === 'he' ? 'למחוק את הלוח?' : 'Delete this board?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === 'he'
+                ? `הלוח "${boardPendingDelete?.business_name ?? ''}" יימחק מלוח הבקרה ולא יהיה ניתן לשחזר אותו.`
+                : `The board "${boardPendingDelete?.business_name ?? ''}" will be removed from your dashboard and cannot be restored.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(isDeletingBoardId)}>
+              {language === 'he' ? 'ביטול' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => void handleDeleteBoard()}
+              disabled={Boolean(isDeletingBoardId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeletingBoardId
+                ? language === 'he' ? 'מוחק...' : 'Deleting...'
+                : language === 'he' ? 'מחק לוח' : 'Delete board'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       
       <main className="flex-1 py-8">
         <div className="container">
@@ -287,6 +346,16 @@ const Dashboard = () => {
                       <Link to={`/board/${board.id}?type=${board.business_type}`}>
                         {language === 'he' ? 'תצוגה' : 'View'}
                       </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setBoardPendingDelete(board)}
+                      disabled={isDeletingBoardId === board.id}
+                      className="gap-1 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {language === 'he' ? 'מחיקה' : 'Delete'}
                     </Button>
                   </div>
                 </div>

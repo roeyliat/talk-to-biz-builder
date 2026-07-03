@@ -490,7 +490,7 @@ export function AACDashboard({
   ];
 
   return (
-    <div className={cn('flex min-h-screen flex-col overflow-x-hidden bg-[#eef2f8] text-base', className)}>
+    <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-[#eef2f8] text-base', className)}>
       {/* Top Bar */}
       {!useIceCreamLayout && (
       <header className="sticky top-16 z-40 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur-sm">
@@ -629,8 +629,8 @@ export function AACDashboard({
       )}
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 overflow-x-hidden overflow-y-auto p-2 md:p-3">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-2 pb-4 md:p-3 md:pb-6">
           {useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]">
@@ -903,7 +903,7 @@ export function AACDashboard({
             'mx-auto flex min-h-full flex-col border-[3px] bg-[#fbfcff] shadow-[0_20px_60px_rgba(48,73,122,0.15)]',
             'max-w-[1380px] rounded-[26px] border-[#30497a] p-3 md:p-4'
           )}>
-            <div className={cn('grid min-h-full gap-3', showMockupSideRail ? 'lg:grid-cols-[minmax(0,1fr)_172px]' : 'grid-cols-1')}>
+            <div className={cn('grid min-h-0 gap-3', showMockupSideRail ? 'lg:grid-cols-[minmax(0,1fr)_172px]' : 'grid-cols-1')}>
               <section className="flex min-h-0 flex-col space-y-3">
                 <div className={cn(
                   'border-[3px] border-[#30497a] bg-white text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',

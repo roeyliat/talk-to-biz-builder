@@ -139,6 +139,31 @@ const writeSavedBoardToLocal = (record: SavedBoardRecord) => {
   writeSavedBoards(updatedBoards);
 };
 
+export const deleteSavedBoard = async (boardId: string, userId?: string) => {
+  const existingBoards = getLocalSavedBoards();
+  const updatedBoards = existingBoards.filter((board) => board.id !== boardId);
+
+  writeSavedBoards(updatedBoards);
+
+  if (!userId) {
+    return true;
+  }
+
+  const { error } = await supabase
+    .from('board_records')
+    .delete()
+    .eq('user_id', userId)
+    .eq('id', boardId);
+
+  if (error) {
+    writeSavedBoards(existingBoards);
+    console.error('Failed to delete board record from Supabase', error);
+    return false;
+  }
+
+  return true;
+};
+
 export const getSavedBoards = async (userId?: string): Promise<SavedBoardRecord[]> => {
   if (!userId) {
     return getLocalSavedBoards();
