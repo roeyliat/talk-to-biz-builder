@@ -19,7 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMenuScanner } from '@/hooks/useMenuScanner';
 import { CategoryItemsEditor, MenuCategory, MenuItem } from '@/components/create-board/CategoryItemsEditor';
 import { ManualMenuModal } from '@/components/create-board/ManualMenuModal';
-import { convertMenuToBoards, parseManualMenuText } from '@/lib/menuToBoards';
+import { convertMenuToBoards, parseManualMenuText, sanitizeMenuData } from '@/lib/menuToBoards';
 import { saveBoardRecord } from '@/lib/savedBoards';
 
 const businessTypes = [
@@ -102,7 +102,7 @@ const CreateBoard = () => {
         return;
       }
 
-      const boards = convertMenuToBoards(menuData);
+      const boards = convertMenuToBoards(sanitizeMenuData(menuData));
       setGeneratedBoards(boards);
       setShowManualMenuModal(false);
       setShowBoardReview(true);
@@ -122,6 +122,52 @@ const CreateBoard = () => {
     setIsGenerating(true);
     
     try {
+      if (categories.length > 0 || standaloneItems.length > 0) {
+        const boards = convertMenuToBoards(sanitizeMenuData({
+          businessName: formData.businessName || 'Custom Board',
+          businessNameHe: formData.businessName || 'לוח מותאם אישית',
+          categories: categories.map((category) => ({
+            id: category.id,
+            name: category.nameEn,
+            nameHe: category.name,
+            items: category.items.map((item) => ({
+              id: item.id,
+              text: item.text,
+              textEn: item.textEn,
+              category: item.category,
+              icon: item.icon,
+              imageUrl: item.imageUrl,
+            })),
+          })),
+          standaloneItems: standaloneItems.map((item) => ({
+            id: item.id,
+            text: item.text,
+            textEn: item.textEn,
+            category: item.category,
+            icon: item.icon,
+            imageUrl: item.imageUrl,
+          })),
+        }));
+
+        sessionStorage.setItem('generatedBoards', JSON.stringify(boards));
+        sessionStorage.setItem('generatedBoardsType', formData.businessType || 'other');
+        sessionStorage.setItem('generatedBoardsName', formData.businessName);
+
+        setTimeout(() => {
+          setIsGenerating(false);
+          toast({
+            title: language === 'he' ? 'הלוח נוצר בהצלחה!' : 'Board created successfully!',
+            description: language === 'he'
+              ? 'מועברים לתצוגת הלוח שלך'
+              : 'Redirecting to your board',
+          });
+
+          navigate(`/board/custom?type=${formData.businessType || 'other'}&edit=true`);
+        }, 1000);
+
+        return;
+      }
+
       // Get base boards for the business type
       const businessType = formData.businessType;
       const validBusinessTypes: BusinessType[] = [
@@ -253,11 +299,34 @@ const CreateBoard = () => {
 
   // Get preview items - mix of base items and user's custom items
   const getPreviewItems = () => {
+    const userItems: Array<{ text: string; textEn: string; category: FitzgeraldCategory; icon: string }> = [];
+
+    categories.forEach((category) => {
+      category.items.slice(0, 4).forEach((item) => {
+        userItems.push({
+          text: item.text,
+          textEn: item.textEn,
+          category: item.category,
+          icon: item.icon,
+        });
+      });
+    });
+
+    standaloneItems.slice(0, 4).forEach((item) => {
+      userItems.push({
+        text: item.text,
+        textEn: item.textEn,
+        category: item.category,
+        icon: item.icon,
+      });
+    });
+
+    if (userItems.length > 0) {
+      return userItems.slice(0, formData.complexity === 1 ? 4 : 6);
+    }
+
     const baseItems = (businessPreviewCards[formData.businessType as BusinessType] || businessPreviewCards.cafe)
       .slice(0, formData.complexity === 1 ? 4 : 6);
-    
-    // Add some user items to preview if they exist (categories and standalone items)
-    const userItems: Array<{ text: string; textEn: string; category: FitzgeraldCategory; icon: string }> = [];
     
     // Add some standalone items
     standaloneItems.slice(0, 2).forEach(item => {

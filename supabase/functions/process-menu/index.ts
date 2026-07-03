@@ -11,6 +11,11 @@ const corsHeaders = {
 const MAX_IMAGE_SIZE = 10_000_000; // 10MB
 const VALID_IMAGE_FORMAT = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/]+=*$/;
 
+const EVIDENCE_STOP_WORDS = new Set([
+  'the', 'and', 'with', 'for', 'to', 'from', 'of', 'a', 'an', 'or', 'menu', 'item',
+  'עם', 'בלי', 'של', 'את', 'או', 'אל', 'על',
+]);
+
 const normalizeValue = (value: string) =>
   value
     .trim()
@@ -45,12 +50,65 @@ const includesAnyTerm = (value: string, terms: string[]) => {
   return terms.some((term) => normalized.includes(normalizeValue(term)));
 };
 
-const sanitizeMenuForBusinessType = (menuData: any, businessType?: string) => {
-  if (businessType !== 'iceCream' || !Array.isArray(menuData?.categories)) {
+const tokenizeEvidence = (value: string) =>
+  normalizeValue(value)
+    .split(' ')
+    .filter((token) => token.length >= 2 && !EVIDENCE_STOP_WORDS.has(token));
+
+const hasSourceEvidence = (item: any) => {
+  const sourceTokens = tokenizeEvidence(item?.sourceText ?? '');
+
+  if (sourceTokens.length === 0) {
+    return false;
+  }
+
+  const itemTokens = [item?.text, item?.textEn]
+    .flatMap((value) => tokenizeEvidence(value ?? ''));
+
+  return itemTokens.some((token) => sourceTokens.includes(token));
+};
+
+const sanitizeVisibleEvidence = (menuData: any) => {
+  if (!Array.isArray(menuData?.categories)) {
     return menuData;
   }
 
-  const nextCategories = menuData.categories
+  const categories = menuData.categories
+    .map((category: any) => {
+      const items = Array.isArray(category?.items)
+        ? category.items.filter((item: any) => hasSourceEvidence(item))
+        : [];
+
+      if (items.length === 0) {
+        return null;
+      }
+
+      return {
+        ...category,
+        items,
+      };
+    })
+    .filter(Boolean);
+
+  const standaloneItems = Array.isArray(menuData?.standaloneItems)
+    ? menuData.standaloneItems.filter((item: any) => hasSourceEvidence(item))
+    : menuData?.standaloneItems;
+
+  return {
+    ...menuData,
+    categories,
+    standaloneItems,
+  };
+};
+
+const sanitizeMenuForBusinessType = (menuData: any, businessType?: string) => {
+  const evidenceSanitized = sanitizeVisibleEvidence(menuData);
+
+  if (businessType !== 'iceCream' || !Array.isArray(evidenceSanitized?.categories)) {
+    return evidenceSanitized;
+  }
+
+  const nextCategories = evidenceSanitized.categories
     .map((category: any) => {
       const categoryName = `${category?.name ?? ''} ${category?.nameHe ?? ''}`.trim();
       const categoryLooksBlocked = includesAnyTerm(categoryName, ICE_CREAM_BLOCKED_TERMS);
@@ -90,7 +148,7 @@ const sanitizeMenuForBusinessType = (menuData: any, businessType?: string) => {
     .filter(Boolean);
 
   return {
-    ...menuData,
+    ...evidenceSanitized,
     categories: nextCategories,
   };
 };
@@ -220,11 +278,15 @@ Your task is to analyze the menu image and create a structured AAC board with th
 
 4. Provide translations in Hebrew and English
 5. Suggest appropriate emoji icons for each item
+6. For each item, provide the exact visible text from the image that proves the item exists
 
 Critical rules:
 - Only include items that are explicitly visible or legibly written in the provided image.
 - Do not infer, guess, autocomplete, or add generic categories/items that are not clearly shown.
+- Every item must include a "sourceText" field copied exactly from the visible text in the image.
+- If you cannot quote visible supporting text for an item, omit that item.
 - If the image only shows ice cream flavors and toppings, do not add drinks, coffee, food, or any other unrelated items.
+- If the image shows cafe or restaurant food only, do not add drinks unless the drink name is visibly written in the image.
 - If text is partial or ambiguous, return fewer items rather than inventing anything.
 - Never expand a business into a "typical menu"; stay strictly grounded in the image.
 
@@ -242,6 +304,7 @@ Return a JSON object with this exact structure:
           "id": "item-id",
           "text": "Hebrew item name",
           "textEn": "English item name",
+          "sourceText": "Exact visible text copied from the image",
           "category": "people|verbs|descriptors|social",
           "icon": "emoji"
         }
@@ -257,7 +320,7 @@ Be thorough but practical - focus only on the items visibly present in the image
             content: [
               {
                 type: "text",
-                text: `Please analyze this menu image and extract only the items that are actually visible for an AAC communication board. Create categories only when they are supported by the image. Expected business type: ${businessType || 'unknown'}. If the image appears to be for an ice cream shop, keep the output limited to flavors, toppings, serving styles, sauces, and other clearly visible ice cream-related items only.`
+                text: `Please analyze this menu image and extract only the items that are actually visible for an AAC communication board. Create categories only when they are supported by the image. Expected business type: ${businessType || 'unknown'}. Every returned item must include exact visible supporting text in sourceText. If the image appears to be for an ice cream shop, keep the output limited to flavors, toppings, serving styles, sauces, and other clearly visible ice cream-related items only. If the image is from a cafe or restaurant and mainly shows food, do not add drinks unless the drink names themselves are visibly written in the image.`
               },
               {
                 type: "image_url",
@@ -295,13 +358,14 @@ Be thorough but practical - focus only on the items visibly present in the image
                               id: { type: "string" },
                               text: { type: "string" },
                               textEn: { type: "string" },
+                              sourceText: { type: "string" },
                               category: { 
                                 type: "string", 
                                 enum: ["people", "verbs", "descriptors", "social"] 
                               },
                               icon: { type: "string" }
                             },
-                            required: ["id", "text", "textEn", "category", "icon"]
+                            required: ["id", "text", "textEn", "sourceText", "category", "icon"]
                           }
                         }
                       },

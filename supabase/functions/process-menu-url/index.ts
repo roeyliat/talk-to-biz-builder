@@ -11,6 +11,11 @@ const corsHeaders = {
 const MAX_URL_LENGTH = 2048;
 const MIN_EXTRACTED_TEXT_LENGTH = 120;
 
+const EVIDENCE_STOP_WORDS = new Set([
+  'the', 'and', 'with', 'for', 'to', 'from', 'of', 'a', 'an', 'or', 'menu', 'item',
+  'עם', 'בלי', 'של', 'את', 'או', 'אל', 'על',
+]);
+
 class UserFacingError extends Error {
   constructor(message: string) {
     super(message);
@@ -298,6 +303,58 @@ const extractVisibleText = (html: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
+const normalizeEvidenceText = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0591-\u05C7]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const tokenizeEvidence = (value: string) =>
+  normalizeEvidenceText(value)
+    .split(' ')
+    .filter((token) => token.length >= 2 && !EVIDENCE_STOP_WORDS.has(token));
+
+const hasSourceEvidence = (item: { text?: string; textEn?: string; sourceText?: string }) => {
+  const sourceTokens = tokenizeEvidence(item.sourceText ?? '');
+
+  if (sourceTokens.length === 0) {
+    return false;
+  }
+
+  const itemTokens = [item.text, item.textEn].flatMap((value) => tokenizeEvidence(value ?? ''));
+  return itemTokens.some((token) => sourceTokens.includes(token));
+};
+
+const sanitizeVisibleEvidence = (menuData: any) => {
+  if (!Array.isArray(menuData?.categories)) {
+    return menuData;
+  }
+
+  return {
+    ...menuData,
+    categories: menuData.categories
+      .map((category: any) => {
+        const items = Array.isArray(category?.items)
+          ? category.items.filter((item: any) => hasSourceEvidence(item))
+          : [];
+
+        if (items.length === 0) {
+          return null;
+        }
+
+        return {
+          ...category,
+          items,
+        };
+      })
+      .filter(Boolean),
+  };
+};
+
 const isDynamicShellWithoutContent = (html: string, text: string) => {
   const normalizedText = text.toLowerCase();
 
@@ -475,10 +532,13 @@ Your task is to analyze the webpage content (which may include a menu) and creat
 
 4. Provide translations in Hebrew and English
 5. Suggest appropriate emoji icons for each item
+6. For each item, provide the exact visible webpage text that proves the item exists
 
 Critical rules:
 - Only include items that are explicitly present in the provided webpage content.
 - Do not infer, guess, autocomplete, or add generic menu items that are not clearly present.
+- Every item must include a "sourceText" field copied from the provided webpage content.
+- If you cannot quote supporting webpage text for an item, omit that item.
 - If the content is incomplete, sparse, or ambiguous, return fewer items rather than inventing any.
 - Never add example items such as burgers, pasta, salads, or drinks unless they appear in the supplied content.
 
@@ -496,6 +556,7 @@ Return a JSON object with this exact structure:
           "id": "unique-item-id",
           "text": "Hebrew item name",
           "textEn": "English item name",
+          "sourceText": "Exact visible text copied from the webpage content",
           "category": "people",
           "icon": "emoji"
         }
@@ -504,12 +565,12 @@ Return a JSON object with this exact structure:
   ]
 }
 
-Be thorough but practical - extract ALL menu items you can find. If items have prices, ignore the prices and focus on the item names.
-If the content doesn't appear to be a menu, try to extract any relevant items or products that could be used for communication.`
+Be thorough but practical - extract only items clearly supported by the supplied content. If items have prices, ignore the prices and focus on the item names.
+If the content doesn't appear to be a menu, do not invent substitute products or categories.`
           },
           {
             role: "user",
-            content: `Please analyze this webpage content from ${parsedUrl.host} and extract all menu items for an AAC communication board. Create appropriate categories and subcategories.
+            content: `Please analyze this webpage content from ${parsedUrl.host} and extract only items explicitly present in the supplied content for an AAC communication board. Every item must include exact supporting text in sourceText. Do not add drinks, foods, or categories unless their names appear in the supplied content.
 
 Webpage content:
 ${textContent}`
@@ -542,13 +603,14 @@ ${textContent}`
                               id: { type: "string" },
                               text: { type: "string" },
                               textEn: { type: "string" },
+                              sourceText: { type: "string" },
                               category: { 
                                 type: "string", 
                                 enum: ["people", "verbs", "descriptors", "social"] 
                               },
                               icon: { type: "string" }
                             },
-                            required: ["id", "text", "textEn", "category", "icon"]
+                            required: ["id", "text", "textEn", "sourceText", "category", "icon"]
                           }
                         }
                       },
@@ -594,7 +656,8 @@ ${textContent}`
       throw new Error("No tool call response from AI");
     }
 
-    const menuData = JSON.parse(toolCall.function.arguments);
+    const rawMenuData = JSON.parse(toolCall.function.arguments);
+    const menuData = sanitizeVisibleEvidence(rawMenuData);
     console.log(`Menu data parsed successfully for user ${user.id}: ${menuData.businessName}, ${menuData.categories?.length || 0} categories`);
 
     // Attach free ARASAAC pictograms to each item where available.
