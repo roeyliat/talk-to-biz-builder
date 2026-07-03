@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, ArrowRight, Check, Sparkles, Link, Camera, Keyboard } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Sparkles, Link, Camera, Keyboard, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AACCard } from '@/components/aac/AACCard';
 import { businessPreviewCards, BusinessType, getBoardsForBusinessType, getSupermarketBaseCategories } from '@/data/businessBoards';
@@ -63,6 +63,7 @@ const CreateBoard = () => {
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showManualMenuModal, setShowManualMenuModal] = useState(false);
+  const [manualEntryMode, setManualEntryMode] = useState<'text' | 'pdf'>('text');
   const [showBoardReview, setShowBoardReview] = useState(false);
   
   const { isProcessing, generatedBoards, processMenuUrl, processMenuImage, setGeneratedBoards, reset: resetScanner } = useMenuScanner();
@@ -516,16 +517,31 @@ const CreateBoard = () => {
                         type="button"
                         variant="outline"
                         className="flex-1 gap-2"
-                        onClick={() => setShowManualMenuModal(true)}
+                        onClick={() => {
+                          setManualEntryMode('text');
+                          setShowManualMenuModal(true);
+                        }}
                       >
                         <Keyboard className="h-4 w-4" />
                         {language === 'he' ? 'הקלדה ידנית' : 'Type Manually'}
                       </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 gap-2"
+                        onClick={() => {
+                          setManualEntryMode('pdf');
+                          setShowManualMenuModal(true);
+                        }}
+                      >
+                        <FileText className="h-4 w-4" />
+                        {language === 'he' ? 'העלאת PDF' : 'Upload PDF'}
+                      </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       {language === 'he'
-                        ? 'סרקו תפריט מאתר או תמונה, או הקלידו אותו ידנית - ותוכלו לעבור מיד לעריכה'
-                        : 'Import from a site or image, or type the menu manually and jump straight to editing'}
+                        ? 'סרקו תפריט מאתר או תמונה, העלו PDF, או הקלידו אותו ידנית - ותוכלו לעבור מיד לעריכה'
+                        : 'Import from a site or image, upload a PDF, or type the menu manually and jump straight to editing'}
                     </p>
                   </div>
 
@@ -700,6 +716,7 @@ const CreateBoard = () => {
         onClose={() => setShowManualMenuModal(false)}
         onSubmit={handleManualMenuSubmit}
         businessName={formData.businessName}
+        openPdfPickerOnOpen={manualEntryMode === 'pdf'}
       />
 
       {/* Processing Overlay */}

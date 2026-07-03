@@ -13,14 +13,16 @@ interface ManualMenuModalProps {
   onClose: () => void;
   onSubmit: (menuText: string) => void;
   businessName?: string;
+  openPdfPickerOnOpen?: boolean;
 }
 
-export function ManualMenuModal({ open, onClose, onSubmit, businessName }: ManualMenuModalProps) {
+export function ManualMenuModal({ open, onClose, onSubmit, businessName, openPdfPickerOnOpen = false }: ManualMenuModalProps) {
   const { language } = useLanguage();
   const { toast } = useToast();
   const [menuText, setMenuText] = useState('');
   const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+  const hasAutoOpenedPdfRef = useRef(false);
 
   const isRtl = language === 'he' || language === 'ar';
 
@@ -93,8 +95,22 @@ export function ManualMenuModal({ open, onClose, onSubmit, businessName }: Manua
     if (!open) {
       setMenuText('');
       setIsExtractingPdf(false);
+      hasAutoOpenedPdfRef.current = false;
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !openPdfPickerOnOpen || hasAutoOpenedPdfRef.current) {
+      return;
+    }
+
+    hasAutoOpenedPdfRef.current = true;
+    const timeoutId = window.setTimeout(() => {
+      pdfInputRef.current?.click();
+    }, 80);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [open, openPdfPickerOnOpen]);
 
   const extractTextFromPdf = async (file: File) => {
     const pdfjs = await import('pdfjs-dist');
