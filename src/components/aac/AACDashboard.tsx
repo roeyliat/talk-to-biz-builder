@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AACBoard, AACCell, BoardNavigationState } from '@/types/aac';
 import { AACCard } from './AACCard';
@@ -9,7 +10,7 @@ import { CustomerModeOverlay } from './CustomerModeOverlay';
 import { VoiceSettingsModal } from '@/components/settings/VoiceSettingsModal';
 import { GuestWatermark } from './GuestWatermark';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X, Settings } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X, Settings, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
@@ -145,8 +146,9 @@ export function AACDashboard({
   const { language, direction, t } = useLanguage();
   const { speak, isSpeaking, speakingCellId, isSupported } = useTextToSpeech();
   const { toast } = useToast();
-  const { isGuest } = useAuth();
+  const { user, isGuest, signOut, loading: authLoading } = useAuth();
   const { playClickSound } = useClickSound();
+  const navigate = useNavigate();
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   
   const [navState, setNavState] = useState<BoardNavigationState>(() =>
@@ -164,6 +166,25 @@ export function AACDashboard({
 
   const currentBoard = activeBoards[navState.currentBoardId];
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
+
+  const handleSignOut = useCallback(async () => {
+    const { error } = await signOut();
+
+    if (error) {
+      toast({
+        title: language === 'he' ? 'שגיאה' : 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: language === 'he' ? 'להתראות!' : 'Goodbye!',
+      description: language === 'he' ? 'התנתקת בהצלחה' : 'You have been signed out',
+    });
+    navigate('/');
+  }, [language, navigate, signOut, toast]);
 
   useEffect(() => {
     const nextBoards = boards ? { ...boards } : { ...getBoardsForBusinessType(businessType) };
@@ -493,8 +514,31 @@ export function AACDashboard({
     <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-[#eef2f8] text-base', className)}>
       {/* Top Bar */}
       {!useIceCreamLayout && (
-      <header className="sticky top-16 z-40 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-3 py-2 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-3 py-2 backdrop-blur-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link to="/" className="flex shrink-0 items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-primary">
+              <img
+                src="/favicon.png"
+                alt="TalkBiz Logo"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <span className="hidden text-base font-bold text-foreground lg:inline">TalkBiz</span>
+          </Link>
+
+          <nav className="hidden items-center gap-4 lg:flex">
+            <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              {t('nav.home')}
+            </Link>
+            <Link to="/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              {t('nav.dashboard')}
+            </Link>
+            <Link to="/create" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              {t('nav.create')}
+            </Link>
+          </nav>
+
           {navState.breadcrumbs.length > 0 && (
             <Button
               variant="outline"
@@ -508,7 +552,7 @@ export function AACDashboard({
           )}
           
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-1 text-sm overflow-x-auto">
+          <nav className="flex min-w-0 items-center gap-1 overflow-x-auto text-sm">
             {navState.breadcrumbs.map((crumb, index) => (
               <div key={crumb.id} className="flex items-center gap-1">
                 {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground/50" />}
@@ -532,7 +576,7 @@ export function AACDashboard({
           </nav>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex shrink-0 items-center gap-1.5">
           {/* Customer Mode Toggle */}
           <Button
             variant={isCustomerMode ? "default" : "outline"}
@@ -593,6 +637,19 @@ export function AACDashboard({
           </Button>
 
           <LanguageSwitcher variant="compact" />
+
+          {!authLoading && user && (
+            <div className="hidden items-center gap-2 lg:flex">
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span className="max-w-[180px] truncate">{isGuest ? (language === 'he' ? 'אורח' : 'Guest') : user.email}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => void handleSignOut()} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                {language === 'he' ? 'התנתק' : 'Sign Out'}
+              </Button>
+            </div>
+          )}
         </div>
       </header>
       )}
