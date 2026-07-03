@@ -41,6 +41,24 @@ const tokenizeNormalizedKey = (value: string) =>
     .split(' ')
     .filter(Boolean);
 
+const hasWholeWordSequenceMatch = (queryTokens: string[], candidateTokens: string[]) => {
+  if (queryTokens.length === 0 || candidateTokens.length === 0 || candidateTokens.length > queryTokens.length) {
+    return false;
+  }
+
+  for (let startIndex = 0; startIndex <= queryTokens.length - candidateTokens.length; startIndex += 1) {
+    const candidateMatches = candidateTokens.every(
+      (token, tokenIndex) => queryTokens[startIndex + tokenIndex] === token,
+    );
+
+    if (candidateMatches) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 const DISCOVERED_LOCAL_IMAGES = imageModulePaths.map((filePath) => ({
   imageUrl: toStablePublicImageUrl(filePath),
   aliases: [extractFilename(filePath)],
@@ -134,6 +152,37 @@ const normalizedLocalEntries = [...localImageAliasMap.entries()].map(([alias, im
   tokens: tokenizeNormalizedKey(alias),
 }));
 
+export function findWholeWordLocalImageMatch(
+  normalizedName: string,
+  entries: Array<{ alias: string; imageUrl: string; tokens: string[] }> = normalizedLocalEntries,
+) {
+  const exactMatch = localImageAliasMap.get(normalizedName);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const nameTokens = tokenizeNormalizedKey(normalizedName);
+  if (nameTokens.length === 0) {
+    return undefined;
+  }
+
+  const rankedWholeWordMatch = entries
+    .filter((entry) => hasWholeWordSequenceMatch(nameTokens, entry.tokens))
+    .sort((first, second) => {
+      if (second.tokens.length !== first.tokens.length) {
+        return second.tokens.length - first.tokens.length;
+      }
+
+      if (second.alias.length !== first.alias.length) {
+        return second.alias.length - first.alias.length;
+      }
+
+      return 0;
+    })[0];
+
+  return rankedWholeWordMatch?.imageUrl;
+}
+
 export function findLocalImageUrl(name?: string) {
   if (!name) {
     return undefined;
@@ -144,32 +193,7 @@ export function findLocalImageUrl(name?: string) {
     return undefined;
   }
 
-  const exactMatch = localImageAliasMap.get(normalizedName);
-  if (exactMatch) {
-    return exactMatch;
-  }
-
-  const inclusiveMatch = normalizedLocalEntries.find(
-    (entry) => normalizedName.includes(entry.alias) || entry.alias.includes(normalizedName),
-  );
-  if (inclusiveMatch) {
-    return inclusiveMatch.imageUrl;
-  }
-
-  const nameTokens = tokenizeNormalizedKey(normalizedName);
-  if (nameTokens.length === 0) {
-    return undefined;
-  }
-
-  const rankedTokenMatch = normalizedLocalEntries
-    .map((entry) => ({
-      imageUrl: entry.imageUrl,
-      score: entry.tokens.filter((token) => nameTokens.includes(token)).length,
-    }))
-    .filter((entry) => entry.score > 0)
-    .sort((first, second) => second.score - first.score)[0];
-
-  return rankedTokenMatch?.imageUrl;
+  return findWholeWordLocalImageMatch(normalizedName);
 }
 
 export function findFirstLocalImageUrl(...names: Array<string | undefined>) {

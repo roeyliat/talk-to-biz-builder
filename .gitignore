@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local deployment and tool state
+.firebase/
+.continue/
+supabase/.temp/
+tmp-check-admin-reset.cjs

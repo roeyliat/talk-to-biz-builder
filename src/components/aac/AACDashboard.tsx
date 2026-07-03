@@ -509,17 +509,9 @@ export function AACDashboard({
           
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-1 text-sm overflow-x-auto">
-            <button
-              onClick={() => navigateToBreadcrumb(-1)}
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline">{t('aac.mainBoard')}</span>
-            </button>
-            
             {navState.breadcrumbs.map((crumb, index) => (
               <div key={crumb.id} className="flex items-center gap-1">
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
+                {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground/50" />}
                 <button
                   onClick={() => navigateToBreadcrumb(index)}
                   className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[100px]"

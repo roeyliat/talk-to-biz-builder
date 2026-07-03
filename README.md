@@ -64,6 +64,38 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+## One-command local deploy
+
+If you work with the two-worktree setup in this repo, you can deploy everything with one command from the main project folder:
+
+```sh
+npm run deploy:live -- --message "Describe your change"
+```
+
+What it does:
+
+- creates a commit in the current worktree if you still have local changes
+- cherry-picks that commit into the clean `main` worktree at `../talk-to-biz-builder-main`
+- runs `npm run build`
+- deploys to Firebase Hosting with `npx firebase-tools`
+- pushes `main` to `origin/main`
+
+Helpful options:
+
+```sh
+# Preview the commands without changing anything
+npm run deploy:dry -- --message "Preview deploy"
+
+# If your clean main worktree lives somewhere else
+MAIN_WORKTREE=/absolute/path/to/talk-to-biz-builder-main npm run deploy:live -- --message "Deploy latest fixes"
+```
+
+Notes:
+
+- The script automatically ignores local-only paths like `.firebase/`, `.continue/`, `supabase/.temp/`, and `tmp-check-admin-reset.cjs`.
+- Keep the clean worktree on the `main` branch.
+- If `firebase` is not installed globally, that is fine: the script uses `npx firebase-tools`.
+
 ## Local AAC images
 
 - Add local AAC images to `src/assets/aac-local/`.
