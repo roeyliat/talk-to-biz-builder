@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ModalFooter } from '@/components/ui/modal-footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -110,11 +110,10 @@ export function MenuScannerModal({ open, onClose, onImageSelected }: MenuScanner
       <DialogContent className="sm:max-w-lg" dir={isRtl ? 'rtl' : 'ltr'}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">{t.title}</DialogTitle>
+          <DialogDescription>{t.instruction}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <p className="text-muted-foreground text-sm">{t.instruction}</p>
-
           {!preview ? (
             <>
               {/* Drop zone */}
