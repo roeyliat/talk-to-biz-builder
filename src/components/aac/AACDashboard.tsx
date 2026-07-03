@@ -688,6 +688,31 @@ export function AACDashboard({
       {/* Main Content */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-2 pb-4 md:p-3 md:pb-6">
+          {showMockupSideRail && !useIceCreamLayout && (
+            <div className="sticky top-0 z-20 -mx-2 mb-3 border-b border-slate-200 bg-[#eef2f8]/95 px-2 py-2 backdrop-blur lg:hidden md:-mx-3 md:px-3">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {sideRailCells.map((cell) => (
+                  <AACCard
+                    key={`mobile-${cell.id}`}
+                    text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
+                    imageSearchTerms={[cell.text, cell.textEn]}
+                    category={cell.category}
+                    icon={cell.icon}
+                    imageUrl={cell.imageUrl}
+                    isFolder={!!cell.linkToBoardId}
+                    onClick={() => handleCellClick(cell)}
+                    size="sm"
+                    variant="utility"
+                    labelPosition="top"
+                    isEditMode={isEditMode}
+                    isSpeaking={speakingCellId === cell.id}
+                    className="h-[104px] min-h-[104px] min-w-[102px] shrink-0 rounded-[18px] px-2 py-2 text-sm"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           {useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]">
@@ -1168,7 +1193,7 @@ export function AACDashboard({
               </section>
 
               {showMockupSideRail && (
-                <aside className={cn('space-y-2.5 ps-1', useIceCreamLayout && 'ps-0')}>
+                <aside className={cn('hidden space-y-2.5 ps-1 lg:block', useIceCreamLayout && 'ps-0')}>
                   <div className="grid auto-rows-fr gap-2.5">
                   {sideRailCells.map((cell) => (
                     <AACCard
