@@ -28,4 +28,31 @@ describe('sanitizeMenuData', () => {
     expect(texts).not.toContain('שחור');
     expect(texts).not.toContain('וניל');
   });
+
+  it('merges consecutive multi-word fragments into a known local composite flavor', () => {
+    const menuData: MenuData = {
+      businessName: 'Pinoli',
+      businessNameHe: 'פינולי',
+      categories: [
+        {
+          id: 'flavors',
+          name: 'Flavors',
+          nameHe: 'טעמים',
+          items: [
+            { text: 'מסקרפונה', textEn: 'Mascarpone' },
+            { text: 'פירות יער', textEn: 'Berries' },
+            { text: 'וקרמבל', textEn: 'And crumble' },
+          ],
+        },
+      ],
+    };
+
+    const sanitized = sanitizeMenuData(menuData);
+    const texts = sanitized.categories[0]?.items.map((item) => item.text) ?? [];
+
+    expect(texts).toContain('מסקרפונה פירות יער וקרמבל');
+    expect(texts).not.toContain('מסקרפונה');
+    expect(texts).not.toContain('פירות יער');
+    expect(texts).not.toContain('וקרמבל');
+  });
 });

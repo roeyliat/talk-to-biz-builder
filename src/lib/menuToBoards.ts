@@ -182,25 +182,44 @@ const mergeCompositeLocalItems = (items: MenuItemData[]) => {
       continue;
     }
 
-    const matchedIndexes: number[] = [];
-    let canMerge = true;
+    const availableCandidates = normalizedItems.filter((candidate) => !consumedIndexes.has(candidate.index));
+    let matchedIndexes: number[] | null = null;
 
-    for (const token of entry.tokens) {
-      const match = normalizedItems.find((candidate) =>
-        !consumedIndexes.has(candidate.index) &&
-        candidate.tokens.length === 1 &&
-        candidate.normalized === token,
-      );
+    for (let startIndex = 0; startIndex < availableCandidates.length; startIndex += 1) {
+      const nextMatchedIndexes: number[] = [];
+      let tokenCursor = 0;
 
-      if (!match) {
-        canMerge = false;
-        break;
+      for (let candidateIndex = startIndex; candidateIndex < availableCandidates.length; candidateIndex += 1) {
+        const candidate = availableCandidates[candidateIndex];
+        const candidateTokenSlice = entry.tokens.slice(tokenCursor, tokenCursor + candidate.tokens.length);
+
+        if (
+          candidate.tokens.length === 0 ||
+          candidateTokenSlice.length !== candidate.tokens.length ||
+          candidate.tokens.some((token, tokenIndex) => candidateTokenSlice[tokenIndex] !== token)
+        ) {
+          if (nextMatchedIndexes.length > 0) {
+            break;
+          }
+
+          continue;
+        }
+
+        nextMatchedIndexes.push(candidate.index);
+        tokenCursor += candidate.tokens.length;
+
+        if (tokenCursor === entry.tokens.length) {
+          matchedIndexes = nextMatchedIndexes;
+          break;
+        }
       }
 
-      matchedIndexes.push(match.index);
+      if (matchedIndexes) {
+        break;
+      }
     }
 
-    if (!canMerge) {
+    if (!matchedIndexes || matchedIndexes.length === 0) {
       continue;
     }
 
