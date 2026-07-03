@@ -180,6 +180,50 @@ const countExtractedItems = (menuData: any) => {
   return categoryCount + standaloneCount;
 };
 
+const tryParseJson = (value: string) => {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
+const parseMenuDataFromResponse = (message: any) => {
+  const toolCall = message?.tool_calls?.find(
+    (call: any) => call?.function?.name === "create_aac_board"
+  ) ?? message?.tool_calls?.[0];
+
+  const toolArguments = toolCall?.function?.arguments;
+  if (typeof toolArguments === "string" && toolArguments.trim()) {
+    const parsedArguments = tryParseJson(toolArguments);
+    if (parsedArguments && typeof parsedArguments === "object") {
+      return parsedArguments;
+    }
+  }
+
+  const messageContent = message?.content;
+  if (typeof messageContent !== "string" || !messageContent.trim()) {
+    return null;
+  }
+
+  const directParsed = tryParseJson(messageContent);
+  if (directParsed && typeof directParsed === "object") {
+    return directParsed;
+  }
+
+  try {
+    const extractedJson = extractFirstJsonObject(messageContent);
+    const extractedParsed = tryParseJson(extractedJson);
+    if (extractedParsed && typeof extractedParsed === "object") {
+      return extractedParsed;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -429,30 +473,27 @@ Be thorough but practical - focus only on the items visibly present in the image
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
-    const data = await response.json();
+    let data: any;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse AI gateway JSON response', parseError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'The AI response could not be read for this image. Please try a clearer image.',
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     console.log(`AI response received for user ${userId}`);
 
     const message = data.choices?.[0]?.message;
-    const toolCall = message?.tool_calls?.[0];
+    const rawMenuData = parseMenuDataFromResponse(message);
 
-    let rawMenuData: any;
-
-    try {
-      if (toolCall?.function?.arguments) {
-        rawMenuData = JSON.parse(toolCall.function.arguments);
-      } else if (typeof message?.content === 'string' && message.content.trim()) {
-        rawMenuData = JSON.parse(extractFirstJsonObject(message.content));
-      } else {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "The AI didn't return usable menu data for this image. Please try a clearer image.",
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    } catch (parseError) {
-      console.error('Failed to parse AI menu response', parseError);
+    if (!rawMenuData || typeof rawMenuData !== 'object') {
+      console.error('Failed to parse AI menu response payload', message);
       return new Response(
         JSON.stringify({
           success: false,
@@ -463,6 +504,17 @@ Be thorough but practical - focus only on the items visibly present in the image
     }
 
     const menuData = sanitizeMenuForBusinessType(rawMenuData, businessType);
+    if (!menuData || typeof menuData !== 'object') {
+      console.error('Sanitized menu data is invalid', rawMenuData);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'The menu image could not be understood. Please try another clearer photo.',
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (countExtractedItems(menuData) === 0) {
       return new Response(
         JSON.stringify({
@@ -474,8 +526,11 @@ Be thorough but practical - focus only on the items visibly present in the image
     }
     console.log(`Menu data parsed successfully for user ${userId}: ${menuData.businessName}`);
 
-    // Attach free ARASAAC pictograms to each item where available.
-    await enrichMenuWithArasaac(menuData);
+    try {
+      await enrichMenuWithArasaac(menuData);
+    } catch (enrichmentError) {
+      console.error('ARASAAC enrichment failed; returning menu without pictogram enrichment', enrichmentError);
+    }
 
     return new Response(
       JSON.stringify({ success: true, data: menuData }),

@@ -203,6 +203,7 @@ run git -C "$MAIN_WORKTREE" push origin "$DEPLOY_BRANCH"
 
 if (( ! DRY_RUN )) && [[ -d "$MAIN_WORKTREE/.firebase" ]]; then
   rm -rf "$MAIN_WORKTREE/.firebase"
+  git -C "$MAIN_WORKTREE" restore .firebase >/dev/null 2>&1 || true
 fi
 
 log "Verifying sync status"
