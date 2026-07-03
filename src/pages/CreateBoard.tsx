@@ -619,7 +619,7 @@ const CreateBoard = () => {
         onClose={() => setShowImageModal(false)}
         onImageSelected={async (imageBase64) => {
           setShowImageModal(false);
-          const success = await processMenuImage(imageBase64);
+          const success = await processMenuImage(imageBase64, formData.businessType);
           if (success) {
             setShowBoardReview(true);
           }

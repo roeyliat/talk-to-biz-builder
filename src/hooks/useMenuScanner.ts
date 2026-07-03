@@ -9,7 +9,7 @@ export function useMenuScanner() {
   const [generatedBoards, setGeneratedBoards] = useState<Record<string, AACBoard> | null>(null);
   const { toast } = useToast();
 
-  const processMenuImage = async (imageBase64: string): Promise<boolean> => {
+  const processMenuImage = async (imageBase64: string, businessType?: string): Promise<boolean> => {
     setIsProcessing(true);
     
     try {
@@ -25,7 +25,7 @@ export function useMenuScanner() {
       }
 
       const { data, error } = await supabase.functions.invoke('process-menu', {
-        body: { imageBase64 },
+        body: { imageBase64, businessType },
       });
 
       if (error) {

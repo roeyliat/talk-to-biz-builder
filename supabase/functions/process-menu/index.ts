@@ -11,6 +11,90 @@ const corsHeaders = {
 const MAX_IMAGE_SIZE = 10_000_000; // 10MB
 const VALID_IMAGE_FORMAT = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/]+=*$/;
 
+const normalizeValue = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0591-\u05C7]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const ICE_CREAM_ALLOWED_ITEM_TERMS = [
+  'גליד', 'טעם', 'סורבה', 'יוגורט', 'וניל', 'שוקולד', 'פיסטוק', 'תות', 'מנגו', 'לימון', 'קרמל', 'קפה',
+  'נוצלה', 'נוצ׳לה', 'חלווה', 'אגוז', 'צנובר', 'מסקרפונה', 'פירות יער', 'קרמבל', 'בייליס', 'אפרול', 'אוזו',
+  'cone', 'cup', 'flavor', 'flavour', 'gelato', 'ice cream', 'sorbet', 'yogurt', 'vanilla', 'chocolate',
+  'pistachio', 'strawberry', 'mango', 'lemon', 'caramel', 'coffee', 'hazelnut', 'berries', 'mascarpone',
+  'topping', 'sprinkle', 'waffle', 'cookie', 'nuts', 'sauce', 'crumble', 'serving', 'cone', 'cup',
+  'גביע', 'כוס', 'קונוס', 'תוספ', 'סוכר', 'אגוז', 'רטב', 'קצפת', 'שברי', 'אפרופו',
+];
+
+const ICE_CREAM_ALLOWED_CATEGORY_TERMS = [
+  'גליד', 'טעמ', 'תוספ', 'סורבה', 'יוגורט', 'גביע', 'כוס', 'קונוס', 'רטב', 'שדרוג', 'serving', 'flavor',
+  'flavour', 'topping', 'ice cream', 'gelato', 'sorbet', 'yogurt', 'cone', 'cup', 'sauce',
+];
+
+const ICE_CREAM_BLOCKED_TERMS = [
+  'שת', 'משקה', 'קפה קר', 'מיץ', 'לימונדה', 'tea', 'drink', 'drinks', 'beverage', 'coffee', 'espresso',
+  'cappuccino', 'latte', 'americano', 'juice', 'smoothie', 'soda', 'cola', 'water', 'beer', 'wine', 'cocktail',
+];
+
+const includesAnyTerm = (value: string, terms: string[]) => {
+  const normalized = normalizeValue(value);
+  return terms.some((term) => normalized.includes(normalizeValue(term)));
+};
+
+const sanitizeMenuForBusinessType = (menuData: any, businessType?: string) => {
+  if (businessType !== 'iceCream' || !Array.isArray(menuData?.categories)) {
+    return menuData;
+  }
+
+  const nextCategories = menuData.categories
+    .map((category: any) => {
+      const categoryName = `${category?.name ?? ''} ${category?.nameHe ?? ''}`.trim();
+      const categoryLooksBlocked = includesAnyTerm(categoryName, ICE_CREAM_BLOCKED_TERMS);
+      const categoryLooksAllowed = includesAnyTerm(categoryName, ICE_CREAM_ALLOWED_CATEGORY_TERMS);
+
+      const nextItems = Array.isArray(category?.items)
+        ? category.items.filter((item: any) => {
+            const itemName = `${item?.text ?? ''} ${item?.textEn ?? ''}`.trim();
+            const itemLooksBlocked = includesAnyTerm(itemName, ICE_CREAM_BLOCKED_TERMS);
+            const itemLooksAllowed = includesAnyTerm(itemName, ICE_CREAM_ALLOWED_ITEM_TERMS);
+
+            if (itemLooksBlocked && !itemLooksAllowed) {
+              return false;
+            }
+
+            if (!categoryLooksAllowed && !itemLooksAllowed) {
+              return false;
+            }
+
+            return true;
+          })
+        : [];
+
+      if (nextItems.length === 0) {
+        return null;
+      }
+
+      if (categoryLooksBlocked && !categoryLooksAllowed) {
+        return null;
+      }
+
+      return {
+        ...category,
+        items: nextItems,
+      };
+    })
+    .filter(Boolean);
+
+  return {
+    ...menuData,
+    categories: nextCategories,
+  };
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -59,7 +143,7 @@ serve(async (req) => {
       );
     }
 
-    const { imageBase64 } = body;
+    const { imageBase64, businessType } = body;
 
     // Input validation: Check if image exists
     if (!imageBase64 || typeof imageBase64 !== "string") {
@@ -137,6 +221,13 @@ Your task is to analyze the menu image and create a structured AAC board with th
 4. Provide translations in Hebrew and English
 5. Suggest appropriate emoji icons for each item
 
+Critical rules:
+- Only include items that are explicitly visible or legibly written in the provided image.
+- Do not infer, guess, autocomplete, or add generic categories/items that are not clearly shown.
+- If the image only shows ice cream flavors and toppings, do not add drinks, coffee, food, or any other unrelated items.
+- If text is partial or ambiguous, return fewer items rather than inventing anything.
+- Never expand a business into a "typical menu"; stay strictly grounded in the image.
+
 Return a JSON object with this exact structure:
 {
   "businessName": "Name of the business if visible",
@@ -159,14 +250,14 @@ Return a JSON object with this exact structure:
   ]
 }
 
-Be thorough but practical - focus on the main items visible in the menu.`
+Be thorough but practical - focus only on the items visibly present in the image.`
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Please analyze this menu image and extract all items for an AAC communication board. Create appropriate categories and subcategories."
+                text: `Please analyze this menu image and extract only the items that are actually visible for an AAC communication board. Create categories only when they are supported by the image. Expected business type: ${businessType || 'unknown'}. If the image appears to be for an ice cream shop, keep the output limited to flavors, toppings, serving styles, sauces, and other clearly visible ice cream-related items only.`
               },
               {
                 type: "image_url",
@@ -256,7 +347,8 @@ Be thorough but practical - focus on the main items visible in the menu.`
       throw new Error("No tool call response from AI");
     }
 
-    const menuData = JSON.parse(toolCall.function.arguments);
+    const rawMenuData = JSON.parse(toolCall.function.arguments);
+    const menuData = sanitizeMenuForBusinessType(rawMenuData, businessType);
     console.log(`Menu data parsed successfully for user ${userId}: ${menuData.businessName}`);
 
     // Attach free ARASAAC pictograms to each item where available.
