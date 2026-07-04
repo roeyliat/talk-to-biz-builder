@@ -48,32 +48,18 @@ const utilityRailCells: AACCell[] = [
     icon: '❌',
   },
   {
-    id: 'utility-help',
-    text: 'עזרה',
-    textEn: 'Help',
+    id: 'utility-thanks',
+    text: 'תודה',
+    textEn: 'Thank you',
     category: 'social',
-    icon: '🆘',
+    icon: '🙏',
   },
   {
-    id: 'utility-done',
-    text: 'סיימתי',
-    textEn: 'Finished',
+    id: 'utility-price',
+    text: 'כמה עולה',
+    textEn: 'How much',
     category: 'social',
-    icon: '👏',
-  },
-  {
-    id: 'utility-question',
-    text: 'שאלה',
-    textEn: 'Question',
-    category: 'social',
-    icon: '❓',
-  },
-  {
-    id: 'utility-special-requests',
-    text: 'בקשות מיוחדות',
-    textEn: 'Special requests',
-    category: 'social',
-    icon: '💬',
+    icon: '💰',
   },
 ];
 
@@ -500,10 +486,8 @@ export function AACDashboard({
     'utility-more': { center: '🙌', bottom: '🟥', accent: '🙌' },
     'utility-yes': { center: '✅' },
     'utility-no': { center: '❌' },
-    'utility-help': { center: '🧑‍🤝‍🧑' },
-    'utility-done': { center: '👏' },
-    'utility-question': { center: '❓' },
-    'utility-special-requests': { center: '💬' },
+    'utility-thanks': { center: '🙏' },
+    'utility-price': { center: '💰' },
   };
   const iceCreamCategoryButtons = [
     {

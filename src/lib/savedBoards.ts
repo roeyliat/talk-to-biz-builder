@@ -1,5 +1,5 @@
 import { AACBoard } from '@/types/aac';
-import { normalizeLocalAssetUrl } from '@/lib/localImageCatalog';
+import { findFirstLocalImageUrl, normalizeLocalAssetUrl } from '@/lib/localImageCatalog';
 import { supabase } from '@/integrations/supabase/client';
 import { Json, Tables } from '@/integrations/supabase/types';
 
@@ -85,7 +85,10 @@ const migrateBoardImages = (board: AACBoard): AACBoard => ({
   ...board,
   cells: board.cells.map((cell) => ({
     ...cell,
-    imageUrl: normalizeLocalAssetUrl(cell.imageUrl) ?? cell.imageUrl,
+    imageUrl:
+      normalizeLocalAssetUrl(cell.imageUrl)
+      ?? findFirstLocalImageUrl(cell.text, cell.textEn)
+      ?? cell.imageUrl,
   })),
 });
 
