@@ -1,0 +1,118 @@
+import { AACBoard } from '@/types/aac';
+
+export interface SharedBoardPayload {
+  version: 1;
+  boardId: string;
+  businessType: string;
+  boardName: string;
+  boards: Record<string, AACBoard>;
+}
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+const encodeBase64 = (binary: string) => {
+  if (typeof globalThis.btoa === 'function') {
+    return globalThis.btoa(binary);
+  }
+
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(binary, 'binary').toString('base64');
+  }
+
+  throw new Error('Base64 encoding is not available in this environment');
+};
+
+const decodeBase64 = (value: string) => {
+  if (typeof globalThis.atob === 'function') {
+    return globalThis.atob(value);
+  }
+
+  if (typeof Buffer !== 'undefined') {
+    return Buffer.from(value, 'base64').toString('binary');
+  }
+
+  throw new Error('Base64 decoding is not available in this environment');
+};
+
+const base64UrlEncode = (value: string) => {
+  const bytes = textEncoder.encode(value);
+  let binary = '';
+
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+
+  return encodeBase64(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+};
+
+const base64UrlDecode = (value: string) => {
+  const normalizedValue = value.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = (4 - (normalizedValue.length % 4)) % 4;
+  const paddedValue = normalizedValue.padEnd(normalizedValue.length + padding, '=');
+  const binary = decodeBase64(paddedValue);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+
+  return textDecoder.decode(bytes);
+};
+
+const isSharedBoardPayload = (value: unknown): value is SharedBoardPayload => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const payload = value as Partial<SharedBoardPayload>;
+  return payload.version === 1
+    && typeof payload.boardId === 'string'
+    && typeof payload.businessType === 'string'
+    && typeof payload.boardName === 'string'
+    && !!payload.boards
+    && typeof payload.boards === 'object';
+};
+
+export const createSharedBoardUrl = (input: {
+  baseUrl: string;
+  boardId: string;
+  businessType: string;
+  boardName: string;
+  boards?: Record<string, AACBoard>;
+}) => {
+  const url = new URL(`/board/${input.boardId}`, input.baseUrl);
+  url.searchParams.set('type', input.businessType);
+
+  if (input.boards) {
+    const payload: SharedBoardPayload = {
+      version: 1,
+      boardId: input.boardId,
+      businessType: input.businessType,
+      boardName: input.boardName,
+      boards: input.boards,
+    };
+
+    url.searchParams.set('shared', base64UrlEncode(JSON.stringify(payload)));
+  }
+
+  return url.toString();
+};
+
+export const parseSharedBoardPayload = (sharedValue: string | null) => {
+  if (!sharedValue) {
+    return null;
+  }
+
+  try {
+    const decodedValue = base64UrlDecode(sharedValue);
+    if (!decodedValue) {
+      return null;
+    }
+
+    const parsedValue = JSON.parse(decodedValue) as unknown;
+    return isSharedBoardPayload(parsedValue) ? parsedValue : null;
+  } catch (error) {
+    console.error('Failed to parse shared board payload', error);
+    return null;
+  }
+};

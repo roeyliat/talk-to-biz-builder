@@ -11,6 +11,7 @@ import { Download, QrCode, FileText, Printer, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AACBoard } from '@/types/aac';
 import { AACCard } from '@/components/aac/AACCard';
+import { createSharedBoardUrl } from '@/lib/sharedBoard';
 
 interface BoardExportModalProps {
   open: boolean;
@@ -35,9 +36,14 @@ export function BoardExportModal({
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
   
-  // Generate the board URL
   const baseUrl = window.location.origin;
-  const boardUrl = `${baseUrl}/board/${boardId}?type=${businessType}`;
+  const boardUrl = createSharedBoardUrl({
+    baseUrl,
+    boardId,
+    businessType,
+    boardName,
+    boards,
+  });
 
   const texts = {
     he: {

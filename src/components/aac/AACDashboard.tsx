@@ -166,6 +166,7 @@ export function AACDashboard({
 
   const currentBoard = activeBoards[navState.currentBoardId];
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
+  const contentDir = direction === 'rtl' ? 'rtl' : 'ltr';
 
   const handleSignOut = useCallback(async () => {
     const { error } = await signOut();
@@ -266,16 +267,33 @@ export function AACDashboard({
     }, 150);
   }, [rootBoardId]);
 
+  const getSpokenCellText = useCallback((cell: AACCell) => {
+    return language === 'he' || language === 'ar' ? cell.text : cell.textEn;
+  }, [language]);
+
+  const speakButtonLabel = useCallback((label: string, cellId?: string) => {
+    const normalizedLabel = label.trim();
+    if (!normalizedLabel) {
+      return;
+    }
+
+    playClickSound();
+    speak(normalizedLabel, undefined, cellId);
+  }, [playClickSound, speak]);
+
+  const runSpokenAction = useCallback((label: string, action: () => void, cellId?: string) => {
+    speakButtonLabel(label, cellId);
+    action();
+  }, [speakButtonLabel]);
+
   const handleCellClick = useCallback((cell: AACCell) => {
     if (isEditMode) return;
-    playClickSound();
+    const text = getSpokenCellText(cell);
+    speakButtonLabel(text, cell.id);
     
     // Customer Mode: Show enlarged cell with TTS
     if (isCustomerMode) {
       if (!cell.linkToBoardId) {
-        // Speak immediately during user gesture (must be synchronous)
-        const text = language === 'he' || language === 'ar' ? cell.text : cell.textEn;
-        speak(text, undefined, cell.id);
         setSelectedCell(cell);
       } else if (activeBoards[cell.linkToBoardId]) {
         navigateToBoard(cell.linkToBoardId);
@@ -286,19 +304,15 @@ export function AACDashboard({
     if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
       navigateToBoard(cell.linkToBoardId);
     } else {
-      // Speak the word with cell ID for visual feedback
-      const text = language === 'he' || language === 'ar' ? cell.text : cell.textEn;
-      speak(text, undefined, cell.id);
       setSelectedWords(prev => [...prev, text]);
     }
-  }, [activeBoards, navigateToBoard, language, speak, isEditMode, isCustomerMode]);
+  }, [activeBoards, getSpokenCellText, navigateToBoard, speakButtonLabel, isEditMode, isCustomerMode]);
 
   const handleCoreWordClick = useCallback((word: { textKey: string }) => {
-    playClickSound();
     const text = t(word.textKey);
-    speak(text);
+    speakButtonLabel(text);
     setSelectedWords(prev => [...prev, text]);
-  }, [t, speak]);
+  }, [t, speakButtonLabel]);
 
   const clearSelectedWords = useCallback(() => {
     setSelectedWords([]);
@@ -494,19 +508,22 @@ export function AACDashboard({
       id: 'toppings',
       label: language === 'he' ? 'תוספות' : 'Toppings',
       icon: '🌈',
-      onClick: () => navigateToBoard('toppings'),
+      onClick: () => runSpokenAction(language === 'he' ? 'תוספות' : 'Toppings', () => navigateToBoard('toppings')),
     },
     {
       id: 'quantity',
       label: language === 'he' ? 'כמות' : 'Quantity',
       icon: '🍦🍦🍦',
-      onClick: () => navigateToBreadcrumb(0),
+      onClick: () => runSpokenAction(language === 'he' ? 'כמות' : 'Quantity', () => navigateToBreadcrumb(0)),
     },
     {
       id: 'flavors',
       label: language === 'he' ? 'טעמים' : 'Flavors',
       icon: '🍨',
-      onClick: () => navigateToBoard(navState.currentBoardId.includes('cone') ? 'flavors-cone' : 'flavors-cup'),
+      onClick: () => runSpokenAction(
+        language === 'he' ? 'טעמים' : 'Flavors',
+        () => navigateToBoard(navState.currentBoardId.includes('cone') ? 'flavors-cone' : 'flavors-cup'),
+      ),
     },
   ];
 
@@ -724,8 +741,8 @@ export function AACDashboard({
 
           {useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]">
-                <section className="space-y-3">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]" style={{ direction: 'ltr' }}>
+                <section className="space-y-3" dir={contentDir}>
                   <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
                     <div className="flex items-center justify-center gap-4">
                       <img
@@ -871,7 +888,7 @@ export function AACDashboard({
                     <div className="mt-3 grid gap-2.5 md:grid-cols-[1fr_1.45fr]">
                       <button
                         type="button"
-                        onClick={clearSelectedWords}
+                        onClick={() => runSpokenAction(language === 'he' ? 'טעם אחר' : 'Another flavor', clearSelectedWords)}
                         className="flex min-h-[62px] items-center justify-center gap-3 rounded-[12px] border-[2.5px] border-[#baa6dd] bg-[linear-gradient(180deg,#eee2fb_0%,#dac9f4_100%)] px-4 text-xl font-bold text-slate-800"
                       >
                         <span>{language === 'he' ? 'טעם אחר' : 'Another flavor'}</span>
@@ -879,7 +896,7 @@ export function AACDashboard({
                       </button>
                       <button
                         type="button"
-                        onClick={selectedWords.length > 0 ? speakAllWords : undefined}
+                        onClick={selectedWords.length > 0 ? () => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords) : undefined}
                         className="flex min-h-[62px] items-center justify-center gap-3 rounded-[12px] border-[2.5px] border-[#baa6dd] bg-[linear-gradient(180deg,#eee2fb_0%,#dac9f4_100%)] px-4 text-xl font-extrabold text-slate-800"
                       >
                         <span>{language === 'he' ? 'סיימתי לבחור' : 'Done choosing'}</span>
@@ -907,7 +924,7 @@ export function AACDashboard({
                   <div className="grid gap-2.5 md:grid-cols-5">
                     <button
                       type="button"
-                      onClick={clearSelectedWords}
+                      onClick={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
                       className="flex min-h-[74px] flex-col items-center justify-center gap-1 rounded-[16px] border-[2.5px] border-[#c8d1e0] bg-white px-3 py-2 text-base font-bold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]"
                     >
                       <Trash2 className="h-8 w-8" />
@@ -915,7 +932,7 @@ export function AACDashboard({
                     </button>
                     <button
                       type="button"
-                      onClick={selectedWords.length > 0 ? speakAllWords : undefined}
+                      onClick={selectedWords.length > 0 ? () => runSpokenAction(language === 'he' ? 'כן' : 'Yes', speakAllWords) : undefined}
                       className="flex min-h-[74px] flex-col items-center justify-center gap-1 rounded-[16px] border-[2.5px] border-[#c8d1e0] bg-white px-3 py-2 text-base font-bold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]"
                     >
                       <Check className="h-9 w-9 text-emerald-600" />
@@ -923,7 +940,7 @@ export function AACDashboard({
                     </button>
                     <button
                       type="button"
-                      onClick={clearSelectedWords}
+                      onClick={() => runSpokenAction(language === 'he' ? 'לא' : 'No', clearSelectedWords)}
                       className="flex min-h-[74px] flex-col items-center justify-center gap-1 rounded-[16px] border-[2.5px] border-[#c8d1e0] bg-white px-3 py-2 text-base font-bold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]"
                     >
                       <X className="h-9 w-9 text-rose-500" />
@@ -949,7 +966,7 @@ export function AACDashboard({
                   </div>
                 </section>
 
-                <aside className="grid auto-rows-fr gap-2.5">
+                <aside className="grid auto-rows-fr gap-2.5" dir={contentDir}>
                   {sideRailCells.map((cell) => {
                     const visual = iceCreamRailVisuals[cell.id] ?? { center: cell.icon };
 
@@ -994,8 +1011,8 @@ export function AACDashboard({
             'mx-auto flex min-h-full flex-col border-[3px] bg-[#fbfcff] shadow-[0_20px_60px_rgba(48,73,122,0.15)]',
             'max-w-[1380px] rounded-[26px] border-[#30497a] p-3 md:p-4'
           )}>
-            <div className={cn('grid min-h-0 gap-3', showMockupSideRail ? 'lg:grid-cols-[minmax(0,1fr)_172px]' : 'grid-cols-1')}>
-              <section className="flex min-h-0 flex-col space-y-3">
+            <div className={cn('grid min-h-0 gap-3', showMockupSideRail ? 'lg:grid-cols-[minmax(0,1fr)_172px]' : 'grid-cols-1')} style={{ direction: 'ltr' }}>
+              <section className="flex min-h-0 flex-col space-y-3" dir={contentDir}>
                 <div className={cn(
                   'border-[3px] border-[#30497a] bg-white text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',
                   useIceCreamLayout ? 'rounded-[18px] px-4 py-3 md:px-6 md:py-4' : 'rounded-[22px] px-4 py-3 md:px-5'
@@ -1112,15 +1129,15 @@ export function AACDashboard({
 
                 {useIceCreamReferenceLayout && (
                   <div className="grid gap-2.5 md:grid-cols-3">
-                    <button type="button" onClick={() => navigateToBoard('toppings')} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
+                    <button type="button" onClick={() => runSpokenAction(language === 'he' ? 'תוספות' : 'Toppings', () => navigateToBoard('toppings'))} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
                       <span>{language === 'he' ? 'תוספות' : 'Toppings'}</span>
                       <span className="text-2xl" aria-hidden="true">🌈</span>
                     </button>
-                    <button type="button" onClick={() => navigateToBreadcrumb(0)} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
+                    <button type="button" onClick={() => runSpokenAction(language === 'he' ? 'כמות' : 'Quantity', () => navigateToBreadcrumb(0))} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
                       <span>{language === 'he' ? 'כמות' : 'Quantity'}</span>
                       <span className="text-2xl" aria-hidden="true">🍦🍦🍦</span>
                     </button>
-                    <button type="button" onClick={() => navigateToBoard(navState.currentBoardId.includes('cone') ? 'flavors-cone' : 'flavors-cup')} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
+                    <button type="button" onClick={() => runSpokenAction(language === 'he' ? 'טעמים' : 'Flavors', () => navigateToBoard(navState.currentBoardId.includes('cone') ? 'flavors-cone' : 'flavors-cup'))} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
                       <span>{language === 'he' ? 'טעמים' : 'Flavors'}</span>
                       <span className="text-2xl" aria-hidden="true">🍨</span>
                     </button>
@@ -1130,7 +1147,7 @@ export function AACDashboard({
                 <div className={cn('grid gap-2.5', useIceCreamLayout ? 'md:grid-cols-5' : 'md:grid-cols-5')}>
                   <button
                     type="button"
-                    onClick={clearSelectedWords}
+                    onClick={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
                     className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
                   >
                     <Trash2 className="h-5 w-5" />
@@ -1138,7 +1155,7 @@ export function AACDashboard({
                   </button>
                   <button
                     type="button"
-                    onClick={selectedWords.length > 0 ? speakAllWords : undefined}
+                    onClick={selectedWords.length > 0 ? () => runSpokenAction(useIceCreamLayout ? (language === 'he' ? 'כן' : 'Yes') : language === 'he' ? 'השמע' : 'Speak', speakAllWords) : undefined}
                     disabled={!useIceCreamLayout && (selectedWords.length === 0 || isSpeaking)}
                     className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)] disabled:opacity-50"
                   >
@@ -1147,7 +1164,9 @@ export function AACDashboard({
                   </button>
                   <button
                     type="button"
-                    onClick={useIceCreamLayout ? clearSelectedWords : () => setIsCustomerMode((prev) => !prev)}
+                    onClick={useIceCreamLayout
+                      ? () => runSpokenAction(language === 'he' ? 'לא' : 'No', clearSelectedWords)
+                      : () => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
                     className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
                   >
                     {useIceCreamLayout ? <X className="h-6 w-6 text-rose-500" /> : <MessageCircle className="h-5 w-5" />}
@@ -1155,7 +1174,7 @@ export function AACDashboard({
                   </button>
                   <button
                     type="button"
-                    onClick={navigateBack}
+                    onClick={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
                     disabled={navState.breadcrumbs.length === 0}
                     className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)] disabled:opacity-50"
                   >
@@ -1164,7 +1183,7 @@ export function AACDashboard({
                   </button>
                   <button
                     type="button"
-                    onClick={() => navigateToBreadcrumb(-1)}
+                    onClick={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
                     className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
                   >
                     <Home className="h-5 w-5" />
@@ -1182,7 +1201,7 @@ export function AACDashboard({
                   </div>
                   <button
                     type="button"
-                    onClick={selectedWords.length > 0 ? speakAllWords : undefined}
+                    onClick={selectedWords.length > 0 ? () => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords) : undefined}
                     className="flex min-h-[72px] items-center justify-center gap-2 rounded-[16px] border-[3px] border-[#c9b4e8] bg-[linear-gradient(180deg,#f3ebff_0%,#e9ddff_100%)] px-4 text-base font-extrabold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
                   >
                     <Check className="h-6 w-6 text-emerald-600" />
@@ -1202,7 +1221,7 @@ export function AACDashboard({
               </section>
 
               {showMockupSideRail && (
-                <aside className={cn('hidden space-y-2.5 ps-1 lg:block', useIceCreamLayout && 'ps-0')}>
+                <aside className={cn('hidden space-y-2.5 ps-1 lg:block', useIceCreamLayout && 'ps-0')} dir={contentDir}>
                   <div className="grid auto-rows-fr gap-2.5">
                   {sideRailCells.map((cell) => (
                     <AACCard

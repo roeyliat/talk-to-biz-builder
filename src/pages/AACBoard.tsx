@@ -5,6 +5,7 @@ import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { AACBoard as AACBoardType } from '@/types/aac';
 import { getSavedBoardById, updateSavedBoardBoards } from '@/lib/savedBoards';
 import { useAuth } from '@/hooks/useAuth';
+import { parseSharedBoardPayload } from '@/lib/sharedBoard';
 
 const shouldUseLatestBusinessTemplate = (businessType: BusinessType) => businessType === 'iceCream';
 
@@ -53,6 +54,14 @@ const AACBoard = () => {
         }
       }
 
+      const sharedPayload = parseSharedBoardPayload(searchParams.get('shared'));
+      if (sharedPayload?.boards) {
+        if (isMounted) {
+          setBoards(sharedPayload.boards);
+        }
+        return;
+      }
+
       const savedBoard = await getSavedBoardById(boardId, user && !isGuest ? user.id : undefined);
       if (savedBoard) {
         if (shouldUseLatestBusinessTemplate(businessType)) {
@@ -85,7 +94,7 @@ const AACBoard = () => {
     return () => {
       isMounted = false;
     };
-  }, [authLoading, boardId, businessType, user, isGuest]);
+  }, [authLoading, boardId, businessType, searchParams, user, isGuest]);
   
   const handleBoardsChange = (newBoards: Record<string, AACBoardType>) => {
     setBoards(newBoards);
