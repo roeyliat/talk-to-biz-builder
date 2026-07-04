@@ -76,7 +76,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
         disabled={disabled}
         style={style}
         className={cn(
-          'relative flex flex-col items-center justify-between gap-2 rounded-xl p-3',
+          'relative flex flex-col items-center gap-2 overflow-hidden rounded-xl p-3',
           'transition-all duration-200 ease-out',
           !isEditMode && 'hover:-translate-y-1 hover:shadow-lg',
           'active:translate-y-0 active:shadow-md',
@@ -143,11 +143,10 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
 
         <div
           className={cn(
-            'flex flex-1 self-stretch overflow-hidden',
-            isMockupCard && 'items-center justify-center min-h-[112px] px-1 py-1 md:min-h-[126px]',
-            isRailCard && 'items-center justify-center min-h-[104px] px-1.5 py-1.5 md:min-h-[114px]',
-            isUtilityCard && 'items-center justify-center min-h-[106px] px-1.5 py-1.5 md:min-h-[118px]',
-            !isBoardStyleCard && 'items-center justify-center'
+            'grid min-h-0 flex-1 self-stretch place-items-center overflow-hidden',
+            isMockupCard && 'min-h-[112px] px-1 py-1 md:min-h-[126px]',
+            isRailCard && 'min-h-[104px] px-1.5 py-1.5 md:min-h-[114px]',
+            isUtilityCard && 'min-h-[106px] px-1.5 py-1.5 md:min-h-[118px]'
           )}
         >
           {shouldShowImage ? (
@@ -156,19 +155,18 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               alt={text} 
               onError={() => setHasImageError(true)}
               className={cn(
-                'max-h-full max-w-full object-contain object-center',
-                isMockupCard && 'h-full w-full',
-                isRailCard && 'h-full w-full max-h-[88px] md:max-h-[96px]',
-                isUtilityCard && 'h-full w-full max-h-[90px] md:max-h-[98px]',
-                !isBoardStyleCard && 'h-full w-full'
+                'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
+                isRailCard && 'max-h-[88px] md:max-h-[96px]',
+                isUtilityCard && 'max-h-[90px] md:max-h-[98px]'
               )}
             />
           ) : fallbackIcon ? (
             <span
               className={cn(
-                isMockupCard && 'text-[2.8rem] md:text-[3.2rem] -mt-2 md:-mt-3',
-                isRailCard && 'text-[2.5rem] md:text-[2.9rem] -mt-1',
-                isUtilityCard && 'text-[2.65rem] md:text-[3rem] -mt-1',
+                'self-center justify-self-center',
+                isMockupCard && 'text-[2.8rem] md:text-[3.2rem]',
+                isRailCard && 'text-[2.5rem] md:text-[2.9rem]',
+                isUtilityCard && 'text-[2.65rem] md:text-[3rem]',
                 !usesMockupSurface && 'text-3xl md:text-4xl'
               )}
             >

@@ -291,9 +291,11 @@ export function AACDashboard({
       return;
     }
 
-    playClickSound();
+    if (!isSupported) {
+      playClickSound();
+    }
     speak(normalizedLabel, undefined, cellId);
-  }, [playClickSound, speak]);
+  }, [isSupported, playClickSound, speak]);
 
   const runSpokenAction = useCallback((label: string, action: () => void, cellId?: string) => {
     speakButtonLabel(label, cellId);
