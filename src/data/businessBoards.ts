@@ -420,7 +420,7 @@ const iceCreamBoards: Record<string, AACBoard> = {
     cells: [
       imageCell('chocolate', 'שוקולד', 'Chocolate', 'people', '🍫', '/aac-local/שוקולד.png', 'toppings'),
       imageCell('chocolate-chips', 'שוקולד צ׳יפס', 'Chocolate Chips', 'people', '🍫', '/aac-local/שוקולד בלגי.png', 'toppings'),
-      imageCell('vanilla', 'וניל', 'Vanilla', 'people', '🍨', '/aac-local/vanilla.svg', 'toppings'),
+      imageCell('vanilla', 'וניל', 'Vanilla', 'people', '🍨', '/aac-local/וניל.png', 'toppings'),
       imageCell('pistachio', 'פיסטוק', 'Pistachio', 'people', '🥜', '/aac-local/פיסטוק.png', 'toppings'),
       imageCell('strawberry', 'תות', 'Strawberry', 'people', '🍓', '/aac-local/תות.png', 'toppings'),
       imageCell('mango', 'מנגו', 'Mango', 'people', '🥭', '/aac-local/מנגו.png', 'toppings'),
@@ -444,7 +444,7 @@ const iceCreamBoards: Record<string, AACBoard> = {
     cells: [
       imageCell('chocolate', 'שוקולד', 'Chocolate', 'people', '🍫', '/aac-local/שוקולד.png', 'toppings'),
       imageCell('chocolate-chips', 'שוקולד צ׳יפס', 'Chocolate Chips', 'people', '🍫', '/aac-local/שוקולד בלגי.png', 'toppings'),
-      imageCell('vanilla', 'וניל', 'Vanilla', 'people', '🍨', '/aac-local/vanilla.svg', 'toppings'),
+      imageCell('vanilla', 'וניל', 'Vanilla', 'people', '🍨', '/aac-local/וניל.png', 'toppings'),
       imageCell('pistachio', 'פיסטוק', 'Pistachio', 'people', '🥜', '/aac-local/פיסטוק.png', 'toppings'),
       imageCell('strawberry', 'תות', 'Strawberry', 'people', '🍓', '/aac-local/תות.png', 'toppings'),
       imageCell('mango', 'מנגו', 'Mango', 'people', '🥭', '/aac-local/מנגו.png', 'toppings'),

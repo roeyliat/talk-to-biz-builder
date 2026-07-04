@@ -68,6 +68,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
 
     const fallbackIcon = isFolder ? '📁' : icon;
     const shouldShowImage = Boolean(resolvedImageUrl) && !hasImageError;
+    const shouldBoostVanillaImage = ['וניל', 'vanilla'].includes(text.trim().toLowerCase());
 
     return (
       <button
@@ -156,6 +157,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               onError={() => setHasImageError(true)}
               className={cn(
                 'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
+                shouldBoostVanillaImage && 'scale-[1.22]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
                 isUtilityCard && 'max-h-[90px] md:max-h-[98px]'
               )}
