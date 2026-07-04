@@ -20,13 +20,6 @@ import { useClickSound } from '@/hooks/useClickSound';
 
 const utilityRailCells: AACCell[] = [
   {
-    id: 'utility-need',
-    text: 'אני צריך',
-    textEn: 'I need',
-    category: 'verbs',
-    icon: '✋',
-  },
-  {
     id: 'utility-want',
     text: 'אני רוצה',
     textEn: 'I want',
@@ -39,13 +32,6 @@ const utilityRailCells: AACCell[] = [
     textEn: 'More',
     category: 'descriptors',
     icon: '🟥',
-  },
-  {
-    id: 'utility-dont-know',
-    text: 'לא יודע',
-    textEn: "I don't know",
-    category: 'social',
-    icon: '🤷',
   },
   {
     id: 'utility-yes',
@@ -510,10 +496,8 @@ export function AACDashboard({
   const iceCreamTitle = boardTitle || (language === 'he' ? 'גלידריה' : 'Ice Cream Shop');
   const iceCreamFlavorCards = displayGridCells.slice(0, 15);
   const iceCreamRailVisuals: Record<string, { top?: string; center?: string; bottom?: string; accent?: string }> = {
-    'utility-need': { center: '🙂☝️' },
     'utility-want': { center: '🙂👉' },
     'utility-more': { center: '🙌', bottom: '🟥', accent: '🙌' },
-    'utility-dont-know': { center: '🤷' },
     'utility-yes': { center: '✅' },
     'utility-no': { center: '❌' },
     'utility-help': { center: '🧑‍🤝‍🧑' },
