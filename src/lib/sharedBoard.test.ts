@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createSharedBoardUrl, parseSharedBoardPayload } from './sharedBoard';
+import { canRenderBoardUrlAsQr, createSharedBoardUrl, parseSharedBoardPayload } from './sharedBoard';
 
 const sampleBoards = {
   main: {
@@ -61,5 +61,10 @@ describe('sharedBoard', () => {
 
   it('returns null for malformed shared payloads', () => {
     expect(parseSharedBoardPayload('not-valid')).toBeNull();
+  });
+
+  it('detects when a URL is too long for a high-correction QR code', () => {
+    expect(canRenderBoardUrlAsQr('https://example.com/short', 'H')).toBe(true);
+    expect(canRenderBoardUrlAsQr(`https://example.com/${'a'.repeat(2000)}`, 'H')).toBe(false);
   });
 });

@@ -8,6 +8,13 @@ export interface SharedBoardPayload {
   boards: Record<string, AACBoard>;
 }
 
+const QR_BYTE_LIMITS = {
+  L: 2953,
+  M: 2331,
+  Q: 1663,
+  H: 1273,
+} as const;
+
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
@@ -115,4 +122,9 @@ export const parseSharedBoardPayload = (sharedValue: string | null) => {
     console.error('Failed to parse shared board payload', error);
     return null;
   }
+};
+
+export const canRenderBoardUrlAsQr = (url: string, level: keyof typeof QR_BYTE_LIMITS = 'M') => {
+  const byteLength = textEncoder.encode(url).length;
+  return byteLength <= QR_BYTE_LIMITS[level];
 };
