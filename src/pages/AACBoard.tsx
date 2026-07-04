@@ -9,6 +9,36 @@ import { parseSharedBoardPayload } from '@/lib/sharedBoard';
 
 const shouldUseLatestBusinessTemplate = (businessType: BusinessType) => businessType === 'iceCream';
 
+const matchesTemplateCell = (savedCell: AACBoardType['cells'][number], latestCell: AACBoardType['cells'][number]) => (
+  savedCell.id === latestCell.id
+  && savedCell.text === latestCell.text
+  && savedCell.textEn === latestCell.textEn
+  && savedCell.category === latestCell.category
+  && savedCell.icon === latestCell.icon
+  && savedCell.linkToBoardId === latestCell.linkToBoardId
+);
+
+const matchesTemplateBoardStructure = (savedBoard: AACBoardType, latestBoard: AACBoardType) => {
+  if (
+    savedBoard.id !== latestBoard.id
+    || savedBoard.name !== latestBoard.name
+    || savedBoard.nameEn !== latestBoard.nameEn
+    || savedBoard.parentBoardId !== latestBoard.parentBoardId
+    || savedBoard.gridSize.cols !== latestBoard.gridSize.cols
+    || savedBoard.gridSize.rows !== latestBoard.gridSize.rows
+    || savedBoard.cells.length !== latestBoard.cells.length
+  ) {
+    return false;
+  }
+
+  const latestCellsById = new Map(latestBoard.cells.map((cell) => [cell.id, cell]));
+
+  return savedBoard.cells.every((savedCell) => {
+    const latestCell = latestCellsById.get(savedCell.id);
+    return latestCell ? matchesTemplateCell(savedCell, latestCell) : false;
+  });
+};
+
 const shouldRefreshSavedTemplateBoards = (
   savedBoards: Record<string, AACBoardType>,
   latestBoards: Record<string, AACBoardType>
@@ -20,7 +50,18 @@ const shouldRefreshSavedTemplateBoards = (
     return false;
   }
 
-  return savedBoardIds.every((boardId) => latestBoardIds.has(boardId));
+  return savedBoardIds.every((boardId) => {
+    if (!latestBoardIds.has(boardId)) {
+      return false;
+    }
+
+    const savedBoard = savedBoards[boardId];
+    const latestBoard = latestBoards[boardId];
+
+    return savedBoard && latestBoard
+      ? matchesTemplateBoardStructure(savedBoard, latestBoard)
+      : false;
+  });
 };
 
 const AACBoard = () => {

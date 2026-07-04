@@ -23,6 +23,8 @@ const extractFilename = (filePath: string) => {
   return lastSegment.replace(/\.[^.]+$/, '');
 };
 
+const extractExtension = (filePath: string) => filePath.split('.').pop()?.toLowerCase() ?? '';
+
 const extractFileBasename = (filePath: string) => filePath.split('/').pop() ?? filePath;
 
 const toBundledImageUrl = (filePath: string) => imageModules[filePath] ?? encodeURI(`/aac-local/${extractFileBasename(filePath)}`);
@@ -33,13 +35,30 @@ const buildAliasMap = (entries: Array<{ imageUrl: string; aliases: string[] }>) 
   entries.forEach(({ imageUrl, aliases }) => {
     aliases.forEach((alias) => {
       const normalized = normalizeImageKey(alias);
-      if (normalized && !aliasMap.has(normalized)) {
+      if (normalized) {
         aliasMap.set(normalized, imageUrl);
       }
     });
   });
 
   return aliasMap;
+};
+
+const getDiscoveredImagePriority = (filePath: string) => {
+  const extension = extractExtension(filePath);
+  const filename = extractFilename(filePath);
+  const hasTrailingSpaceInFilename = /\s$/.test(filename);
+
+  const extensionPriority: Record<string, number> = {
+    png: 5,
+    jpg: 4,
+    jpeg: 3,
+    webp: 2,
+    avif: 1,
+    svg: 0,
+  };
+
+  return (extensionPriority[extension] ?? -1) * 10 + (hasTrailingSpaceInFilename ? 0 : 1);
 };
 
 const tokenizeNormalizedKey = (value: string) =>
@@ -65,10 +84,19 @@ const hasWholeWordSequenceMatch = (sourceTokens: string[], candidateTokens: stri
   return false;
 };
 
-const DISCOVERED_LOCAL_IMAGES = imageModulePaths.map((filePath) => ({
-  imageUrl: toBundledImageUrl(filePath),
-  aliases: [extractFilename(filePath)],
-}));
+const DISCOVERED_LOCAL_IMAGES = imageModulePaths
+  .sort((firstPath, secondPath) => {
+    const priorityDifference = getDiscoveredImagePriority(firstPath) - getDiscoveredImagePriority(secondPath);
+    if (priorityDifference !== 0) {
+      return priorityDifference;
+    }
+
+    return firstPath.localeCompare(secondPath);
+  })
+  .map((filePath) => ({
+    imageUrl: toBundledImageUrl(filePath),
+    aliases: [extractFilename(filePath)],
+  }));
 
 const stableDiscoveredImageMap = new Map(
   DISCOVERED_LOCAL_IMAGES.map((entry) => [normalizeImageKey(entry.aliases[0] ?? ''), entry.imageUrl]),
