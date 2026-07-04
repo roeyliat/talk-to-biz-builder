@@ -47,14 +47,14 @@ export function useResolvedAacImage({
     [fallbackTerms, text],
   );
 
-  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(localImageUrl ?? normalizedImageUrl);
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(normalizedImageUrl ?? localImageUrl);
 
   useEffect(() => {
-    setResolvedImageUrl(localImageUrl ?? normalizedImageUrl);
+    setResolvedImageUrl(normalizedImageUrl ?? localImageUrl);
   }, [localImageUrl, normalizedImageUrl]);
 
   useEffect(() => {
-    if (!allowCloudFallback || localImageUrl || normalizedImageUrl) {
+    if (!allowCloudFallback || normalizedImageUrl || localImageUrl) {
       return;
     }
 
