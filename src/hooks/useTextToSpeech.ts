@@ -36,6 +36,22 @@ const languageToVoiceMap: Record<Language, string> = {
 
 const STORAGE_KEY = 'talkbiz-voice-settings';
 
+const normalizeVoiceLanguageTag = (lang: string) =>
+  lang
+    .toLowerCase()
+    .replace(/_/g, '-')
+    .replace(/^iw(?=-|$)/, 'he');
+
+const getMatchingVoices = (availableVoices: SpeechSynthesisVoice[], lang: string) => {
+  const normalizedTarget = normalizeVoiceLanguageTag(lang);
+  const targetBase = normalizedTarget.split('-')[0];
+
+  return availableVoices.filter((voice) => {
+    const normalizedVoiceLang = normalizeVoiceLanguageTag(voice.lang);
+    return normalizedVoiceLang === normalizedTarget || normalizedVoiceLang.split('-')[0] === targetBase;
+  });
+};
+
 export function useTextToSpeech() {
   const { language } = useLanguage();
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -84,14 +100,10 @@ export function useTextToSpeech() {
 
   // Find the best voice for a given language and profile
   const findBestVoice = useCallback((lang: string, preferFemale: boolean): SpeechSynthesisVoice | undefined => {
-    // Filter voices by language
-    const langCode = lang.split('-')[0];
-    const matchingVoices = voices.filter(v => 
-      v.lang === lang || v.lang.startsWith(langCode)
-    );
+    const matchingVoices = getMatchingVoices(voices, lang);
 
     if (matchingVoices.length === 0) {
-      return voices.find(v => v.default) || voices[0];
+      return undefined;
     }
 
     // Try to find a voice matching gender preference
@@ -138,6 +150,8 @@ export function useTextToSpeech() {
       currentVoices = window.speechSynthesis.getVoices();
     }
 
+    window.speechSynthesis.resume();
+
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
@@ -150,21 +164,7 @@ export function useTextToSpeech() {
     const profileMod = PROFILE_MODIFIERS[settings.profile];
 
     // Find and set the best voice for this language and profile
-    const langCode = voiceLang.split('-')[0];
-    const matchingVoices = currentVoices.filter(v =>
-      v.lang === voiceLang || v.lang.startsWith(langCode)
-    );
-    let voice: SpeechSynthesisVoice | undefined;
-    if (matchingVoices.length > 0) {
-      const genderKeywords = profileMod.preferFemale
-        ? ['female', 'woman', 'girl', 'נקבה', 'أنثى', 'женщина']
-        : ['male', 'man', 'boy', 'זכר', 'ذكر', 'мужчина'];
-      voice = matchingVoices.find(v =>
-        genderKeywords.some(kw => v.name.toLowerCase().includes(kw))
-      ) || matchingVoices[0];
-    } else {
-      voice = currentVoices.find(v => v.default) || currentVoices[0];
-    }
+    const voice = findBestVoice(voiceLang, profileMod.preferFemale);
     if (voice) {
       utterance.voice = voice;
     }
@@ -212,7 +212,7 @@ export function useTextToSpeech() {
         window.speechSynthesis.resume();
       }
     }, 5000);
-  }, [language, voices, settings]);
+  }, [findBestVoice, language, voices, settings]);
 
   const stop = useCallback(() => {
     window.speechSynthesis.cancel();

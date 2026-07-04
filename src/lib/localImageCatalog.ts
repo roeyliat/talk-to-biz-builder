@@ -153,7 +153,7 @@ const LOCAL_IMAGE_ENTRIES = [
     aliases: ['caramel', 'קרמל', 'dulce de leche', 'דולצה למנצ׳ה', 'דולצה למנצה', 'דולצה למנצ׳ה'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('כוס', 'גביע', 'cup') ?? '/aac-local/cup.svg',
+    imageUrl: findDiscoveredImageUrl('גביע', 'כוס', 'cup') ?? '/aac-local/cup.svg',
     aliases: ['cup', 'גביע', 'כוס'],
   },
   {
