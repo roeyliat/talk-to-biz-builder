@@ -27,11 +27,11 @@ const PROFILE_MODIFIERS: Record<VoiceProfile, { pitchMod: number; rateMod: numbe
 };
 
 // Map app languages to BCP-47 language tags for speech synthesis
-const languageToVoiceMap: Record<Language, string> = {
-  he: 'he-IL',
-  en: 'en-US',
-  ar: 'ar-SA',
-  ru: 'ru-RU',
+const languageToVoiceMap: Record<Language, string[]> = {
+  he: ['he-IL', 'he', 'iw-IL', 'iw'],
+  en: ['en-US', 'en'],
+  ar: ['ar-SA', 'ar'],
+  ru: ['ru-RU', 'ru'],
 };
 
 const STORAGE_KEY = 'talkbiz-voice-settings';
@@ -42,14 +42,25 @@ const normalizeVoiceLanguageTag = (lang: string) =>
     .replace(/_/g, '-')
     .replace(/^iw(?=-|$)/, 'he');
 
-const getMatchingVoices = (availableVoices: SpeechSynthesisVoice[], lang: string) => {
-  const normalizedTarget = normalizeVoiceLanguageTag(lang);
-  const targetBase = normalizedTarget.split('-')[0];
+const getMatchingVoices = (availableVoices: SpeechSynthesisVoice[], langs: string | string[]) => {
+  const candidates = Array.isArray(langs) ? langs : [langs];
+  const matches: SpeechSynthesisVoice[] = [];
 
-  return availableVoices.filter((voice) => {
-    const normalizedVoiceLang = normalizeVoiceLanguageTag(voice.lang);
-    return normalizedVoiceLang === normalizedTarget || normalizedVoiceLang.split('-')[0] === targetBase;
+  candidates.forEach((lang) => {
+    const normalizedTarget = normalizeVoiceLanguageTag(lang);
+    const targetBase = normalizedTarget.split('-')[0];
+
+    availableVoices.forEach((voice) => {
+      const normalizedVoiceLang = normalizeVoiceLanguageTag(voice.lang);
+      const isMatch = normalizedVoiceLang === normalizedTarget || normalizedVoiceLang.split('-')[0] === targetBase;
+
+      if (isMatch && !matches.some((match) => match.name === voice.name && match.lang === voice.lang)) {
+        matches.push(voice);
+      }
+    });
   });
+
+  return matches;
 };
 
 export function useTextToSpeech() {
@@ -99,8 +110,8 @@ export function useTextToSpeech() {
   }, []);
 
   // Find the best voice for a given language and profile
-  const findBestVoice = useCallback((lang: string, preferFemale: boolean): SpeechSynthesisVoice | undefined => {
-    const matchingVoices = getMatchingVoices(voices, lang);
+  const findBestVoice = useCallback((langs: string | string[], preferFemale: boolean): SpeechSynthesisVoice | undefined => {
+    const matchingVoices = getMatchingVoices(voices, langs);
 
     if (matchingVoices.length === 0) {
       return undefined;
@@ -157,16 +168,18 @@ export function useTextToSpeech() {
 
     // Set language
     const targetLang = overrideLang || language;
-    const voiceLang = languageToVoiceMap[targetLang];
-    utterance.lang = voiceLang;
+    const voiceLangs = languageToVoiceMap[targetLang];
 
     // Get profile modifiers
     const profileMod = PROFILE_MODIFIERS[settings.profile];
 
     // Find and set the best voice for this language and profile
-    const voice = findBestVoice(voiceLang, profileMod.preferFemale);
+    const voice = findBestVoice(voiceLangs, profileMod.preferFemale);
     if (voice) {
       utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = targetLang === 'he' ? 'he' : voiceLangs[0];
     }
 
     // Apply settings with profile modifiers
@@ -188,6 +201,29 @@ export function useTextToSpeech() {
       }
     };
     utterance.onerror = (e) => {
+      if (targetLang === 'he' && utterance.lang !== 'he') {
+        const fallbackUtterance = new SpeechSynthesisUtterance(text);
+        utteranceRef.current = fallbackUtterance;
+        fallbackUtterance.lang = 'he';
+        fallbackUtterance.rate = utterance.rate;
+        fallbackUtterance.pitch = utterance.pitch;
+        fallbackUtterance.volume = utterance.volume;
+        fallbackUtterance.onstart = utterance.onstart;
+        fallbackUtterance.onend = utterance.onend;
+        fallbackUtterance.onerror = () => {
+          console.warn('TTS error:', e.error);
+          setIsSpeaking(false);
+          setSpeakingCellId(null);
+          if (keepAliveRef.current) {
+            clearInterval(keepAliveRef.current);
+            keepAliveRef.current = null;
+          }
+        };
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(fallbackUtterance);
+        return;
+      }
+
       console.warn('TTS error:', e.error);
       setIsSpeaking(false);
       setSpeakingCellId(null);

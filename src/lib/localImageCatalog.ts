@@ -153,12 +153,12 @@ const LOCAL_IMAGE_ENTRIES = [
     aliases: ['caramel', 'קרמל', 'dulce de leche', 'דולצה למנצ׳ה', 'דולצה למנצה', 'דולצה למנצ׳ה'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('גביע', 'כוס', 'cup') ?? '/aac-local/cup.svg',
-    aliases: ['cup', 'גביע', 'כוס'],
+    imageUrl: findDiscoveredImageUrl('כוס', 'cup') ?? '/aac-local/cup.svg',
+    aliases: ['cup', 'כוס'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('קונוס', 'cone') ?? '/aac-local/cone.svg',
-    aliases: ['cone', 'waffle cone', 'קונוס', 'גלידה'],
+    imageUrl: findDiscoveredImageUrl('גביע', 'קונוס', 'cone') ?? '/aac-local/cone.svg',
+    aliases: ['cone', 'waffle cone', 'קונוס', 'גלידה', 'גביע'],
   },
   {
     imageUrl: findDiscoveredImageUrl('יוגורט', 'yogurt') ?? '/aac-local/yogurt.svg',
