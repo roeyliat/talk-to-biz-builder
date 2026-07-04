@@ -121,7 +121,7 @@ const LOCAL_IMAGE_ENTRIES = [
     aliases: ['chocolate', 'שוקולד', 'שוקולד ציפס', 'שוקולד צ׳יפס', 'chocolate chips'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('וניל', 'vanilla') ?? '/aac-local/vanilla.svg',
+    imageUrl: findDiscoveredImageUrl('וניל', 'vanilla') ?? '/aac-local/וניל.png',
     aliases: ['vanilla', 'וניל'],
   },
   {

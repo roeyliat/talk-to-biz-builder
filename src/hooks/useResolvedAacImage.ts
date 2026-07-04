@@ -47,14 +47,18 @@ export function useResolvedAacImage({
     [fallbackTerms, text],
   );
 
-  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(normalizedImageUrl ?? localImageUrl);
+  const preferredImageUrl = normalizedImageUrl === imageUrl
+    ? localImageUrl ?? normalizedImageUrl
+    : normalizedImageUrl ?? localImageUrl ?? imageUrl;
+
+  const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(preferredImageUrl);
 
   useEffect(() => {
-    setResolvedImageUrl(normalizedImageUrl ?? localImageUrl);
-  }, [localImageUrl, normalizedImageUrl]);
+    setResolvedImageUrl(preferredImageUrl);
+  }, [preferredImageUrl]);
 
   useEffect(() => {
-    if (!allowCloudFallback || normalizedImageUrl || localImageUrl) {
+    if (!allowCloudFallback || preferredImageUrl) {
       return;
     }
 
@@ -82,7 +86,7 @@ export function useResolvedAacImage({
     return () => {
       isCancelled = true;
     };
-  }, [allowCloudFallback, fallbackTerms, localImageUrl, normalizedImageUrl, text]);
+  }, [allowCloudFallback, fallbackTerms, preferredImageUrl, text]);
 
   return resolvedImageUrl;
 }
