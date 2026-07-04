@@ -68,12 +68,6 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
 
     const fallbackIcon = isFolder ? '📁' : icon;
     const shouldShowImage = Boolean(resolvedImageUrl) && !hasImageError;
-    const isLocalCatalogImage = Boolean(resolvedImageUrl?.includes('/aac-local/'));
-    const localImageName = resolvedImageUrl?.split('/').pop()?.toLowerCase();
-    const isReducedFlavorImage = localImageName === 'coffee.svg'
-      || localImageName === 'cookie.svg'
-      || localImageName === 'caramel.svg'
-      || localImageName === 'vanilla.svg';
 
     return (
       <button
@@ -150,9 +144,9 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
         <div
           className={cn(
             'flex flex-1 self-stretch overflow-hidden',
-            isMockupCard && 'items-center justify-center pt-1 min-h-[112px] md:min-h-[126px]',
-            isRailCard && 'items-start justify-center min-h-[104px] md:min-h-[114px] pt-3',
-            isUtilityCard && 'items-start justify-center min-h-[106px] md:min-h-[118px] pt-3',
+            isMockupCard && 'items-center justify-center min-h-[112px] px-1 py-1 md:min-h-[126px]',
+            isRailCard && 'items-center justify-center min-h-[104px] px-1.5 py-1.5 md:min-h-[114px]',
+            isUtilityCard && 'items-center justify-center min-h-[106px] px-1.5 py-1.5 md:min-h-[118px]',
             !isBoardStyleCard && 'items-center justify-center'
           )}
         >
@@ -162,16 +156,11 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               alt={text} 
               onError={() => setHasImageError(true)}
               className={cn(
-                'max-w-full object-contain transition-transform',
-                isMockupCard && !isLocalCatalogImage && 'h-auto w-full max-h-[150px] object-center md:max-h-[168px] scale-[1.06]',
-                isMockupCard && isLocalCatalogImage && !isReducedFlavorImage && 'h-auto w-full max-h-[164px] object-center md:max-h-[182px] scale-[1.16]',
-                isMockupCard && isLocalCatalogImage && isReducedFlavorImage && 'h-auto w-[92%] max-h-[118px] object-center md:max-h-[130px] scale-[1.04]',
-                isRailCard && !isLocalCatalogImage && 'h-auto w-[78%] max-h-[84px] object-top -mt-1 md:max-h-[92px] scale-[1.02]',
-                isRailCard && isLocalCatalogImage && 'h-auto w-[90%] max-h-[98px] object-top -mt-2 md:max-h-[108px] md:-mt-3 scale-[1.1]',
-                isUtilityCard && !isLocalCatalogImage && 'h-auto w-[80%] max-h-[88px] object-top -mt-1 md:max-h-[96px] scale-[1.04]',
-                isUtilityCard && isLocalCatalogImage && 'h-auto w-[92%] max-h-[104px] object-top -mt-2 md:max-h-[114px] md:-mt-3 scale-[1.12]',
-                !isBoardStyleCard && isLocalCatalogImage && 'h-auto w-[92%] max-h-[90%] object-top scale-[1.1]',
-                !isBoardStyleCard && 'h-full w-full max-h-full object-contain'
+                'max-h-full max-w-full object-contain object-center',
+                isMockupCard && 'h-full w-full',
+                isRailCard && 'h-full w-full max-h-[88px] md:max-h-[96px]',
+                isUtilityCard && 'h-full w-full max-h-[90px] md:max-h-[98px]',
+                !isBoardStyleCard && 'h-full w-full'
               )}
             />
           ) : fallbackIcon ? (

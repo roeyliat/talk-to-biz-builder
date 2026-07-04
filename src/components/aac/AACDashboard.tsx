@@ -48,6 +48,20 @@ const utilityRailCells: AACCell[] = [
     icon: '🤷',
   },
   {
+    id: 'utility-yes',
+    text: 'כן',
+    textEn: 'Yes',
+    category: 'social',
+    icon: '✅',
+  },
+  {
+    id: 'utility-no',
+    text: 'לא',
+    textEn: 'No',
+    category: 'social',
+    icon: '❌',
+  },
+  {
     id: 'utility-help',
     text: 'עזרה',
     textEn: 'Help',
@@ -498,6 +512,8 @@ export function AACDashboard({
     'utility-want': { center: '🙂👉' },
     'utility-more': { center: '🙌', bottom: '🟥', accent: '🙌' },
     'utility-dont-know': { center: '🤷' },
+    'utility-yes': { center: '✅' },
+    'utility-no': { center: '❌' },
     'utility-help': { center: '🧑‍🤝‍🧑' },
     'utility-done': { center: '👏' },
     'utility-question': { center: '❓' },
@@ -560,7 +576,7 @@ export function AACDashboard({
             <Button
               variant="outline"
               size="sm"
-              onClick={navigateBack}
+              onClick={() => runSpokenAction(t('aac.back'), navigateBack)}
               className="shrink-0 gap-2 border-slate-300 bg-white"
             >
               <BackIcon className="h-4 w-4" />
@@ -574,7 +590,7 @@ export function AACDashboard({
               <div key={crumb.id} className="flex items-center gap-1">
                 {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground/50" />}
                 <button
-                  onClick={() => navigateToBreadcrumb(index)}
+                  onClick={() => runSpokenAction(language === 'he' || language === 'ar' ? crumb.name : crumb.nameEn, () => navigateToBreadcrumb(index))}
                   className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[100px]"
                 >
                   {language === 'he' || language === 'ar' ? crumb.name : crumb.nameEn}
@@ -598,10 +614,15 @@ export function AACDashboard({
           <Button
             variant={isCustomerMode ? "default" : "outline"}
             size="sm"
-            onClick={() => {
-              setIsCustomerMode(!isCustomerMode);
-              if (isEditMode) setIsEditMode(false);
-            }}
+            onClick={() => runSpokenAction(
+              isCustomerMode
+                ? (language === 'he' ? 'צא ממצב לקוח' : 'Exit Customer Mode')
+                : (language === 'he' ? 'אני רוצה לדבר' : 'I Want To Talk'),
+              () => {
+                setIsCustomerMode(!isCustomerMode);
+                if (isEditMode) setIsEditMode(false);
+              },
+            )}
             className={cn(
               'gap-2 border-slate-300 bg-white',
               isCustomerMode && "bg-green-600 hover:bg-green-700 text-white"
@@ -625,7 +646,12 @@ export function AACDashboard({
             <Button
               variant={isEditMode ? "default" : "outline"}
               size="sm"
-              onClick={() => setIsEditMode(!isEditMode)}
+              onClick={() => runSpokenAction(
+                isEditMode
+                  ? (language === 'he' ? 'סיום עריכה' : 'Done')
+                  : (language === 'he' ? 'עריכה' : 'Edit'),
+                () => setIsEditMode(!isEditMode),
+              )}
               className="gap-2 border-slate-300 bg-white"
             >
               {isEditMode ? (
@@ -646,7 +672,7 @@ export function AACDashboard({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setShowVoiceSettings(true)}
+            onClick={() => runSpokenAction(language === 'he' ? 'הגדרות קול' : 'Voice Settings', () => setShowVoiceSettings(true))}
             className="shrink-0"
             aria-label={language === 'he' ? 'הגדרות קול' : 'Voice Settings'}
           >
@@ -661,7 +687,7 @@ export function AACDashboard({
                 <User className="h-4 w-4" />
                 <span className="max-w-[180px] truncate">{isGuest ? (language === 'he' ? 'אורח' : 'Guest') : user.email}</span>
               </div>
-              <Button variant="outline" size="sm" onClick={() => void handleSignOut()} className="gap-2">
+              <Button variant="outline" size="sm" onClick={() => runSpokenAction(language === 'he' ? 'התנתק' : 'Sign Out', () => { void handleSignOut(); })} className="gap-2">
                 <LogOut className="h-4 w-4" />
                 {language === 'he' ? 'התנתק' : 'Sign Out'}
               </Button>
@@ -693,7 +719,7 @@ export function AACDashboard({
           </p>
           <Button
             size="sm"
-            onClick={() => setShowAddModal(true)}
+            onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => setShowAddModal(true))}
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -948,7 +974,7 @@ export function AACDashboard({
                     </button>
                     <button
                       type="button"
-                      onClick={navigateBack}
+                      onClick={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
                       disabled={navState.breadcrumbs.length === 0}
                       className="flex min-h-[74px] flex-col items-center justify-center gap-1 rounded-[16px] border-[2.5px] border-[#c8d1e0] bg-white px-3 py-2 text-base font-bold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] disabled:opacity-50"
                     >
@@ -957,7 +983,7 @@ export function AACDashboard({
                     </button>
                     <button
                       type="button"
-                      onClick={() => navigateToBreadcrumb(-1)}
+                      onClick={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
                       className="flex min-h-[74px] flex-col items-center justify-center gap-1 rounded-[16px] border-[2.5px] border-[#c8d1e0] bg-white px-3 py-2 text-base font-bold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]"
                     >
                       <Home className="h-9 w-9" />
@@ -1086,7 +1112,7 @@ export function AACDashboard({
                     <div className="mt-3 grid gap-2.5 md:grid-cols-[1fr_1.45fr]">
                       <button
                         type="button"
-                        onClick={clearSelectedWords}
+                        onClick={() => runSpokenAction(language === 'he' ? 'טעם אחר' : 'Another flavor', clearSelectedWords)}
                         className="flex min-h-[60px] items-center justify-center gap-3 rounded-[12px] border-[2.5px] border-[#bba6de] bg-[linear-gradient(180deg,#efe4ff_0%,#dccbf7_100%)] px-4 text-lg font-bold text-slate-800"
                       >
                         <span>{language === 'he' ? 'טעם אחר' : 'Another flavor'}</span>
@@ -1094,7 +1120,7 @@ export function AACDashboard({
                       </button>
                       <button
                         type="button"
-                        onClick={selectedWords.length > 0 ? speakAllWords : undefined}
+                        onClick={selectedWords.length > 0 ? () => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords) : undefined}
                         className="flex min-h-[60px] items-center justify-center gap-3 rounded-[12px] border-[2.5px] border-[#bba6de] bg-[linear-gradient(180deg,#efe4ff_0%,#dccbf7_100%)] px-4 text-lg font-extrabold text-slate-800"
                       >
                         <span>{language === 'he' ? 'סיימתי לבחור' : 'Done choosing'}</span>
