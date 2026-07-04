@@ -710,7 +710,7 @@ export function AACDashboard({
                     type="button"
                     onClick={() => handleCellClick(cell)}
                     className={cn(
-                      'flex h-[86px] min-w-[76px] shrink-0 flex-col items-center justify-between rounded-[16px] border-[2px] border-[#cad3e4] bg-white px-1.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_2px_6px_rgba(15,23,42,0.06)]',
+                      'flex h-[86px] min-w-[76px] shrink-0 flex-col items-center justify-start gap-1 rounded-[16px] border-[2px] border-[#cad3e4] bg-white px-1.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_2px_6px_rgba(15,23,42,0.06)]',
                       speakingCellId === cell.id && 'ring-2 ring-primary shadow-lg shadow-primary/20'
                     )}
                     aria-label={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -718,7 +718,7 @@ export function AACDashboard({
                     <span className="line-clamp-2 min-h-[1.6rem] text-[0.78rem] font-extrabold leading-tight text-slate-800">
                       {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                     </span>
-                    <div className="flex flex-1 items-center justify-center pb-0.5">
+                    <div className="flex flex-1 items-center justify-center -translate-y-2 pb-1">
                       <span
                         className={cn(
                           'leading-none',
@@ -972,7 +972,7 @@ export function AACDashboard({
                         type="button"
                         onClick={() => handleCellClick(cell)}
                         className={cn(
-                          'flex min-h-[88px] flex-col items-center justify-between rounded-[16px] border-[2.5px] border-[#c6cfdd] bg-white px-2 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
+                          'flex min-h-[88px] flex-col items-center justify-start gap-1 rounded-[16px] border-[2.5px] border-[#c6cfdd] bg-white px-2 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
                           speakingCellId === cell.id && 'ring-4 ring-primary shadow-lg shadow-primary/20'
                         )}
                       >
@@ -980,7 +980,7 @@ export function AACDashboard({
                           {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                         </span>
 
-                        <div className="flex flex-1 w-full items-center justify-center gap-2 py-1">
+                        <div className="flex flex-1 w-full items-center justify-center gap-2 -translate-y-2 py-1">
                           {visual.center === '🙌' ? (
                             <>
                               <span className="text-[1.55rem] leading-none" aria-hidden="true">🙌</span>
