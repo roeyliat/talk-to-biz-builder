@@ -11,7 +11,7 @@ import { Download, QrCode, FileText, Printer, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AACBoard } from '@/types/aac';
 import { AACCard } from '@/components/aac/AACCard';
-import { createSharedBoardUrl } from '@/lib/sharedBoard';
+import { canRenderBoardUrlAsQr, createSharedBoardUrl } from '@/lib/sharedBoard';
 
 interface BoardExportModalProps {
   open: boolean;
@@ -44,6 +44,8 @@ export function BoardExportModal({
     boardName,
     boards,
   });
+  const canRenderMainQr = canRenderBoardUrlAsQr(boardUrl, 'H');
+  const canRenderPrintQr = canRenderBoardUrlAsQr(boardUrl, 'M');
 
   const texts = {
     he: {
@@ -55,6 +57,7 @@ export function BoardExportModal({
       downloadQR: 'הורד קוד QR',
       copyLink: 'העתק קישור',
       copied: 'הקישור הועתק!',
+      qrTooLarge: 'הקישור ארוך מדי עבור קוד QR. השתמשו בהעתקת הקישור.',
       printTitle: 'הדפסת לוח תקשורת',
       printDescription: 'הורידו PDF להדפסה ותלייה בעסק',
       downloadPDF: 'הורד PDF',
@@ -70,6 +73,7 @@ export function BoardExportModal({
       downloadQR: 'Download QR Code',
       copyLink: 'Copy Link',
       copied: 'Link copied!',
+      qrTooLarge: 'This link is too long for a QR code. Use Copy Link instead.',
       printTitle: 'Print Communication Board',
       printDescription: 'Download a PDF to print and display in your business',
       downloadPDF: 'Download PDF',
@@ -85,6 +89,7 @@ export function BoardExportModal({
       downloadQR: 'تحميل رمز QR',
       copyLink: 'نسخ الرابط',
       copied: 'تم نسخ الرابط!',
+      qrTooLarge: 'هذا الرابط طويل جدًا لرمز QR. استخدم نسخ الرابط بدلاً من ذلك.',
       printTitle: 'طباعة لوحة التواصل',
       printDescription: 'قم بتحميل PDF للطباعة والعرض في عملك',
       downloadPDF: 'تحميل PDF',
@@ -100,6 +105,7 @@ export function BoardExportModal({
       downloadQR: 'Скачать QR-код',
       copyLink: 'Копировать ссылку',
       copied: 'Ссылка скопирована!',
+      qrTooLarge: 'Ссылка слишком длинная для QR-кода. Используйте копирование ссылки.',
       printTitle: 'Печать доски',
       printDescription: 'Скачайте PDF для печати и размещения в вашем бизнесе',
       downloadPDF: 'Скачать PDF',
@@ -229,19 +235,25 @@ export function BoardExportModal({
 
             <div className="flex justify-center">
               <div className="p-6 bg-white rounded-2xl shadow-lg">
-                <QRCodeSVG
-                  id="board-qr-code"
-                  value={boardUrl}
-                  size={200}
-                  level="H"
-                  includeMargin
-                  imageSettings={{
-                    src: '',
-                    height: 0,
-                    width: 0,
-                    excavate: false,
-                  }}
-                />
+                {canRenderMainQr ? (
+                  <QRCodeSVG
+                    id="board-qr-code"
+                    value={boardUrl}
+                    size={200}
+                    level="H"
+                    includeMargin
+                    imageSettings={{
+                      src: '',
+                      height: 0,
+                      width: 0,
+                      excavate: false,
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-[200px] w-[200px] items-center justify-center rounded-lg border border-dashed border-muted-foreground/40 bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+                    {t.qrTooLarge}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -303,12 +315,18 @@ export function BoardExportModal({
 
                 {/* QR Code Footer */}
                 <div className="flex items-center justify-center gap-4 pt-4 border-t border-gray-200">
-                  <QRCodeSVG value={boardUrl} size={60} level="M" />
+                  {canRenderPrintQr ? (
+                    <QRCodeSVG value={boardUrl} size={60} level="M" />
+                  ) : (
+                    <div className="flex h-[60px] w-[60px] items-center justify-center rounded border border-dashed border-gray-300 text-[10px] text-gray-400">
+                      QR
+                    </div>
+                  )}
                   <div className="text-start">
                     <p className="text-xs text-gray-500">
                       {language === 'he' ? 'סרקו לגרסה דיגיטלית' : 'Scan for digital version'}
                     </p>
-                    <p className="text-xs text-gray-400">{boardUrl}</p>
+                    <p className="text-xs text-gray-400">{canRenderPrintQr ? boardUrl : t.qrTooLarge}</p>
                   </div>
                 </div>
               </div>
