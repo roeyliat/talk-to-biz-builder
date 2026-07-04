@@ -718,7 +718,7 @@ export function AACDashboard({
                     <span className="line-clamp-2 min-h-[1.6rem] text-[0.78rem] font-extrabold leading-tight text-slate-800">
                       {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                     </span>
-                    <div className="mt-0.5 flex h-[3rem] w-full items-start justify-center overflow-hidden">
+                    <div className="-mt-4 flex h-[2.4rem] w-full items-start justify-center overflow-hidden">
                       <span
                         className={cn(
                           'leading-none',
@@ -980,7 +980,7 @@ export function AACDashboard({
                           {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                         </span>
 
-                        <div className="mt-0.5 flex h-[3.4rem] w-full items-start justify-center gap-2 overflow-hidden">
+                        <div className="-mt-5 flex h-[2.75rem] w-full items-start justify-center gap-2 overflow-hidden">
                           {visual.center === '🙌' ? (
                             <>
                               <span className="text-[1.55rem] leading-none" aria-hidden="true">🙌</span>
