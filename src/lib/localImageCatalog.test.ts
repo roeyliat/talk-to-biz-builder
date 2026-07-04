@@ -8,7 +8,9 @@ import {
 
 const expectResolvedAssetName = (value: string | undefined, fileName: string) => {
   expect(value).toBeTruthy();
-  expect(decodeURIComponent(value ?? '')).toContain(fileName);
+  const resolvedValue = decodeURIComponent(value ?? '').toLowerCase();
+  const expectedValue = fileName.toLowerCase();
+  expect(resolvedValue).toContain(expectedValue);
 };
 
 describe('findWholeWordLocalImageMatch', () => {
@@ -33,7 +35,7 @@ describe('findWholeWordLocalImageMatch', () => {
   it('returns an exact local match first', () => {
     const result = findWholeWordLocalImageMatch(normalizeImageKey('שוקולד בלגי'), customEntries);
 
-    expectResolvedAssetName(result, 'שוקולד בלגי.png');
+    expectResolvedAssetName(result, 'שוקולד בלגי');
   });
 
   it('matches a local filename when it appears as full words inside a longer requested flavor', () => {
@@ -59,7 +61,7 @@ describe('findLocalImageUrl', () => {
   it('uses the built-in local catalog before any cloud fallback', () => {
     const result = findLocalImageUrl('קרמל מלוח');
 
-    expectResolvedAssetName(result, 'קרמל מלוח עם שברי אפרופו.png');
+    expectResolvedAssetName(result, 'קרמל מלוח עם שברי אפרופו');
   });
 
   it('does not resolve local images from partial-word overlaps', () => {

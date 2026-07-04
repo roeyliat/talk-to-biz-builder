@@ -1,4 +1,5 @@
 import { AACBoard } from '@/types/aac';
+import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
 
 export interface SharedBoardPayload {
   version: 1;
@@ -56,6 +57,8 @@ const base64UrlEncode = (value: string) => {
     .replace(/=+$/g, '');
 };
 
+const encodeSharedPayload = (value: string) => compressToEncodedURIComponent(value);
+
 const base64UrlDecode = (value: string) => {
   const normalizedValue = value.replace(/-/g, '+').replace(/_/g, '/');
   const padding = (4 - (normalizedValue.length % 4)) % 4;
@@ -64,6 +67,15 @@ const base64UrlDecode = (value: string) => {
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
 
   return textDecoder.decode(bytes);
+};
+
+const decodeSharedPayload = (value: string) => {
+  const decompressed = decompressFromEncodedURIComponent(value);
+  if (decompressed) {
+    return decompressed;
+  }
+
+  return base64UrlDecode(value);
 };
 
 const isSharedBoardPayload = (value: unknown): value is SharedBoardPayload => {
@@ -99,7 +111,7 @@ export const createSharedBoardUrl = (input: {
       boards: input.boards,
     };
 
-    url.searchParams.set('shared', base64UrlEncode(JSON.stringify(payload)));
+    url.searchParams.set('shared', encodeSharedPayload(JSON.stringify(payload)));
   }
 
   return url.toString();
@@ -111,7 +123,7 @@ export const parseSharedBoardPayload = (sharedValue: string | null) => {
   }
 
   try {
-    const decodedValue = base64UrlDecode(sharedValue);
+    const decodedValue = decodeSharedPayload(sharedValue);
     if (!decodedValue) {
       return null;
     }
