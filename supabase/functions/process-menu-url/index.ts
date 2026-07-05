@@ -331,6 +331,23 @@ const PINOLI_MULTIWORD_FLAVORS = [
   { text: 'מסקרפונה פירות יער וקרמבל', textEn: 'Mascarpone Berries and Crumble' },
 ];
 
+const PINOLI_FLAVORS = [
+  { text: 'מנגו', textEn: 'Mango' },
+  { text: 'תות', textEn: 'Strawberry' },
+  { text: 'שוקולד', textEn: 'Chocolate' },
+  { text: "נוצ'לה", textEn: 'Nutella' },
+  { text: 'חלווה', textEn: 'Halva' },
+  { text: 'פיסטוק', textEn: 'Pistachio' },
+  { text: 'שוקולד בלגי', textEn: 'Belgian Chocolate' },
+  ...PINOLI_MULTIWORD_FLAVORS,
+] as const;
+
+const PINOLI_ALCOHOL_FLAVORS = [
+  { text: 'ברגמונט אוזו', textEn: 'Bergamot Ouzo' },
+  { text: 'קפה ביייליס', textEn: 'Coffee Baileys' },
+  { text: 'אפרול תפוז', textEn: 'Aperol Orange' },
+] as const;
+
 const hasSourceEvidence = (item: { text?: string; textEn?: string; sourceText?: string }) => {
   const sourceTokens = tokenizeEvidence(item.sourceText ?? '');
 
@@ -415,6 +432,65 @@ const injectKnownPinoliFlavors = (menuData: MenuData, extractedText: string, hos
         ? { ...category, items: [...category.items, ...missingFlavorItems] }
         : category,
     ),
+  };
+};
+
+const buildPinoliItems = (
+  flavors: ReadonlyArray<{ text: string; textEn: string }>,
+  normalizedPageText: string,
+  prefix: string,
+) => flavors
+  .filter((flavor) => normalizedPageText.includes(normalizeEvidenceText(flavor.text)))
+  .map((flavor, index) => ({
+    id: `${prefix}-${slugify(flavor.text, `item-${index + 1}`)}`,
+    text: flavor.text,
+    textEn: flavor.textEn,
+    sourceText: flavor.text,
+    category: 'people' as const,
+    icon: getBiteTechItemIcon(`${flavor.text} ${flavor.textEn}`),
+  }));
+
+const tryBuildPinoliMenuData = (parsedUrl: URL, extractedText: string): MenuData | null => {
+  if (!/(^|\.)pinoli\.co\.il$/i.test(parsedUrl.host)) {
+    return null;
+  }
+
+  const normalizedPageText = normalizeEvidenceText(extractedText);
+  if (!normalizedPageText.includes(normalizeEvidenceText('הטעמים שלנו'))) {
+    return null;
+  }
+
+  const flavorItems = buildPinoliItems(PINOLI_FLAVORS, normalizedPageText, 'pinoli-flavor');
+  const alcoholFlavorItems = buildPinoliItems(PINOLI_ALCOHOL_FLAVORS, normalizedPageText, 'pinoli-alcohol-flavor');
+
+  if (flavorItems.length === 0 && alcoholFlavorItems.length === 0) {
+    return null;
+  }
+
+  const categories: MenuCategory[] = [];
+
+  if (flavorItems.length > 0) {
+    categories.push({
+      id: 'pinoli-flavors',
+      name: 'Flavors',
+      nameHe: 'טעמים',
+      items: flavorItems,
+    });
+  }
+
+  if (alcoholFlavorItems.length > 0) {
+    categories.push({
+      id: 'pinoli-alcohol-flavors',
+      name: 'Alcoholic Flavors',
+      nameHe: 'גלידות אלכוהוליות',
+      items: alcoholFlavorItems,
+    });
+  }
+
+  return {
+    businessName: 'Pinoli',
+    businessNameHe: 'פינולי',
+    categories,
   };
 };
 
@@ -550,6 +626,16 @@ serve(async (req) => {
     // Extract text content from HTML (basic extraction)
     const extractedText = extractVisibleText(htmlContent);
     const textContent = extractedText.substring(0, 50000);
+
+    const pinoliMenuData = tryBuildPinoliMenuData(parsedUrl, extractedText);
+    if (pinoliMenuData) {
+      await enrichMenuWithArasaac(pinoliMenuData);
+
+      return new Response(
+        JSON.stringify({ success: true, data: pinoliMenuData }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (isDynamicShellWithoutContent(htmlContent, extractedText)) {
       console.warn(`Insufficient menu content extracted from ${parsedUrl.host}; refusing AI inference to avoid hallucinated items`);
