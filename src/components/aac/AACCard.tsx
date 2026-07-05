@@ -168,10 +168,10 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               onError={() => setHasImageError(true)}
               className={cn(
                 'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
-                shouldBoostVanillaImage && 'scale-[5.16]',
+                shouldBoostVanillaImage && 'scale-[2.58]',
                 shouldBoostChocolateFlavorImage && 'scale-[1.18]',
                 shouldBoostBelgianChocolateFlavorImage && 'scale-[1.16]',
-                shouldBoostStrawberryFlavorImage && 'scale-[4.74]',
+                shouldBoostStrawberryFlavorImage && 'scale-[2.37]',
                 shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
                 shouldBoostColorfulSprinklesImage && 'scale-[2.25]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
