@@ -71,6 +71,11 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
     const normalizedText = text.trim().toLowerCase();
     const decodedImageUrl = resolvedImageUrl ? decodeURIComponent(resolvedImageUrl).toLowerCase() : '';
     const shouldBoostVanillaImage = ['וניל', 'vanilla'].includes(normalizedText);
+    const shouldShrinkChocolateFlavorImage = ['שוקולד', 'chocolate', 'שוקולד צ׳יפס', 'שוקולד ציפס', 'chocolate chips'].includes(normalizedText)
+      || decodedImageUrl.includes('שוקולד.png')
+      || decodedImageUrl.includes('שוקולד בלגי');
+    const shouldBoostStrawberryFlavorImage = ['תות', 'strawberry'].includes(normalizedText)
+      || decodedImageUrl.includes('תות.png');
     const shouldShrinkBrownSprinklesImage = normalizedText.includes('סוכריות חומות') || decodedImageUrl.includes('סוכריות חומות');
     const shouldBoostColorfulSprinklesImage = normalizedText.includes('סוכריות צבעוניות') || decodedImageUrl.includes('סוכריות צבעוניות');
 
@@ -162,8 +167,10 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               className={cn(
                 'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
                 shouldBoostVanillaImage && 'scale-[1.22]',
+                shouldShrinkChocolateFlavorImage && 'scale-[0.8]',
+                shouldBoostStrawberryFlavorImage && 'scale-[1.12]',
                 shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
-                shouldBoostColorfulSprinklesImage && 'scale-[1.16]',
+                shouldBoostColorfulSprinklesImage && 'scale-[1.42]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
                 isUtilityCard && 'max-h-[54px] md:max-h-[64px]'
               )}
