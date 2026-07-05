@@ -27,6 +27,7 @@ type MenuItem = {
   id: string;
   text: string;
   textEn: string;
+  sourceText?: string;
   category: "people" | "verbs" | "descriptors" | "social";
   icon: string;
   imageUrl?: string;
@@ -318,6 +319,18 @@ const tokenizeEvidence = (value: string) =>
     .split(' ')
     .filter((token) => token.length >= 2 && !EVIDENCE_STOP_WORDS.has(token));
 
+const PINOLI_MULTIWORD_FLAVORS = [
+  { text: 'וניל שחור', textEn: 'Black Vanilla' },
+  { text: 'פינולי (צנובר)', textEn: 'Pinoli (Pine Nut)' },
+  { text: 'קפה איטלקי', textEn: 'Italian Coffee' },
+  { text: 'שוקולד מריר', textEn: 'Dark Chocolate' },
+  { text: 'ליים בזיליקום', textEn: 'Lime Basil' },
+  { text: 'אמסטרדם קוקיס', textEn: 'Amsterdam Cookies' },
+  { text: 'חמאת בוטנים ופטל', textEn: 'Peanut Butter and Raspberry' },
+  { text: 'קרמל מלוח עם שברי אפרופו', textEn: 'Salted Caramel with Apropo Pieces' },
+  { text: 'מסקרפונה פירות יער וקרמבל', textEn: 'Mascarpone Berries and Crumble' },
+];
+
 const hasSourceEvidence = (item: { text?: string; textEn?: string; sourceText?: string }) => {
   const sourceTokens = tokenizeEvidence(item.sourceText ?? '');
 
@@ -352,6 +365,56 @@ const sanitizeVisibleEvidence = (menuData: any) => {
         };
       })
       .filter(Boolean),
+  };
+};
+
+const injectKnownPinoliFlavors = (menuData: MenuData, extractedText: string, host: string): MenuData => {
+  if (!/(^|\.)pinoli\.co\.il$/i.test(host) || !Array.isArray(menuData.categories)) {
+    return menuData;
+  }
+
+  const normalizedPageText = normalizeEvidenceText(extractedText);
+  if (!normalizedPageText) {
+    return menuData;
+  }
+
+  const flavorCategory = menuData.categories.find((category) =>
+    /טעמ|flavor|gelato|גליד/i.test(`${category.nameHe ?? ''} ${category.name ?? ''}`),
+  ) ?? menuData.categories[0];
+
+  if (!flavorCategory) {
+    return menuData;
+  }
+
+  const existingNames = new Set(
+    menuData.categories.flatMap((category) => category.items.map((item) => normalizeEvidenceText(item.text))),
+  );
+
+  const missingFlavorItems = PINOLI_MULTIWORD_FLAVORS
+    .filter((flavor) => {
+      const normalizedFlavor = normalizeEvidenceText(flavor.text);
+      return normalizedFlavor && normalizedPageText.includes(normalizedFlavor) && !existingNames.has(normalizedFlavor);
+    })
+    .map((flavor, index) => ({
+      id: `pinoli-flavor-${slugify(flavor.text, `flavor-${index + 1}`)}`,
+      text: flavor.text,
+      textEn: flavor.textEn,
+      sourceText: flavor.text,
+      category: 'people' as const,
+      icon: getBiteTechItemIcon(`${flavor.text} ${flavor.textEn}`),
+    }));
+
+  if (missingFlavorItems.length === 0) {
+    return menuData;
+  }
+
+  return {
+    ...menuData,
+    categories: menuData.categories.map((category) =>
+      category.id === flavorCategory.id
+        ? { ...category, items: [...category.items, ...missingFlavorItems] }
+        : category,
+    ),
   };
 };
 
@@ -657,7 +720,11 @@ ${textContent}`
     }
 
     const rawMenuData = JSON.parse(toolCall.function.arguments);
-    const menuData = sanitizeVisibleEvidence(rawMenuData);
+    const menuData = injectKnownPinoliFlavors(
+      sanitizeVisibleEvidence(rawMenuData),
+      extractedText,
+      parsedUrl.host,
+    );
     console.log(`Menu data parsed successfully for user ${user.id}: ${menuData.businessName}, ${menuData.categories?.length || 0} categories`);
 
     // Attach free ARASAAC pictograms to each item where available.
