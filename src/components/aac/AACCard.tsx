@@ -170,7 +170,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
                 shouldShrinkChocolateFlavorImage && 'scale-[0.8]',
                 shouldBoostStrawberryFlavorImage && 'scale-[1.12]',
                 shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
-                shouldBoostColorfulSprinklesImage && 'scale-[1.42]',
+                shouldBoostColorfulSprinklesImage && 'scale-[1.72]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
                 isUtilityCard && 'max-h-[54px] md:max-h-[64px]'
               )}
