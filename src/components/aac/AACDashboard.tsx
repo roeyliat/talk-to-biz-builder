@@ -718,11 +718,11 @@ export function AACDashboard({
                     <span className="line-clamp-2 min-h-[1.6rem] text-[0.78rem] font-extrabold leading-tight text-slate-800">
                       {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                     </span>
-                    <div className="-mt-9 flex h-[3rem] w-full items-start justify-center overflow-hidden">
+                    <div className="-mt-3 flex h-[2.6rem] w-full items-center justify-center overflow-hidden">
                       <span
                         className={cn(
-                          '-translate-y-5 leading-none transform',
-                          cell.id === 'utility-question' ? 'text-[2.1rem]' : 'text-[1.9rem]'
+                          '-translate-y-1 leading-none transform',
+                          cell.id === 'utility-question' ? 'text-[1.8rem]' : 'text-[1.6rem]'
                         )}
                         aria-hidden="true"
                       >
@@ -980,17 +980,17 @@ export function AACDashboard({
                           {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                         </span>
 
-                        <div className="-mt-10 flex h-[3.3rem] w-full items-start justify-center gap-2 overflow-hidden">
+                        <div className="-mt-3 flex h-[3rem] w-full items-center justify-center gap-2 overflow-hidden">
                           {visual.center === '🙌' ? (
                             <>
-                              <span className="-translate-y-6 transform text-[1.55rem] leading-none" aria-hidden="true">🙌</span>
-                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-[4px] border border-[#c33] bg-[#dd3b3b] text-[0]" aria-hidden="true">■</span>
-                              <span className="-translate-y-6 transform text-[1.55rem] leading-none" aria-hidden="true">🙌</span>
+                              <span className="-translate-y-1 transform text-[1.35rem] leading-none" aria-hidden="true">🙌</span>
+                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-[4px] border border-[#c33] bg-[#dd3b3b] text-[0]" aria-hidden="true">■</span>
+                              <span className="-translate-y-1 transform text-[1.35rem] leading-none" aria-hidden="true">🙌</span>
                             </>
                           ) : (
                             <span className={cn(
-                              '-translate-y-6 leading-none transform',
-                              cell.id === 'utility-question' ? 'text-[3rem]' : 'text-[2.5rem]'
+                              '-translate-y-1 leading-none transform',
+                              cell.id === 'utility-question' ? 'text-[2.2rem]' : 'text-[2rem]'
                             )} aria-hidden="true">
                               {visual.center}
                             </span>
