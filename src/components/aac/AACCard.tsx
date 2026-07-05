@@ -68,7 +68,11 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
 
     const fallbackIcon = isFolder ? '📁' : icon;
     const shouldShowImage = Boolean(resolvedImageUrl) && !hasImageError;
-    const shouldBoostVanillaImage = ['וניל', 'vanilla'].includes(text.trim().toLowerCase());
+    const normalizedText = text.trim().toLowerCase();
+    const decodedImageUrl = resolvedImageUrl ? decodeURIComponent(resolvedImageUrl).toLowerCase() : '';
+    const shouldBoostVanillaImage = ['וניל', 'vanilla'].includes(normalizedText);
+    const shouldShrinkBrownSprinklesImage = normalizedText.includes('סוכריות חומות') || decodedImageUrl.includes('סוכריות חומות');
+    const shouldBoostColorfulSprinklesImage = normalizedText.includes('סוכריות צבעוניות') || decodedImageUrl.includes('סוכריות צבעוניות');
 
     return (
       <button
@@ -158,6 +162,8 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               className={cn(
                 'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
                 shouldBoostVanillaImage && 'scale-[1.22]',
+                shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
+                shouldBoostColorfulSprinklesImage && 'scale-[1.16]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
                 isUtilityCard && 'max-h-[54px] md:max-h-[64px]'
               )}
