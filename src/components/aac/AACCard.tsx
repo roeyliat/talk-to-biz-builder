@@ -147,7 +147,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
             'grid min-h-0 flex-1 self-stretch place-items-center overflow-hidden',
             isMockupCard && 'min-h-[112px] px-1 py-1 md:min-h-[126px]',
             isRailCard && 'min-h-[104px] px-1.5 py-1.5 md:min-h-[114px]',
-            isUtilityCard && 'min-h-[106px] px-1.5 py-1.5 md:min-h-[118px]'
+            isUtilityCard && 'min-h-[82px] px-1.5 py-1 md:min-h-[92px]'
           )}
         >
           {shouldShowImage ? (
@@ -159,7 +159,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
                 'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
                 shouldBoostVanillaImage && 'scale-[1.22]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
-                isUtilityCard && 'max-h-[90px] md:max-h-[98px]'
+                isUtilityCard && 'max-h-[62px] md:max-h-[72px]'
               )}
             />
           ) : fallbackIcon ? (
@@ -168,7 +168,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
                 'self-center justify-self-center',
                 isMockupCard && 'text-[2.8rem] md:text-[3.2rem]',
                 isRailCard && 'text-[2.5rem] md:text-[2.9rem]',
-                isUtilityCard && 'text-[2.65rem] md:text-[3rem]',
+                isUtilityCard && 'text-[2rem] md:text-[2.25rem]',
                 !usesMockupSurface && 'text-3xl md:text-4xl'
               )}
             >
