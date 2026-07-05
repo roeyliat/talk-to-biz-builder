@@ -70,9 +70,11 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
     const shouldShowImage = Boolean(resolvedImageUrl) && !hasImageError;
     const normalizedText = text.trim().toLowerCase();
     const decodedImageUrl = resolvedImageUrl ? decodeURIComponent(resolvedImageUrl).toLowerCase() : '';
-    const shouldBoostVanillaImage = ['וניל', 'vanilla'].includes(normalizedText);
-    const shouldShrinkChocolateFlavorImage = ['שוקולד', 'chocolate', 'שוקולד צ׳יפס', 'שוקולד ציפס', 'chocolate chips'].includes(normalizedText)
-      || decodedImageUrl.includes('שוקולד.png')
+    const shouldBoostVanillaImage = ['וניל', 'vanilla', 'גלידת וניל'].includes(normalizedText)
+      || decodedImageUrl.includes('וניל.png');
+    const shouldBoostChocolateFlavorImage = ['שוקולד', 'chocolate'].includes(normalizedText)
+      || decodedImageUrl.includes('שוקולד.png');
+    const shouldBoostBelgianChocolateFlavorImage = ['שוקולד בלגי', 'belgian chocolate'].includes(normalizedText)
       || decodedImageUrl.includes('שוקולד בלגי');
     const shouldBoostStrawberryFlavorImage = ['תות', 'strawberry'].includes(normalizedText)
       || decodedImageUrl.includes('תות.png');
@@ -166,9 +168,10 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               onError={() => setHasImageError(true)}
               className={cn(
                 'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
-                shouldBoostVanillaImage && 'scale-[1.22]',
-                shouldShrinkChocolateFlavorImage && 'scale-[0.66]',
-                shouldBoostStrawberryFlavorImage && 'scale-[1.12]',
+                shouldBoostVanillaImage && 'scale-[1.38]',
+                shouldBoostChocolateFlavorImage && 'scale-[1.18]',
+                shouldBoostBelgianChocolateFlavorImage && 'scale-[1.16]',
+                shouldBoostStrawberryFlavorImage && 'scale-[1.24]',
                 shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
                 shouldBoostColorfulSprinklesImage && 'scale-[2.25]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
