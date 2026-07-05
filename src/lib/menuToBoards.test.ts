@@ -55,4 +55,36 @@ describe('sanitizeMenuData', () => {
     expect(texts).not.toContain('פירות יער');
     expect(texts).not.toContain('וקרמבל');
   });
+
+  it('drops composite fragments when the whole flavor already exists', () => {
+    const menuData: MenuData = {
+      businessName: 'Pinoli',
+      businessNameHe: 'פינולי',
+      categories: [
+        {
+          id: 'flavors',
+          name: 'Flavors',
+          nameHe: 'טעמים',
+          items: [
+            { text: 'מסקרפונה פירות יער וקרמבל', textEn: 'Mascarpone berries and crumble' },
+            { text: 'מסקרפונה', textEn: 'Mascarpone' },
+            { text: 'פירות יער', textEn: 'Berries' },
+            { text: 'וקרמבל', textEn: 'And crumble' },
+            { text: 'שוקולד', textEn: 'Chocolate' },
+            { text: 'שוקולד מריר', textEn: 'Dark chocolate' },
+          ],
+        },
+      ],
+    };
+
+    const sanitized = sanitizeMenuData(menuData);
+    const texts = sanitized.categories[0]?.items.map((item) => item.text) ?? [];
+
+    expect(texts).toContain('מסקרפונה פירות יער וקרמבל');
+    expect(texts).toContain('שוקולד');
+    expect(texts).toContain('שוקולד מריר');
+    expect(texts).not.toContain('מסקרפונה');
+    expect(texts).not.toContain('פירות יער');
+    expect(texts).not.toContain('וקרמבל');
+  });
 });
