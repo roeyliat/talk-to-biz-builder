@@ -27,6 +27,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/create" element={<CreateBoard />} />
             <Route path="/demo" element={<BoardDemo />} />
+            <Route path="/b" element={<AACBoard />} />
+            <Route path="/b/:boardId" element={<AACBoard />} />
             <Route path="/board" element={<AACBoard />} />
             <Route path="/board/:boardId" element={<AACBoard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
