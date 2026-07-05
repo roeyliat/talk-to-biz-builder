@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enrichMenuWithArasaac } from "../_shared/arasaac.ts";
+import { extractWoltMenuDataFromHtml, isWoltHost } from "../_shared/wolt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -293,6 +294,90 @@ const processBiteTechUrl = async (parsedUrl: URL) => {
 
   await enrichMenuWithArasaac(menuData);
   return menuData;
+};
+
+const buildWoltMenuData = (rawMenuData: ReturnType<typeof extractWoltMenuDataFromHtml>): MenuData | null => {
+  if (!rawMenuData) return null;
+
+  const businessNameHe = rawMenuData.businessNameHe || 'תפריט';
+  const businessName = businessNameHe;
+
+  const categories = rawMenuData.categories.map((category, categoryIndex) => ({
+    id: `wolt-category-${slugify(category.nameHe, `category-${categoryIndex + 1}`)}`,
+    name: category.nameHe,
+    nameHe: category.nameHe,
+    items: category.items.map((item, itemIndex) => ({
+      id: `wolt-item-${categoryIndex + 1}-${itemIndex + 1}-${slugify(item.text, 'item')}`,
+      text: item.text,
+      textEn: item.text,
+      sourceText: [item.text, item.description].filter(Boolean).join(' — '),
+      category: 'people' as const,
+      icon: getBiteTechItemIcon(`${item.text} ${item.description ?? ''}`),
+      imageUrl: item.imageUrl,
+    })),
+  }));
+
+  return {
+    businessName,
+    businessNameHe,
+    categories,
+  };
+};
+
+const mergeMenuCategories = (baseMenuData: MenuData, extraMenuData: MenuData) => {
+  const existingCategoryNames = new Set(
+    baseMenuData.categories.map((category) => normalizeEvidenceText(category.nameHe || category.name || '')),
+  );
+
+  return {
+    ...baseMenuData,
+    categories: [
+      ...baseMenuData.categories,
+      ...extraMenuData.categories.filter((category) => {
+        const normalizedName = normalizeEvidenceText(category.nameHe || category.name || '');
+        return normalizedName && !existingCategoryNames.has(normalizedName);
+      }),
+    ],
+  };
+};
+
+const fetchOfficialPinoliFlavorMenuData = async () => {
+  const response = await fetch('https://www.pinoli.co.il/%D7%94%D7%98%D7%A2%D7%9E%D7%99%D7%9D/', {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; AACBoardBot/1.0)',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.5,he;q=0.3',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Pinoli flavors page: ${response.status}`);
+  }
+
+  const html = await response.text();
+  const extractedText = extractVisibleText(html);
+  return tryBuildPinoliMenuData(new URL('https://www.pinoli.co.il/%D7%94%D7%98%D7%A2%D7%9E%D7%99%D7%9D/'), extractedText);
+};
+
+const maybeEnrichWoltPinoliMenuData = async (parsedUrl: URL, menuData: MenuData) => {
+  const normalizedBusinessName = normalizeEvidenceText(menuData.businessNameHe || menuData.businessName || '');
+  const looksLikePinoli = normalizedBusinessName.includes(normalizeEvidenceText('פינולי')) || /pinoli/i.test(parsedUrl.href);
+
+  if (!looksLikePinoli) {
+    return menuData;
+  }
+
+  try {
+    const pinoliFlavorMenuData = await fetchOfficialPinoliFlavorMenuData();
+    if (!pinoliFlavorMenuData) {
+      return menuData;
+    }
+
+    return mergeMenuCategories(menuData, pinoliFlavorMenuData);
+  } catch (error) {
+    console.warn('Failed to enrich Wolt Pinoli menu with official flavors', error);
+    return menuData;
+  }
 };
 
 const extractVisibleText = (html: string) =>
@@ -626,6 +711,19 @@ serve(async (req) => {
     // Extract text content from HTML (basic extraction)
     const extractedText = extractVisibleText(htmlContent);
     const textContent = extractedText.substring(0, 50000);
+
+    if (isWoltHost(parsedUrl.host)) {
+      const woltMenuData = buildWoltMenuData(extractWoltMenuDataFromHtml(htmlContent));
+      if (woltMenuData) {
+        const enrichedWoltMenuData = await maybeEnrichWoltPinoliMenuData(parsedUrl, woltMenuData);
+        await enrichMenuWithArasaac(enrichedWoltMenuData);
+
+        return new Response(
+          JSON.stringify({ success: true, data: enrichedWoltMenuData }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     const pinoliMenuData = tryBuildPinoliMenuData(parsedUrl, extractedText);
     if (pinoliMenuData) {

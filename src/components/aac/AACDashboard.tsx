@@ -34,20 +34,6 @@ const utilityRailCells: AACCell[] = [
     icon: '🟥',
   },
   {
-    id: 'utility-yes',
-    text: 'כן',
-    textEn: 'Yes',
-    category: 'social',
-    icon: '✅',
-  },
-  {
-    id: 'utility-no',
-    text: 'לא',
-    textEn: 'No',
-    category: 'social',
-    icon: '❌',
-  },
-  {
     id: 'utility-thanks',
     text: 'תודה',
     textEn: 'Thank you',
@@ -72,6 +58,11 @@ interface AACDashboardProps {
   allowEdit?: boolean;
   onBoardsChange?: (boards: Record<string, AACBoard>) => void;
 }
+
+type ManualIceCreamCellEntry = {
+  boardId: string;
+  cell: AACCell;
+};
 
 const buildInitialNavState = (
   activeBoards: Record<string, AACBoard>,
@@ -145,6 +136,7 @@ export function AACDashboard({
   const [isEditMode, setIsEditMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCell, setEditingCell] = useState<AACCell | null>(null);
+  const [editingBoardId, setEditingBoardId] = useState<string | null>(null);
   
   // Customer Communication Mode
   const [isCustomerMode, setIsCustomerMode] = useState(false);
@@ -313,12 +305,13 @@ export function AACDashboard({
   }, [selectedWords, speak]);
 
   // Edit mode handlers
-  const handleDeleteCell = useCallback((cellId: string) => {
+  const handleDeleteCell = useCallback((cellId: string, targetBoardId?: string) => {
     const newBoards = { ...activeBoards };
-    const board = newBoards[navState.currentBoardId];
+    const boardId = targetBoardId ?? navState.currentBoardId;
+    const board = newBoards[boardId];
     if (!board) return;
 
-    newBoards[navState.currentBoardId] = {
+    newBoards[boardId] = {
       ...board,
       cells: board.cells.filter(c => c.id !== cellId),
     };
@@ -329,10 +322,11 @@ export function AACDashboard({
     });
   }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
 
-  const handleEditCell = useCallback((cell: AACCell) => {
+  const handleEditCell = useCallback((cell: AACCell, targetBoardId?: string) => {
     setEditingCell(cell);
+    setEditingBoardId(targetBoardId ?? navState.currentBoardId);
     setShowAddModal(true);
-  }, []);
+  }, [navState.currentBoardId]);
 
   const handleAddCell = useCallback((cellData: Omit<AACCell, 'id'>) => {
     const newBoards = { ...activeBoards };
@@ -357,20 +351,22 @@ export function AACDashboard({
 
   const handleUpdateCell = useCallback((updatedCell: AACCell) => {
     const newBoards = { ...activeBoards };
-    const board = newBoards[navState.currentBoardId];
+    const boardId = editingBoardId ?? navState.currentBoardId;
+    const board = newBoards[boardId];
     if (!board) return;
 
-    newBoards[navState.currentBoardId] = {
+    newBoards[boardId] = {
       ...board,
       cells: board.cells.map(c => c.id === updatedCell.id ? updatedCell : c),
     };
     
     updateBoards(newBoards);
     setEditingCell(null);
+    setEditingBoardId(null);
     toast({
       title: language === 'he' ? 'הפריט עודכן' : 'Item updated',
     });
-  }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
+  }, [activeBoards, editingBoardId, navState.currentBoardId, updateBoards, toast, language]);
 
   if (!currentBoard) {
     return <div className="text-center text-muted-foreground">Board not found</div>;
@@ -466,9 +462,9 @@ export function AACDashboard({
     }
 
     return {
-      serving: servingSection?.board.cells ?? [],
-      flavors: flavorsSection?.board.cells ?? [],
-      toppings: toppingsSection?.board.cells ?? [],
+      serving: servingSection ? servingSection.board.cells.map((cell) => ({ boardId: servingSection.board.id, cell })) : [],
+      flavors: flavorsSection ? flavorsSection.board.cells.map((cell) => ({ boardId: flavorsSection.board.id, cell })) : [],
+      toppings: toppingsSection ? toppingsSection.board.cells.map((cell) => ({ boardId: toppingsSection.board.id, cell })) : [],
       labels: {
         serving: servingSection?.label ?? (language === 'he' ? 'איך תרצה?' : 'How would you like it?'),
         flavors: flavorsSection?.label ?? (language === 'he' ? 'בחר טעם גלידה' : 'Choose a flavor'),
@@ -739,6 +735,33 @@ export function AACDashboard({
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]" style={{ direction: 'ltr' }}>
                 <section className="space-y-3" dir={contentDir}>
+                  {allowEdit && (
+                    <div className="flex items-center justify-end gap-2 rounded-[16px] border-[2px] border-[#c8d1e0] bg-white/95 px-3 py-2 shadow-[0_6px_18px_rgba(15,23,42,0.08)]">
+                      <Button
+                        variant={isEditMode ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => runSpokenAction(
+                          isEditMode
+                            ? (language === 'he' ? 'סיום עריכה' : 'Done')
+                            : (language === 'he' ? 'עריכה' : 'Edit'),
+                          () => setIsEditMode(!isEditMode),
+                        )}
+                        className="gap-2"
+                      >
+                        {isEditMode ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                        {isEditMode ? (language === 'he' ? 'סיום עריכה' : 'Done') : (language === 'he' ? 'עריכה' : 'Edit')}
+                      </Button>
+                    </div>
+                  )}
+
+                  {isEditMode && (
+                    <div className="rounded-[16px] border-[2px] border-primary/20 bg-primary/10 px-3 py-2 text-center text-sm font-medium text-primary">
+                      {language === 'he'
+                        ? '🛠️ מצב עריכה: לחץ על פריט כדי לערוך או למחוק אותו'
+                        : '🛠️ Edit mode: tap an item to edit or delete it'}
+                    </div>
+                  )}
+
                   <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
                     <div className="flex items-center justify-center gap-4">
                       <img
@@ -763,7 +786,7 @@ export function AACDashboard({
                         </div>
 
                         <div className={cn('grid gap-3', manualIceCreamSections.serving.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
-                          {manualIceCreamSections.serving.map((cell) => (
+                          {manualIceCreamSections.serving.map(({ boardId, cell }: ManualIceCreamCellEntry) => (
                             <AACCard
                               key={cell.id}
                               text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -778,8 +801,8 @@ export function AACDashboard({
                               labelPosition="top"
                               isEditMode={isEditMode}
                               isSpeaking={speakingCellId === cell.id}
-                              onDelete={() => handleDeleteCell(cell.id)}
-                              onEdit={() => handleEditCell(cell)}
+                              onDelete={() => handleDeleteCell(cell.id, boardId)}
+                              onEdit={() => handleEditCell(cell, boardId)}
                               className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
                           ))}
@@ -794,7 +817,7 @@ export function AACDashboard({
                         </div>
 
                         <div className="grid grid-cols-3 gap-2.5 md:gap-3">
-                          {manualIceCreamSections.flavors.map((cell) => (
+                          {manualIceCreamSections.flavors.map(({ boardId, cell }: ManualIceCreamCellEntry) => (
                             <AACCard
                               key={cell.id}
                               text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -809,8 +832,8 @@ export function AACDashboard({
                               labelPosition="top"
                               isEditMode={isEditMode}
                               isSpeaking={speakingCellId === cell.id}
-                              onDelete={() => handleDeleteCell(cell.id)}
-                              onEdit={() => handleEditCell(cell)}
+                              onDelete={() => handleDeleteCell(cell.id, boardId)}
+                              onEdit={() => handleEditCell(cell, boardId)}
                               className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
                           ))}
@@ -825,7 +848,7 @@ export function AACDashboard({
                         </div>
 
                         <div className={cn('grid gap-3', manualIceCreamSections.toppings.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
-                          {manualIceCreamSections.toppings.map((cell) => (
+                          {manualIceCreamSections.toppings.map(({ boardId, cell }: ManualIceCreamCellEntry) => (
                             <AACCard
                               key={cell.id}
                               text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -840,8 +863,8 @@ export function AACDashboard({
                               labelPosition="top"
                               isEditMode={isEditMode}
                               isSpeaking={speakingCellId === cell.id}
-                              onDelete={() => handleDeleteCell(cell.id)}
-                              onEdit={() => handleEditCell(cell)}
+                              onDelete={() => handleDeleteCell(cell.id, boardId)}
+                              onEdit={() => handleEditCell(cell, boardId)}
                               className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
                           ))}
@@ -1286,6 +1309,7 @@ export function AACDashboard({
         onClose={() => {
           setShowAddModal(false);
           setEditingCell(null);
+          setEditingBoardId(null);
         }}
         onAddCell={handleAddCell}
         editingCell={editingCell}
