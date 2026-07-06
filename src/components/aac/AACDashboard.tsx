@@ -498,6 +498,7 @@ export function AACDashboard({
     'utility-thanks': { src: '/aac-local/תודה.jpeg' },
     'utility-price': { src: howMuchImage },
   };
+  const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
   const iceCreamCategoryButtons = [
     {
       id: 'toppings',
@@ -728,15 +729,24 @@ export function AACDashboard({
                       {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                     </span>
                     <div className="mt-0 flex h-[2.2rem] w-full items-center justify-center overflow-hidden">
-                      <span
-                        className={cn(
-                          'leading-none',
-                          cell.id === 'utility-question' ? 'text-[1.5rem]' : 'text-[1.3rem]'
-                        )}
-                        aria-hidden="true"
-                      >
-                        {cell.icon}
-                      </span>
+                      {utilityRailImageVisuals[cell.id] ? (
+                        <img
+                          src={getUtilityRailImageSrc(cell)}
+                          alt=""
+                          aria-hidden="true"
+                          className="max-h-full w-auto object-contain"
+                        />
+                      ) : (
+                        <span
+                          className={cn(
+                            'leading-none',
+                            cell.id === 'utility-question' ? 'text-[1.5rem]' : 'text-[1.3rem]'
+                          )}
+                          aria-hidden="true"
+                        >
+                          {cell.icon}
+                        </span>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -1303,7 +1313,7 @@ export function AACDashboard({
                       imageSearchTerms={[cell.text, cell.textEn]}
                       category={cell.category}
                       icon={cell.icon}
-                      imageUrl={cell.imageUrl}
+                      imageUrl={getUtilityRailImageSrc(cell)}
                       isFolder={!!cell.linkToBoardId}
                       onClick={() => handleCellClick(cell)}
                       size="md"
