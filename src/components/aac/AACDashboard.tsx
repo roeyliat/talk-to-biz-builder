@@ -495,7 +495,7 @@ export function AACDashboard({
   const utilityRailImageVisuals: Record<string, { src: string; className?: string }> = {
     'utility-want': { src: wantImage },
     'utility-more': { src: moreImage },
-    'utility-thanks': { src: '/aac-local/תודה.jpeg' },
+    'utility-thanks': { src: '/aac-local/תודה.png' },
     'utility-price': { src: howMuchImage },
   };
   const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
