@@ -1053,7 +1053,7 @@ export function AACDashboard({
                   </div>
                 </section>
 
-                <aside className="grid auto-rows-fr content-start gap-4 self-start max-h-[min(56vh,34rem)] overflow-y-auto pe-1" dir={contentDir}>
+                <aside className="grid h-[min(56vh,34rem)] grid-rows-4 gap-4 self-start pe-1" dir={contentDir}>
                   {sideRailCells.map((cell) => {
                     const visual = iceCreamRailVisuals[cell.id] ?? { center: cell.icon };
 
@@ -1063,7 +1063,7 @@ export function AACDashboard({
                         type="button"
                         onClick={() => handleCellClick(cell)}
                         className={cn(
-                          'flex h-[62px] min-h-[62px] flex-col items-center justify-start gap-0.5 rounded-[14px] border-[2px] border-[#c6cfdd] bg-white px-1.5 py-1.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
+                          'flex h-full min-h-0 flex-col items-center justify-start gap-1 rounded-[14px] border-[2px] border-[#c6cfdd] bg-white px-1.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
                           speakingCellId === cell.id && 'ring-4 ring-primary shadow-lg shadow-primary/20'
                         )}
                       >
@@ -1071,7 +1071,7 @@ export function AACDashboard({
                           {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                         </span>
 
-                        <div className="mt-0 flex h-[2.95rem] w-full items-center justify-center overflow-hidden">
+                        <div className="mt-0 flex min-h-0 flex-1 w-full items-center justify-center overflow-hidden">
                           {utilityRailImageVisuals[cell.id] ? (
                             <img
                               src={utilityRailImageVisuals[cell.id].src}
