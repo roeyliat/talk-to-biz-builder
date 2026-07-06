@@ -17,6 +17,9 @@ import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useClickSound } from '@/hooks/useClickSound';
+import wantImage from '@/assets/aac-local/אני רוצה.PNG';
+import moreImage from '@/assets/aac-local/עוד.PNG';
+import howMuchImage from '@/assets/aac-local/כמה עולה.PNG';
 
 const utilityRailCells: AACCell[] = [
   {
@@ -485,13 +488,15 @@ export function AACDashboard({
   const iceCreamPrompt = language === 'he' ? 'בחר טעם גלידה' : 'Choose Ice Cream Flavor';
   const iceCreamTitle = boardTitle || (language === 'he' ? 'גלידריה' : 'Ice Cream Shop');
   const iceCreamFlavorCards = displayGridCells.slice(0, 15);
-  const iceCreamRailVisuals: Record<string, { top?: string; center?: string; bottom?: string; accent?: string }> = {
-    'utility-want': { center: '🙂👉' },
-    'utility-more': { center: '🙌', bottom: '🟥', accent: '🙌' },
+  const iceCreamRailVisuals: Record<string, { center?: string }> = {
     'utility-yes': { center: '✅' },
     'utility-no': { center: '❌' },
-    'utility-thanks': { center: '🙏' },
-    'utility-price': { center: '💰' },
+  };
+  const utilityRailImageVisuals: Record<string, { src: string; className?: string }> = {
+    'utility-want': { src: wantImage },
+    'utility-more': { src: moreImage },
+    'utility-thanks': { src: '/aac-local/תודה.jpeg' },
+    'utility-price': { src: howMuchImage },
   };
   const iceCreamCategoryButtons = [
     {
@@ -1052,12 +1057,13 @@ export function AACDashboard({
                         </span>
 
                         <div className="mt-0 flex h-[2.5rem] w-full items-center justify-center gap-2 overflow-hidden">
-                          {visual.center === '🙌' ? (
-                            <>
-                              <span className="text-[1.1rem] leading-none" aria-hidden="true">🙌</span>
-                              <span className="inline-flex h-4 w-4 items-center justify-center rounded-[4px] border border-[#c33] bg-[#dd3b3b] text-[0]" aria-hidden="true">■</span>
-                              <span className="text-[1.1rem] leading-none" aria-hidden="true">🙌</span>
-                            </>
+                          {utilityRailImageVisuals[cell.id] ? (
+                            <img
+                              src={utilityRailImageVisuals[cell.id].src}
+                              alt=""
+                              aria-hidden="true"
+                              className={cn('max-h-full w-auto object-contain', utilityRailImageVisuals[cell.id].className)}
+                            />
                           ) : (
                             <span className={cn(
                               'leading-none',
