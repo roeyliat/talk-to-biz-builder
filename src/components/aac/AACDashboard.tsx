@@ -871,7 +871,14 @@ export function AACDashboard({
 
                         <div className="max-h-[min(56vh,34rem)] overflow-y-auto pe-1">
                           <div className="grid grid-cols-3 gap-4 md:gap-5">
-                          {manualIceCreamSections.flavors.map(({ boardId, cell }: ManualIceCreamCellEntry) => (
+                          {manualIceCreamSections.flavors.map(({ boardId, cell }: ManualIceCreamCellEntry) => {
+                            const normalizedFlavorText = `${cell.text ?? ''} ${cell.textEn ?? ''}`.toLowerCase();
+                            const shouldEmphasizeFlavorImage = normalizedFlavorText.includes('תות')
+                              || normalizedFlavorText.includes('strawberry')
+                              || normalizedFlavorText.includes('גלידת וניל')
+                              || normalizedFlavorText.includes('vanilla');
+
+                            return (
                             <AACCard
                               key={cell.id}
                               text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -891,9 +898,13 @@ export function AACDashboard({
                               className="h-[112px] min-h-[112px] gap-1.5 rounded-[14px] border-[2px] border-[#efcf63] px-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:h-[118px] md:min-h-[118px]"
                               labelClassName="min-h-[1.45rem] text-[0.8rem] md:min-h-[1.55rem] md:text-[0.88rem]"
                               imageContainerClassName="min-h-0 px-0 py-0"
-                              imageClassName="h-[92%] w-[92%] max-h-none max-w-none !scale-[0.82] -translate-y-[4%]"
+                              imageClassName={cn(
+                                'h-[96%] w-[96%] max-h-none max-w-none !scale-[0.9] -translate-y-[9%]',
+                                shouldEmphasizeFlavorImage && '!scale-[1.02] -translate-y-[12%]'
+                              )}
                             />
-                          ))}
+                            );
+                          })}
                           </div>
                         </div>
                       </div>
