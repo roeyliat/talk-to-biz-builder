@@ -328,9 +328,16 @@ export function AACDashboard({
     setShowAddModal(true);
   }, [navState.currentBoardId]);
 
+  const openAddItemModal = useCallback((targetBoardId?: string) => {
+    setEditingCell(null);
+    setEditingBoardId(targetBoardId ?? navState.currentBoardId);
+    setShowAddModal(true);
+  }, [navState.currentBoardId]);
+
   const handleAddCell = useCallback((cellData: Omit<AACCell, 'id'>) => {
     const newBoards = { ...activeBoards };
-    const board = newBoards[navState.currentBoardId];
+    const boardId = editingBoardId ?? navState.currentBoardId;
+    const board = newBoards[boardId];
     if (!board) return;
 
     const newCell: AACCell = {
@@ -338,16 +345,17 @@ export function AACDashboard({
       id: `custom-${Date.now()}`,
     };
 
-    newBoards[navState.currentBoardId] = {
+    newBoards[boardId] = {
       ...board,
       cells: [...board.cells, newCell],
     };
     
     updateBoards(newBoards);
+    setEditingBoardId(null);
     toast({
       title: language === 'he' ? 'הפריט נוסף' : 'Item added',
     });
-  }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
+  }, [activeBoards, editingBoardId, navState.currentBoardId, updateBoards, toast, language]);
 
   const handleUpdateCell = useCallback((updatedCell: AACCell) => {
     const newBoards = { ...activeBoards };
@@ -685,7 +693,7 @@ export function AACDashboard({
           </p>
           <Button
             size="sm"
-            onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => setShowAddModal(true))}
+            onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal())}
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -751,6 +759,16 @@ export function AACDashboard({
                         {isEditMode ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
                         {isEditMode ? (language === 'he' ? 'סיום עריכה' : 'Done') : (language === 'he' ? 'עריכה' : 'Edit')}
                       </Button>
+                      {isEditMode && !useManualIceCreamLayout && (
+                        <Button
+                          size="sm"
+                          onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal())}
+                          className="gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          {language === 'he' ? 'הוסף פריט' : 'Add Item'}
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -779,10 +797,20 @@ export function AACDashboard({
                   {useManualIceCreamLayout && manualIceCreamSections ? (
                     <>
                       <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
-                        <div className="mb-3 text-center">
+                        <div className="mb-3 flex items-center justify-between gap-3">
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.serving}
                           </h2>
+                          {isEditMode && manualIceCreamSections.serving[0] && (
+                            <Button
+                              size="sm"
+                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.serving[0].boardId))}
+                              className="gap-2"
+                            >
+                              <Plus className="h-4 w-4" />
+                              {language === 'he' ? 'הוסף פריט' : 'Add Item'}
+                            </Button>
+                          )}
                         </div>
 
                         <div className={cn('grid gap-3', manualIceCreamSections.serving.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
@@ -810,10 +838,20 @@ export function AACDashboard({
                       </div>
 
                       <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
-                        <div className="mb-3 text-center">
+                        <div className="mb-3 flex items-center justify-between gap-3">
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.flavors}
                           </h2>
+                          {isEditMode && manualIceCreamSections.flavors[0] && (
+                            <Button
+                              size="sm"
+                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.flavors[0].boardId))}
+                              className="gap-2"
+                            >
+                              <Plus className="h-4 w-4" />
+                              {language === 'he' ? 'הוסף פריט' : 'Add Item'}
+                            </Button>
+                          )}
                         </div>
 
                         <div className="grid grid-cols-3 gap-2.5 md:gap-3">
@@ -841,10 +879,20 @@ export function AACDashboard({
                       </div>
 
                       <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
-                        <div className="mb-3 text-center">
+                        <div className="mb-3 flex items-center justify-between gap-3">
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.toppings}
                           </h2>
+                          {isEditMode && manualIceCreamSections.toppings[0] && (
+                            <Button
+                              size="sm"
+                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.toppings[0].boardId))}
+                              className="gap-2"
+                            >
+                              <Plus className="h-4 w-4" />
+                              {language === 'he' ? 'הוסף פריט' : 'Add Item'}
+                            </Button>
+                          )}
                         </div>
 
                         <div className={cn('grid gap-3', manualIceCreamSections.toppings.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
