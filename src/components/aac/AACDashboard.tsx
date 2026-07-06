@@ -891,7 +891,7 @@ export function AACDashboard({
                               className="h-[112px] min-h-[112px] gap-1.5 rounded-[14px] border-[2px] border-[#efcf63] px-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:h-[118px] md:min-h-[118px]"
                               labelClassName="min-h-[1.45rem] text-[0.8rem] md:min-h-[1.55rem] md:text-[0.88rem]"
                               imageContainerClassName="min-h-0 px-0 py-0"
-                              imageClassName="h-[118%] w-[118%] max-h-none max-w-none"
+                              imageClassName="h-[100%] w-[100%] max-h-none max-w-none"
                             />
                           ))}
                           </div>
