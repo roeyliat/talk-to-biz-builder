@@ -17,9 +17,9 @@ import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useClickSound } from '@/hooks/useClickSound';
-import wantImage from '@/assets/aac-local/אני רוצה.PNG';
-import moreImage from '@/assets/aac-local/עוד.PNG';
-import howMuchImage from '@/assets/aac-local/כמה עולה.PNG';
+import wantImage from '@/assets/aac-local/אני רוצה.png';
+import moreImage from '@/assets/aac-local/עוד.png';
+import howMuchImage from '@/assets/aac-local/כמה עולה.png';
 
 const utilityRailCells: AACCell[] = [
   {
@@ -493,10 +493,10 @@ export function AACDashboard({
     'utility-no': { center: '❌' },
   };
   const utilityRailImageVisuals: Record<string, { src: string; className?: string }> = {
-    'utility-want': { src: wantImage },
-    'utility-more': { src: moreImage },
-    'utility-thanks': { src: '/aac-local/תודה.png' },
-    'utility-price': { src: howMuchImage },
+    'utility-want': { src: wantImage, className: 'scale-[1.18]' },
+    'utility-more': { src: moreImage, className: 'scale-[1.18]' },
+    'utility-thanks': { src: '/aac-local/תודה.png', className: 'scale-[1.15]' },
+    'utility-price': { src: howMuchImage, className: 'scale-[1.2]' },
   };
   const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
   const iceCreamCategoryButtons = [
@@ -756,7 +756,7 @@ export function AACDashboard({
 
           {useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]" style={{ direction: 'ltr' }}>
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_112px]" style={{ direction: 'ltr' }}>
                 <section className="space-y-3" dir={contentDir}>
                   {allowEdit && (
                     <div className="flex items-center justify-end gap-2 rounded-[16px] border-[2px] border-[#c8d1e0] bg-white/95 px-3 py-2 shadow-[0_6px_18px_rgba(15,23,42,0.08)]">
@@ -1053,7 +1053,7 @@ export function AACDashboard({
                   </div>
                 </section>
 
-                <aside className="grid auto-rows-fr gap-2.5" dir={contentDir}>
+                <aside className="grid auto-rows-fr content-start gap-4 self-start max-h-[min(56vh,34rem)] overflow-y-auto pe-1" dir={contentDir}>
                   {sideRailCells.map((cell) => {
                     const visual = iceCreamRailVisuals[cell.id] ?? { center: cell.icon };
 
@@ -1063,26 +1063,26 @@ export function AACDashboard({
                         type="button"
                         onClick={() => handleCellClick(cell)}
                         className={cn(
-                          'flex min-h-[88px] flex-col items-center justify-start gap-1 rounded-[16px] border-[2.5px] border-[#c6cfdd] bg-white px-2 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
+                          'flex h-[62px] min-h-[62px] flex-col items-center justify-start gap-0.5 rounded-[14px] border-[2px] border-[#c6cfdd] bg-white px-1.5 py-1.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
                           speakingCellId === cell.id && 'ring-4 ring-primary shadow-lg shadow-primary/20'
                         )}
                       >
-                        <span className="text-[0.98rem] font-extrabold leading-tight text-slate-900">
+                        <span className="text-[0.78rem] font-extrabold leading-tight text-slate-900">
                           {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                         </span>
 
-                        <div className="mt-0 flex h-[2.5rem] w-full items-center justify-center gap-2 overflow-hidden">
+                        <div className="mt-0 flex h-[2.95rem] w-full items-center justify-center overflow-hidden">
                           {utilityRailImageVisuals[cell.id] ? (
                             <img
                               src={utilityRailImageVisuals[cell.id].src}
                               alt=""
                               aria-hidden="true"
-                              className={cn('max-h-full w-auto object-contain', utilityRailImageVisuals[cell.id].className)}
+                              className={cn('h-full w-full max-h-none max-w-none object-contain', utilityRailImageVisuals[cell.id].className)}
                             />
                           ) : (
                             <span className={cn(
                               'leading-none',
-                              cell.id === 'utility-question' ? 'text-[1.75rem]' : 'text-[1.55rem]'
+                              cell.id === 'utility-question' ? 'text-[1.5rem]' : 'text-[1.35rem]'
                             )} aria-hidden="true">
                               {visual.center}
                             </span>
