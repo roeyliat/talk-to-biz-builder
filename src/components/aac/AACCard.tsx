@@ -23,6 +23,9 @@ interface AACCardProps {
   isSpeaking?: boolean; // NEW: Visual feedback during speech
   onDelete?: () => void;
   onEdit?: () => void;
+  labelClassName?: string;
+  imageContainerClassName?: string;
+  imageClassName?: string;
 }
 
 const categoryStyles: Record<FitzgeraldCategory, string> = {
@@ -46,7 +49,7 @@ const variantStyles = {
 };
 
 export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
-  ({ text, imageSearchTerms = [], category, icon, imageUrl, size = 'md', variant = 'fitzgerald', labelPosition, isFolder, onClick, className, style, disabled, isEditMode, isSpeaking, onDelete, onEdit }, ref) => {
+  ({ text, imageSearchTerms = [], category, icon, imageUrl, size = 'md', variant = 'fitzgerald', labelPosition, isFolder, onClick, className, style, disabled, isEditMode, isSpeaking, onDelete, onEdit, labelClassName, imageContainerClassName, imageClassName }, ref) => {
     const usesMockupSurface = variant !== 'fitzgerald';
     const isMockupCard = variant === 'mockup';
     const isRailCard = variant === 'rail';
@@ -147,7 +150,8 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
             isMockupCard && 'min-h-[2rem] font-bold text-slate-800 text-[0.95rem] md:text-base',
             isRailCard && 'min-h-[1.95rem] font-bold text-slate-800 text-[0.98rem]',
             isUtilityCard && 'min-h-[2.2rem] font-extrabold text-slate-800 text-[1rem] leading-snug',
-            !usesMockupSurface && 'font-semibold text-foreground'
+            !usesMockupSurface && 'font-semibold text-foreground',
+            labelClassName
           )}>
             {text}
           </span>
@@ -158,7 +162,8 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
             'grid min-h-0 flex-1 self-stretch place-items-center overflow-hidden',
             isMockupCard && 'min-h-[112px] px-1 py-1 md:min-h-[126px]',
             isRailCard && 'min-h-[104px] px-1.5 py-1.5 md:min-h-[114px]',
-            isUtilityCard && 'min-h-[74px] px-1 py-1 md:min-h-[84px]'
+            isUtilityCard && 'min-h-[74px] px-1 py-1 md:min-h-[84px]',
+            imageContainerClassName
           )}
         >
           {shouldShowImage ? (
@@ -175,7 +180,8 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
                 shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
                 shouldBoostColorfulSprinklesImage && 'scale-[2.25]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
-                isUtilityCard && 'max-h-[54px] md:max-h-[64px]'
+                isUtilityCard && 'max-h-[54px] md:max-h-[64px]',
+                imageClassName
               )}
             />
           ) : fallbackIcon ? (

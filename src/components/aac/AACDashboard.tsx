@@ -869,7 +869,8 @@ export function AACDashboard({
                           )}
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2.5 md:gap-3">
+                        <div className="max-h-[min(56vh,34rem)] overflow-y-auto pe-1">
+                          <div className="grid grid-cols-3 gap-4 md:gap-5">
                           {manualIceCreamSections.flavors.map(({ boardId, cell }: ManualIceCreamCellEntry) => (
                             <AACCard
                               key={cell.id}
@@ -887,9 +888,13 @@ export function AACDashboard({
                               isSpeaking={speakingCellId === cell.id}
                               onDelete={() => handleDeleteCell(cell.id, boardId)}
                               onEdit={() => handleEditCell(cell, boardId)}
-                              className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                              className="h-[112px] min-h-[112px] gap-1.5 rounded-[14px] border-[2px] border-[#efcf63] px-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:h-[118px] md:min-h-[118px]"
+                              labelClassName="min-h-[1.45rem] text-[0.8rem] md:min-h-[1.55rem] md:text-[0.88rem]"
+                              imageContainerClassName="min-h-0 px-0 py-0"
+                              imageClassName="h-[118%] w-[118%] max-h-none max-w-none"
                             />
                           ))}
+                          </div>
                         </div>
                       </div>
 
