@@ -899,8 +899,8 @@ export function AACDashboard({
                               labelClassName="min-h-[1.45rem] text-[0.8rem] md:min-h-[1.55rem] md:text-[0.88rem]"
                               imageContainerClassName="min-h-0 px-0 py-0"
                               imageClassName={cn(
-                                'h-[96%] w-[96%] max-h-none max-w-none !scale-[0.9] -translate-y-[9%]',
-                                shouldEmphasizeFlavorImage && '!scale-[1.02] -translate-y-[12%]'
+                                'h-[98%] w-[98%] max-h-none max-w-none !scale-[0.96] -translate-y-[14%]',
+                                shouldEmphasizeFlavorImage && '!scale-[1.22] -translate-y-[18%]'
                               )}
                             />
                             );
