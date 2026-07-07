@@ -28,7 +28,7 @@ const translations: Record<Language, Record<string, string>> = {
     'hero.demo': 'צפו בדוגמה',
     
     // Features
-    'features.title': 'למה TalktobiZ?',
+    'features.title': 'למה TalkToBiz?',
     'features.ai.title': 'מונע בינה מלאכותית',
     'features.ai.description': 'AI חכם שמבין את העסק שלכם ויוצר לוחות מותאמים אישית',
     'features.accessible.title': 'נגיש לכולם',
@@ -101,6 +101,8 @@ const translations: Record<Language, Record<string, string>> = {
     'aac.mainBoard': 'לוח ראשי',
     'aac.uploadMenu': 'העלו תמונת תפריט',
     'aac.aiProcessing': 'ה-AI יעבד את התמונה ויצור כרטיסים',
+    'boardSection.ordering': 'שלבי הזמנה',
+    'boardSection.service': 'בקשות שירות',
     
     // Menu Items
     'menu.drinks': 'משקאות',
@@ -128,14 +130,14 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.aacBoard': 'AAC Board',
     
     // Hero
-    'hero.title': 'TalktobiZ',
+    'hero.title': 'TalkToBiz',
     'hero.subtitle': 'Make Your Business Accessible to Everyone',
     'hero.description': 'Create custom visual communication boards for your business, so every customer can communicate with ease',
     'hero.cta': 'Get Started',
     'hero.demo': 'Watch Demo',
     
     // Features
-    'features.title': 'Why TalktobiZ?',
+    'features.title': 'Why TalkToBiz?',
     'features.ai.title': 'AI-Powered',
     'features.ai.description': 'Smart AI that understands your business and creates personalized boards',
     'features.accessible.title': 'Accessible to All',
@@ -208,6 +210,8 @@ const translations: Record<Language, Record<string, string>> = {
     'aac.mainBoard': 'Main Board',
     'aac.uploadMenu': 'Upload Menu Photo',
     'aac.aiProcessing': 'AI will process the image and create cards',
+    'boardSection.ordering': 'Ordering Steps',
+    'boardSection.service': 'Service Requests',
     
     // Menu Items
     'menu.drinks': 'Drinks',
@@ -235,14 +239,14 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.aacBoard': 'لوحة التواصل',
     
     // Hero
-    'hero.title': 'TalktobiZ',
+    'hero.title': 'TalkToBiz',
     'hero.subtitle': 'اجعل عملك متاحاً للجميع',
     'hero.description': 'أنشئ لوحات تواصل بصرية مخصصة لعملك، لكي يتمكن كل عميل من التواصل بسهولة',
     'hero.cta': 'ابدأ الآن',
     'hero.demo': 'شاهد العرض',
     
     // Features
-    'features.title': 'لماذا TalktobiZ؟',
+    'features.title': 'لماذا TalkToBiz؟',
     'features.ai.title': 'مدعوم بالذكاء الاصطناعي',
     'features.ai.description': 'ذكاء اصطناعي يفهم عملك وينشئ لوحات مخصصة',
     'features.accessible.title': 'متاح للجميع',
@@ -315,6 +319,8 @@ const translations: Record<Language, Record<string, string>> = {
     'aac.mainBoard': 'اللوحة الرئيسية',
     'aac.uploadMenu': 'تحميل صورة القائمة',
     'aac.aiProcessing': 'سيقوم الذكاء الاصطناعي بمعالجة الصورة',
+    'boardSection.ordering': 'خطوات الطلب',
+    'boardSection.service': 'طلبات الخدمة',
     
     // Menu Items
     'menu.drinks': 'مشروبات',
@@ -342,14 +348,14 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.aacBoard': 'Коммуникационная доска',
     
     // Hero
-    'hero.title': 'TalktobiZ',
-    'hero.subtitle': 'Сделайте свой бизнес доступным для всех',
+    'hero.title': 'TalkToBiz',
+    'hero.subtitle': 'Сделайте ваш бизнес доступным для всех',
     'hero.description': 'Создавайте персонализированные коммуникационные доски для вашего бизнеса, чтобы каждый клиент мог легко общаться',
     'hero.cta': 'Начать',
     'hero.demo': 'Смотреть демо',
     
     // Features
-    'features.title': 'Почему TalktobiZ?',
+    'features.title': 'Почему TalkToBiz?',
     'features.ai.title': 'На основе ИИ',
     'features.ai.description': 'Умный ИИ, который понимает ваш бизнес и создает персонализированные доски',
     'features.accessible.title': 'Доступно для всех',
@@ -422,6 +428,8 @@ const translations: Record<Language, Record<string, string>> = {
     'aac.mainBoard': 'Главная доска',
     'aac.uploadMenu': 'Загрузить фото меню',
     'aac.aiProcessing': 'ИИ обработает изображение и создаст карточки',
+    'boardSection.ordering': 'Этапы заказа',
+    'boardSection.service': 'Запросы обслуживания',
     
     // Menu Items
     'menu.drinks': 'Напитки',
@@ -444,13 +452,29 @@ const translations: Record<Language, Record<string, string>> = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('he');
+  const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === 'undefined') {
+      return 'he';
+    }
+
+    const savedLanguage = window.localStorage.getItem('talktobiz_language');
+    if (savedLanguage === 'he' || savedLanguage === 'en' || savedLanguage === 'ar' || savedLanguage === 'ru') {
+      return savedLanguage;
+    }
+
+    return 'he';
+  });
 
   const direction: Direction = (language === 'he' || language === 'ar') ? 'rtl' : 'ltr';
 
   useEffect(() => {
     document.documentElement.dir = direction;
     document.documentElement.lang = language;
+    document.body.dir = direction;
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('talktobiz_language', language);
+    }
   }, [language, direction]);
 
   const t = (key: string): string => {

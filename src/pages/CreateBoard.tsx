@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -50,7 +50,7 @@ const CreateBoard = () => {
   const { t, language, direction } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, isGuest, loading: authLoading } = useAuth();
+  const { user, isGuest } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     businessType: '',
@@ -67,16 +67,6 @@ const CreateBoard = () => {
   const [showBoardReview, setShowBoardReview] = useState(false);
   
   const { isProcessing, generatedBoards, processMenuUrl, processMenuImage, setGeneratedBoards, reset: resetScanner } = useMenuScanner();
-
-  useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-
-    if (!user || isGuest) {
-      navigate('/auth', { replace: true });
-    }
-  }, [authLoading, isGuest, navigate, user]);
 
   const steps = [
     { num: 1, key: 'step1' },

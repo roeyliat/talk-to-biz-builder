@@ -23,9 +23,6 @@ interface AACCardProps {
   isSpeaking?: boolean; // NEW: Visual feedback during speech
   onDelete?: () => void;
   onEdit?: () => void;
-  labelClassName?: string;
-  imageContainerClassName?: string;
-  imageClassName?: string;
 }
 
 const categoryStyles: Record<FitzgeraldCategory, string> = {
@@ -49,7 +46,7 @@ const variantStyles = {
 };
 
 export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
-  ({ text, imageSearchTerms = [], category, icon, imageUrl, size = 'md', variant = 'fitzgerald', labelPosition, isFolder, onClick, className, style, disabled, isEditMode, isSpeaking, onDelete, onEdit, labelClassName, imageContainerClassName, imageClassName }, ref) => {
+  ({ text, imageSearchTerms = [], category, icon, imageUrl, size = 'md', variant = 'fitzgerald', labelPosition, isFolder, onClick, className, style, disabled, isEditMode, isSpeaking, onDelete, onEdit }, ref) => {
     const usesMockupSurface = variant !== 'fitzgerald';
     const isMockupCard = variant === 'mockup';
     const isRailCard = variant === 'rail';
@@ -71,18 +68,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
 
     const fallbackIcon = isFolder ? '📁' : icon;
     const shouldShowImage = Boolean(resolvedImageUrl) && !hasImageError;
-    const normalizedText = text.trim().toLowerCase();
-    const decodedImageUrl = resolvedImageUrl ? decodeURIComponent(resolvedImageUrl).toLowerCase() : '';
-    const shouldBoostVanillaImage = ['וניל', 'vanilla', 'גלידת וניל'].includes(normalizedText)
-      || decodedImageUrl.includes('וניל.png');
-    const shouldBoostChocolateFlavorImage = ['שוקולד', 'chocolate'].includes(normalizedText)
-      || decodedImageUrl.includes('שוקולד.png');
-    const shouldBoostBelgianChocolateFlavorImage = ['שוקולד בלגי', 'belgian chocolate'].includes(normalizedText)
-      || decodedImageUrl.includes('שוקולד בלגי');
-    const shouldBoostStrawberryFlavorImage = ['תות', 'strawberry'].includes(normalizedText)
-      || decodedImageUrl.includes('תות.png');
-    const shouldShrinkBrownSprinklesImage = normalizedText.includes('סוכריות חומות') || decodedImageUrl.includes('סוכריות חומות');
-    const shouldBoostColorfulSprinklesImage = normalizedText.includes('סוכריות צבעוניות') || decodedImageUrl.includes('סוכריות צבעוניות');
+    const shouldBoostVanillaImage = ['וניל', 'vanilla'].includes(text.trim().toLowerCase());
 
     return (
       <button
@@ -150,8 +136,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
             isMockupCard && 'min-h-[2rem] font-bold text-slate-800 text-[0.95rem] md:text-base',
             isRailCard && 'min-h-[1.95rem] font-bold text-slate-800 text-[0.98rem]',
             isUtilityCard && 'min-h-[2.2rem] font-extrabold text-slate-800 text-[1rem] leading-snug',
-            !usesMockupSurface && 'font-semibold text-foreground',
-            labelClassName
+            !usesMockupSurface && 'font-semibold text-foreground'
           )}>
             {text}
           </span>
@@ -162,8 +147,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
             'grid min-h-0 flex-1 self-stretch place-items-center overflow-hidden',
             isMockupCard && 'min-h-[112px] px-1 py-1 md:min-h-[126px]',
             isRailCard && 'min-h-[104px] px-1.5 py-1.5 md:min-h-[114px]',
-            isUtilityCard && 'min-h-[74px] px-1 py-1 md:min-h-[84px]',
-            imageContainerClassName
+            isUtilityCard && 'min-h-[106px] px-1.5 py-1.5 md:min-h-[118px]'
           )}
         >
           {shouldShowImage ? (
@@ -173,15 +157,9 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
               onError={() => setHasImageError(true)}
               className={cn(
                 'block h-full max-h-full min-h-0 w-full max-w-full self-center justify-self-center object-contain object-center',
-                shouldBoostVanillaImage && 'scale-[2.58]',
-                shouldBoostChocolateFlavorImage && 'scale-[1.18]',
-                shouldBoostBelgianChocolateFlavorImage && 'scale-[1.16]',
-                shouldBoostStrawberryFlavorImage && 'scale-[2.37]',
-                shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
-                shouldBoostColorfulSprinklesImage && 'scale-[2.25]',
+                shouldBoostVanillaImage && 'scale-[1.22]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
-                isUtilityCard && 'max-h-[54px] md:max-h-[64px]',
-                imageClassName
+                isUtilityCard && 'max-h-[90px] md:max-h-[98px]'
               )}
             />
           ) : fallbackIcon ? (
@@ -190,7 +168,7 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
                 'self-center justify-self-center',
                 isMockupCard && 'text-[2.8rem] md:text-[3.2rem]',
                 isRailCard && 'text-[2.5rem] md:text-[2.9rem]',
-                isUtilityCard && 'text-[1.7rem] md:text-[1.95rem]',
+                isUtilityCard && 'text-[2.65rem] md:text-[3rem]',
                 !usesMockupSurface && 'text-3xl md:text-4xl'
               )}
             >

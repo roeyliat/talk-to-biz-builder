@@ -67,8 +67,7 @@ const shouldRefreshSavedTemplateBoards = (
 const AACBoard = () => {
   const { boardId } = useParams();
   const [searchParams] = useSearchParams();
-  const sharedPayload = parseSharedBoardPayload(searchParams.get('s') ?? searchParams.get('shared'));
-  const businessType = (sharedPayload?.businessType ?? searchParams.get('type')) as BusinessType || 'cafe';
+  const businessType = searchParams.get('type') as BusinessType || 'cafe';
   const editMode = searchParams.get('edit') === 'true';
   const { user, isGuest, loading: authLoading } = useAuth();
   
@@ -96,6 +95,7 @@ const AACBoard = () => {
         }
       }
 
+      const sharedPayload = parseSharedBoardPayload(searchParams.get('shared'));
       if (sharedPayload?.boards) {
         if (isMounted) {
           setBoards(sharedPayload.boards);

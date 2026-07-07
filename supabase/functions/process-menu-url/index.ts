@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { enrichMenuWithArasaac } from "../_shared/arasaac.ts";
-import { extractWoltMenuDataFromHtml, isWoltHost } from "../_shared/wolt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +27,6 @@ type MenuItem = {
   id: string;
   text: string;
   textEn: string;
-  sourceText?: string;
   category: "people" | "verbs" | "descriptors" | "social";
   icon: string;
   imageUrl?: string;
@@ -296,90 +294,6 @@ const processBiteTechUrl = async (parsedUrl: URL) => {
   return menuData;
 };
 
-const buildWoltMenuData = (rawMenuData: ReturnType<typeof extractWoltMenuDataFromHtml>): MenuData | null => {
-  if (!rawMenuData) return null;
-
-  const businessNameHe = rawMenuData.businessNameHe || 'תפריט';
-  const businessName = businessNameHe;
-
-  const categories = rawMenuData.categories.map((category, categoryIndex) => ({
-    id: `wolt-category-${slugify(category.nameHe, `category-${categoryIndex + 1}`)}`,
-    name: category.nameHe,
-    nameHe: category.nameHe,
-    items: category.items.map((item, itemIndex) => ({
-      id: `wolt-item-${categoryIndex + 1}-${itemIndex + 1}-${slugify(item.text, 'item')}`,
-      text: item.text,
-      textEn: item.text,
-      sourceText: [item.text, item.description].filter(Boolean).join(' — '),
-      category: 'people' as const,
-      icon: getBiteTechItemIcon(`${item.text} ${item.description ?? ''}`),
-      imageUrl: item.imageUrl,
-    })),
-  }));
-
-  return {
-    businessName,
-    businessNameHe,
-    categories,
-  };
-};
-
-const mergeMenuCategories = (baseMenuData: MenuData, extraMenuData: MenuData) => {
-  const existingCategoryNames = new Set(
-    baseMenuData.categories.map((category) => normalizeEvidenceText(category.nameHe || category.name || '')),
-  );
-
-  return {
-    ...baseMenuData,
-    categories: [
-      ...baseMenuData.categories,
-      ...extraMenuData.categories.filter((category) => {
-        const normalizedName = normalizeEvidenceText(category.nameHe || category.name || '');
-        return normalizedName && !existingCategoryNames.has(normalizedName);
-      }),
-    ],
-  };
-};
-
-const fetchOfficialPinoliFlavorMenuData = async () => {
-  const response = await fetch('https://www.pinoli.co.il/%D7%94%D7%98%D7%A2%D7%9E%D7%99%D7%9D/', {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; AACBoardBot/1.0)',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5,he;q=0.3',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Pinoli flavors page: ${response.status}`);
-  }
-
-  const html = await response.text();
-  const extractedText = extractVisibleText(html);
-  return tryBuildPinoliMenuData(new URL('https://www.pinoli.co.il/%D7%94%D7%98%D7%A2%D7%9E%D7%99%D7%9D/'), extractedText);
-};
-
-const maybeEnrichWoltPinoliMenuData = async (parsedUrl: URL, menuData: MenuData) => {
-  const normalizedBusinessName = normalizeEvidenceText(menuData.businessNameHe || menuData.businessName || '');
-  const looksLikePinoli = normalizedBusinessName.includes(normalizeEvidenceText('פינולי')) || /pinoli/i.test(parsedUrl.href);
-
-  if (!looksLikePinoli) {
-    return menuData;
-  }
-
-  try {
-    const pinoliFlavorMenuData = await fetchOfficialPinoliFlavorMenuData();
-    if (!pinoliFlavorMenuData) {
-      return menuData;
-    }
-
-    return mergeMenuCategories(menuData, pinoliFlavorMenuData);
-  } catch (error) {
-    console.warn('Failed to enrich Wolt Pinoli menu with official flavors', error);
-    return menuData;
-  }
-};
-
 const extractVisibleText = (html: string) =>
   html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -403,35 +317,6 @@ const tokenizeEvidence = (value: string) =>
   normalizeEvidenceText(value)
     .split(' ')
     .filter((token) => token.length >= 2 && !EVIDENCE_STOP_WORDS.has(token));
-
-const PINOLI_MULTIWORD_FLAVORS = [
-  { text: 'וניל שחור', textEn: 'Black Vanilla' },
-  { text: 'פינולי (צנובר)', textEn: 'Pinoli (Pine Nut)' },
-  { text: 'קפה איטלקי', textEn: 'Italian Coffee' },
-  { text: 'שוקולד מריר', textEn: 'Dark Chocolate' },
-  { text: 'ליים בזיליקום', textEn: 'Lime Basil' },
-  { text: 'אמסטרדם קוקיס', textEn: 'Amsterdam Cookies' },
-  { text: 'חמאת בוטנים ופטל', textEn: 'Peanut Butter and Raspberry' },
-  { text: 'קרמל מלוח עם שברי אפרופו', textEn: 'Salted Caramel with Apropo Pieces' },
-  { text: 'מסקרפונה פירות יער וקרמבל', textEn: 'Mascarpone Berries and Crumble' },
-];
-
-const PINOLI_FLAVORS = [
-  { text: 'מנגו', textEn: 'Mango' },
-  { text: 'תות', textEn: 'Strawberry' },
-  { text: 'שוקולד', textEn: 'Chocolate' },
-  { text: "נוצ'לה", textEn: 'Nutella' },
-  { text: 'חלווה', textEn: 'Halva' },
-  { text: 'פיסטוק', textEn: 'Pistachio' },
-  { text: 'שוקולד בלגי', textEn: 'Belgian Chocolate' },
-  ...PINOLI_MULTIWORD_FLAVORS,
-] as const;
-
-const PINOLI_ALCOHOL_FLAVORS = [
-  { text: 'ברגמונט אוזו', textEn: 'Bergamot Ouzo' },
-  { text: 'קפה ביייליס', textEn: 'Coffee Baileys' },
-  { text: 'אפרול תפוז', textEn: 'Aperol Orange' },
-] as const;
 
 const hasSourceEvidence = (item: { text?: string; textEn?: string; sourceText?: string }) => {
   const sourceTokens = tokenizeEvidence(item.sourceText ?? '');
@@ -467,115 +352,6 @@ const sanitizeVisibleEvidence = (menuData: any) => {
         };
       })
       .filter(Boolean),
-  };
-};
-
-const injectKnownPinoliFlavors = (menuData: MenuData, extractedText: string, host: string): MenuData => {
-  if (!/(^|\.)pinoli\.co\.il$/i.test(host) || !Array.isArray(menuData.categories)) {
-    return menuData;
-  }
-
-  const normalizedPageText = normalizeEvidenceText(extractedText);
-  if (!normalizedPageText) {
-    return menuData;
-  }
-
-  const flavorCategory = menuData.categories.find((category) =>
-    /טעמ|flavor|gelato|גליד/i.test(`${category.nameHe ?? ''} ${category.name ?? ''}`),
-  ) ?? menuData.categories[0];
-
-  if (!flavorCategory) {
-    return menuData;
-  }
-
-  const existingNames = new Set(
-    menuData.categories.flatMap((category) => category.items.map((item) => normalizeEvidenceText(item.text))),
-  );
-
-  const missingFlavorItems = PINOLI_MULTIWORD_FLAVORS
-    .filter((flavor) => {
-      const normalizedFlavor = normalizeEvidenceText(flavor.text);
-      return normalizedFlavor && normalizedPageText.includes(normalizedFlavor) && !existingNames.has(normalizedFlavor);
-    })
-    .map((flavor, index) => ({
-      id: `pinoli-flavor-${slugify(flavor.text, `flavor-${index + 1}`)}`,
-      text: flavor.text,
-      textEn: flavor.textEn,
-      sourceText: flavor.text,
-      category: 'people' as const,
-      icon: getBiteTechItemIcon(`${flavor.text} ${flavor.textEn}`),
-    }));
-
-  if (missingFlavorItems.length === 0) {
-    return menuData;
-  }
-
-  return {
-    ...menuData,
-    categories: menuData.categories.map((category) =>
-      category.id === flavorCategory.id
-        ? { ...category, items: [...category.items, ...missingFlavorItems] }
-        : category,
-    ),
-  };
-};
-
-const buildPinoliItems = (
-  flavors: ReadonlyArray<{ text: string; textEn: string }>,
-  normalizedPageText: string,
-  prefix: string,
-) => flavors
-  .filter((flavor) => normalizedPageText.includes(normalizeEvidenceText(flavor.text)))
-  .map((flavor, index) => ({
-    id: `${prefix}-${slugify(flavor.text, `item-${index + 1}`)}`,
-    text: flavor.text,
-    textEn: flavor.textEn,
-    sourceText: flavor.text,
-    category: 'people' as const,
-    icon: getBiteTechItemIcon(`${flavor.text} ${flavor.textEn}`),
-  }));
-
-const tryBuildPinoliMenuData = (parsedUrl: URL, extractedText: string): MenuData | null => {
-  if (!/(^|\.)pinoli\.co\.il$/i.test(parsedUrl.host)) {
-    return null;
-  }
-
-  const normalizedPageText = normalizeEvidenceText(extractedText);
-  if (!normalizedPageText.includes(normalizeEvidenceText('הטעמים שלנו'))) {
-    return null;
-  }
-
-  const flavorItems = buildPinoliItems(PINOLI_FLAVORS, normalizedPageText, 'pinoli-flavor');
-  const alcoholFlavorItems = buildPinoliItems(PINOLI_ALCOHOL_FLAVORS, normalizedPageText, 'pinoli-alcohol-flavor');
-
-  if (flavorItems.length === 0 && alcoholFlavorItems.length === 0) {
-    return null;
-  }
-
-  const categories: MenuCategory[] = [];
-
-  if (flavorItems.length > 0) {
-    categories.push({
-      id: 'pinoli-flavors',
-      name: 'Flavors',
-      nameHe: 'טעמים',
-      items: flavorItems,
-    });
-  }
-
-  if (alcoholFlavorItems.length > 0) {
-    categories.push({
-      id: 'pinoli-alcohol-flavors',
-      name: 'Alcoholic Flavors',
-      nameHe: 'גלידות אלכוהוליות',
-      items: alcoholFlavorItems,
-    });
-  }
-
-  return {
-    businessName: 'Pinoli',
-    businessNameHe: 'פינולי',
-    categories,
   };
 };
 
@@ -711,29 +487,6 @@ serve(async (req) => {
     // Extract text content from HTML (basic extraction)
     const extractedText = extractVisibleText(htmlContent);
     const textContent = extractedText.substring(0, 50000);
-
-    if (isWoltHost(parsedUrl.host)) {
-      const woltMenuData = buildWoltMenuData(extractWoltMenuDataFromHtml(htmlContent));
-      if (woltMenuData) {
-        const enrichedWoltMenuData = await maybeEnrichWoltPinoliMenuData(parsedUrl, woltMenuData);
-        await enrichMenuWithArasaac(enrichedWoltMenuData);
-
-        return new Response(
-          JSON.stringify({ success: true, data: enrichedWoltMenuData }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
-
-    const pinoliMenuData = tryBuildPinoliMenuData(parsedUrl, extractedText);
-    if (pinoliMenuData) {
-      await enrichMenuWithArasaac(pinoliMenuData);
-
-      return new Response(
-        JSON.stringify({ success: true, data: pinoliMenuData }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
 
     if (isDynamicShellWithoutContent(htmlContent, extractedText)) {
       console.warn(`Insufficient menu content extracted from ${parsedUrl.host}; refusing AI inference to avoid hallucinated items`);
@@ -904,11 +657,7 @@ ${textContent}`
     }
 
     const rawMenuData = JSON.parse(toolCall.function.arguments);
-    const menuData = injectKnownPinoliFlavors(
-      sanitizeVisibleEvidence(rawMenuData),
-      extractedText,
-      parsedUrl.host,
-    );
+    const menuData = sanitizeVisibleEvidence(rawMenuData);
     console.log(`Menu data parsed successfully for user ${user.id}: ${menuData.businessName}, ${menuData.categories?.length || 0} categories`);
 
     // Attach free ARASAAC pictograms to each item where available.

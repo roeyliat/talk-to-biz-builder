@@ -9,9 +9,10 @@ import { useToast } from '@/hooks/use-toast';
 export function Header() {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isGuest, signOut, loading } = useAuth();
+  const { user, isGuest, isAdmin, isApproved, signOut, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const canAccessProtectedRoutes = isAdmin || isApproved;
 
   const toggleLanguage = () => {
     setLanguage(language === 'he' ? 'en' : 'he');
@@ -39,18 +40,15 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
-  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary overflow-hidden">
-    <img
-      src="/favicon.png"
-      alt="TalktobiZ Logo"
-      className="h-full w-full object-cover"
-    />
-  </div>
-
-  <span className="font-bold text-xl text-foreground">
-    TalktobiZ
-  </span>
-</Link>
+          <svg className="h-9 w-9" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="12" fill="currentColor" className="text-primary"/>
+            <path d="M30 35h40M30 50h40M30 65h30" stroke="white" strokeWidth="6" strokeLinecap="round"/>
+            <circle cx="75" cy="65" r="8" fill="white"/>
+          </svg>
+          <span className="font-bold text-xl text-foreground">
+            TalkToBiz
+          </span>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
@@ -61,17 +59,35 @@ export function Header() {
             {t('nav.home')}
           </Link>
           <Link 
-            to="/dashboard" 
+            to="/demo" 
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            {t('nav.dashboard')}
+            {language === 'he' ? 'הדגמה' : 'Demo'}
           </Link>
-          <Link 
-            to="/create" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {t('nav.create')}
-          </Link>
+          {canAccessProtectedRoutes && (
+            <>
+              <Link 
+                to="/dashboard" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t('nav.dashboard')}
+              </Link>
+              <Link 
+                to="/create" 
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t('nav.create')}
+              </Link>
+            </>
+          )}
+          {isAdmin && (
+            <Link 
+              to="/admin/users" 
+              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              {language === 'he' ? 'ניהול משתמשים' : 'Manage Users'}
+            </Link>
+          )}
         </nav>
 
         {/* Actions */}
@@ -100,13 +116,22 @@ export function Header() {
                   </Button>
                 </div>
               ) : (
-                <Button 
-                  size="sm" 
-                  className="hidden md:inline-flex"
-                  onClick={() => navigate('/auth')}
-                >
-                  {language === 'he' ? 'התחברות' : 'Login'}
-                </Button>
+                <div className="hidden md:flex items-center gap-3">
+                  <Button 
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/signin')}
+                  >
+                    {language === 'he' ? 'התחברות' : 'Sign In'}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/signup')}
+                  >
+                    {language === 'he' ? 'הרשמה' : 'Sign Up'}
+                  </Button>
+                </div>
               )}
             </>
           )}
@@ -135,19 +160,39 @@ export function Header() {
               {t('nav.home')}
             </Link>
             <Link 
-              to="/dashboard" 
+              to="/demo" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              {t('nav.dashboard')}
+              {language === 'he' ? 'הדגמה' : 'Demo'}
             </Link>
-            <Link 
-              to="/create" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {t('nav.create')}
-            </Link>
+            {canAccessProtectedRoutes && (
+              <>
+                <Link 
+                  to="/dashboard" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('nav.dashboard')}
+                </Link>
+                <Link 
+                  to="/create" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('nav.create')}
+                </Link>
+              </>
+            )}
+            {isAdmin && (
+              <Link 
+                to="/admin/users" 
+                className="text-sm font-medium text-primary hover:text-primary/80 transition-colors py-2"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {language === 'he' ? 'ניהול משתמשים' : 'Manage Users'}
+              </Link>
+            )}
             <div className="flex items-center gap-3 pt-3 border-t border-border/40">
               <Button
                 variant="ghost"
@@ -156,7 +201,7 @@ export function Header() {
                 className="gap-2"
               >
                 <Globe className="h-4 w-4" />
-                {language === 'he' ? 'English' : 'עברית'}
+                {language === 'he' ? 'אנגלית' : 'עברית'}
               </Button>
               
               {!loading && (
@@ -167,15 +212,30 @@ export function Header() {
                       {language === 'he' ? 'התנתק' : 'Sign Out'}
                     </Button>
                   ) : (
-                    <Button 
-                      size="sm" 
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        navigate('/auth');
-                      }}
-                    >
-                      {language === 'he' ? 'התחברות' : 'Login'}
-                    </Button>
+                    <div className="flex flex-col gap-2 w-full">
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          navigate('/signin');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full"
+                      >
+                        {language === 'he' ? 'התחברות' : 'Sign In'}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigate('/signup');
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full"
+                      >
+                        {language === 'he' ? 'הרשמה' : 'Sign Up'}
+                      </Button>
+                    </div>
                   )}
                 </>
               )}

@@ -65,8 +65,9 @@ describe('sharedBoard', () => {
 
     const parsedUrl = new URL(url);
 
-    expect(parsedUrl.pathname).toBe('/b');
-    expect(parsedUrl.searchParams.get('s')).toBeTruthy();
+    expect(parsedUrl.pathname).toBe('/board/board-123');
+    expect(parsedUrl.searchParams.get('type')).toBe('iceCream');
+    expect(parsedUrl.searchParams.get('shared')).toBeTruthy();
   });
 
   it('round-trips a shared board payload', () => {
@@ -78,7 +79,7 @@ describe('sharedBoard', () => {
       boards: sampleBoards,
     });
 
-    const sharedValue = new URL(url).searchParams.get('s');
+    const sharedValue = new URL(url).searchParams.get('shared');
     const parsedPayload = parseSharedBoardPayload(sharedValue);
 
     expect(parsedPayload).toEqual({
@@ -139,20 +140,5 @@ describe('sharedBoard', () => {
 
     expect(compressedUrl.length).toBeLessThan(legacyUrl.length);
     expect(canRenderBoardUrlAsQr(compressedUrl, 'M')).toBe(true);
-  });
-
-  it('keeps plain saved-board links short when inline board data is not provided', () => {
-    const url = createSharedBoardUrl({
-      baseUrl: 'https://example.com',
-      boardId: 'board-123',
-      businessType: 'iceCream',
-      boardName: 'גלידות',
-    });
-
-    const parsedUrl = new URL(url);
-
-    expect(parsedUrl.pathname).toBe('/board/board-123');
-    expect(parsedUrl.searchParams.get('type')).toBe('iceCream');
-    expect(parsedUrl.searchParams.get('s')).toBeNull();
   });
 });

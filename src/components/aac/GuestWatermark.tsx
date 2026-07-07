@@ -18,11 +18,16 @@ export function GuestWatermark({ className }: GuestWatermarkProps) {
       <div className="bg-background/80 backdrop-blur-sm border border-border rounded-lg px-4 py-2 shadow-lg">
         <p className="text-sm text-muted-foreground font-medium">
           {language === 'he' ? 'נוצר עם' : 'Created with'}{' '}
-          <span className="text-primary font-bold">TalktobiZ</span>
+          <span className="text-primary font-bold">TalkToBiz</span>
           {' '}
           <span className="text-xs opacity-70">
-            {language === 'he' ? '(גרסת התנסות)' : '(Trial Version)'}
+            {language === 'he' ? '(גרסת התנסות - אימוג׳ים בלבד)' : '(Trial - Emojis Only)'}
           </span>
+        </p>
+        <p className="text-xs text-muted-foreground/60 mt-1 text-center">
+          {language === 'he' 
+            ? 'הירשם לקבלת תמונות ARASAAC מקצועיות' 
+            : 'Sign up for professional ARASAAC images'}
         </p>
       </div>
     </div>

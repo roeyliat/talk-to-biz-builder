@@ -363,7 +363,7 @@ const Dashboard = () => {
 
               {/* Create New Card */}
               <Link
-                to={user && !isGuest ? '/create' : '/auth'}
+                to="/create"
                 className="flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/50 p-8 transition-all duration-300 min-h-[200px]"
               >
                 <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
@@ -383,7 +383,7 @@ const Dashboard = () => {
                 {t('dashboard.noBoards')}
               </h2>
               <Button size="lg" asChild className="mt-4">
-                <Link to={user && !isGuest ? '/create' : '/auth'} className="gap-2">
+                <Link to="/create" className="gap-2">
                   <Plus className="h-5 w-5" />
                   {t('dashboard.createNew')}
                 </Link>

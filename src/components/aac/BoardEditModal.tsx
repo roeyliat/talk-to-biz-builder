@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,14 +49,6 @@ export function BoardEditModal({
   });
 
   const isEditing = !!editingCell;
-
-  useEffect(() => {
-    setText(editingCell?.text || '');
-    setTextEn(editingCell?.textEn || '');
-    setIcon(editingCell?.icon || '😊');
-    setImageUrl(editingCell?.imageUrl);
-    setCategory(editingCell?.category || 'people');
-  }, [editingCell, open]);
 
   const texts = {
     he: {

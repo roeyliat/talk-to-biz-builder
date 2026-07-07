@@ -121,24 +121,6 @@ const tokenizeNormalizedText = (value: string) =>
     .split(' ')
     .filter(Boolean);
 
-const hasWholeWordSequenceMatch = (sourceTokens: string[], candidateTokens: string[]) => {
-  if (sourceTokens.length === 0 || candidateTokens.length === 0 || candidateTokens.length > sourceTokens.length) {
-    return false;
-  }
-
-  for (let startIndex = 0; startIndex <= sourceTokens.length - candidateTokens.length; startIndex += 1) {
-    const candidateMatches = candidateTokens.every(
-      (token, tokenIndex) => sourceTokens[startIndex + tokenIndex] === token,
-    );
-
-    if (candidateMatches) {
-      return true;
-    }
-  }
-
-  return false;
-};
-
 const DESCRIPTOR_FRAGMENTS = new Set([
   'שחור',
   'לבן',
@@ -169,13 +151,6 @@ const LOCAL_COMPOSITE_ITEM_ENTRIES = DISCOVERED_LOCAL_IMAGES
   })
   .filter((entry) => entry.tokens.length > 1)
   .sort((first, second) => second.tokens.length - first.tokens.length);
-
-const EXACT_LOCAL_IMAGE_ALIASES = new Set(
-  DISCOVERED_LOCAL_IMAGES
-    .flatMap((entry) => entry.aliases)
-    .map((alias) => normalizeImageKey(alias))
-    .filter(Boolean),
-);
 
 const dedupeAndNormalizeItems = (items: MenuItemData[]) => {
   const seen = new Set<string>();
@@ -295,37 +270,9 @@ const dropDescriptorFragments = (items: MenuItemData[]) => {
     .map(({ item }) => item);
 };
 
-const dropCompositeFragmentsWhenWholeItemExists = (items: MenuItemData[]) => {
-  const normalizedItems = items.map((item) => ({
-    item,
-    normalized: normalizeImageKey(item.text),
-    tokens: tokenizeNormalizedText(item.text),
-  }));
-
-  return normalizedItems
-    .filter(({ normalized, tokens }) => {
-      if (!normalized || tokens.length === 0) {
-        return false;
-      }
-
-      if (EXACT_LOCAL_IMAGE_ALIASES.has(normalized)) {
-        return true;
-      }
-
-      return !normalizedItems.some((candidate) =>
-        candidate.normalized !== normalized
-        && candidate.tokens.length > tokens.length
-        && hasWholeWordSequenceMatch(candidate.tokens, tokens),
-      );
-    })
-    .map(({ item }) => item);
-};
-
 export const sanitizeMenuData = (menuData: MenuData): MenuData => {
   const sanitizeItems = (items: MenuItemData[]) =>
-    dropCompositeFragmentsWhenWholeItemExists(
-      dropDescriptorFragments(mergeCompositeLocalItems(dedupeAndNormalizeItems(items))),
-    );
+    dropDescriptorFragments(mergeCompositeLocalItems(dedupeAndNormalizeItems(items)));
 
   return {
     ...menuData,

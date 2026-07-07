@@ -13,8 +13,6 @@ import { AACBoard } from '@/types/aac';
 import { AACCard } from '@/components/aac/AACCard';
 import { canRenderBoardUrlAsQr, createSharedBoardUrl } from '@/lib/sharedBoard';
 
-const QR_LEVELS = ['H', 'Q', 'M', 'L'] as const;
-
 interface BoardExportModalProps {
   open: boolean;
   onClose: () => void;
@@ -46,9 +44,8 @@ export function BoardExportModal({
     boardName,
     boards,
   });
-  const qrLevel = QR_LEVELS.find((level) => canRenderBoardUrlAsQr(boardUrl, level)) ?? null;
-  const canRenderMainQr = qrLevel !== null;
-  const canRenderPrintQr = qrLevel !== null;
+  const canRenderMainQr = canRenderBoardUrlAsQr(boardUrl, 'H');
+  const canRenderPrintQr = canRenderBoardUrlAsQr(boardUrl, 'M');
 
   const texts = {
     he: {
@@ -243,7 +240,7 @@ export function BoardExportModal({
                     id="board-qr-code"
                     value={boardUrl}
                     size={200}
-                    level={qrLevel ?? 'L'}
+                    level="H"
                     includeMargin
                     imageSettings={{
                       src: '',

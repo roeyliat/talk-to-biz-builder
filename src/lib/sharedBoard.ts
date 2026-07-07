@@ -99,8 +99,10 @@ export const createSharedBoardUrl = (input: {
   boardName: string;
   boards?: Record<string, AACBoard>;
 }) => {
+  const url = new URL(`/board/${input.boardId}`, input.baseUrl);
+  url.searchParams.set('type', input.businessType);
+
   if (input.boards) {
-    const url = new URL('/b', input.baseUrl);
     const payload: SharedBoardPayload = {
       version: 1,
       boardId: input.boardId,
@@ -109,12 +111,8 @@ export const createSharedBoardUrl = (input: {
       boards: input.boards,
     };
 
-    url.searchParams.set('s', encodeSharedPayload(JSON.stringify(payload)));
-    return url.toString();
+    url.searchParams.set('shared', encodeSharedPayload(JSON.stringify(payload)));
   }
-
-  const url = new URL(`/board/${input.boardId}`, input.baseUrl);
-  url.searchParams.set('type', input.businessType);
 
   return url.toString();
 };
@@ -132,7 +130,8 @@ export const parseSharedBoardPayload = (sharedValue: string | null) => {
 
     const parsedValue = JSON.parse(decodedValue) as unknown;
     return isSharedBoardPayload(parsedValue) ? parsedValue : null;
-  } catch {
+  } catch (error) {
+    console.error('Failed to parse shared board payload', error);
     return null;
   }
 };

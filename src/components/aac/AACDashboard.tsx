@@ -17,9 +17,6 @@ import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useClickSound } from '@/hooks/useClickSound';
-import wantImage from '@/assets/aac-local/אני רוצה.png';
-import moreImage from '@/assets/aac-local/עוד.png';
-import howMuchImage from '@/assets/aac-local/כמה עולה.png';
 
 const utilityRailCells: AACCell[] = [
   {
@@ -35,6 +32,20 @@ const utilityRailCells: AACCell[] = [
     textEn: 'More',
     category: 'descriptors',
     icon: '🟥',
+  },
+  {
+    id: 'utility-yes',
+    text: 'כן',
+    textEn: 'Yes',
+    category: 'social',
+    icon: '✅',
+  },
+  {
+    id: 'utility-no',
+    text: 'לא',
+    textEn: 'No',
+    category: 'social',
+    icon: '❌',
   },
   {
     id: 'utility-thanks',
@@ -61,11 +72,6 @@ interface AACDashboardProps {
   allowEdit?: boolean;
   onBoardsChange?: (boards: Record<string, AACBoard>) => void;
 }
-
-type ManualIceCreamCellEntry = {
-  boardId: string;
-  cell: AACCell;
-};
 
 const buildInitialNavState = (
   activeBoards: Record<string, AACBoard>,
@@ -139,7 +145,6 @@ export function AACDashboard({
   const [isEditMode, setIsEditMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCell, setEditingCell] = useState<AACCell | null>(null);
-  const [editingBoardId, setEditingBoardId] = useState<string | null>(null);
   
   // Customer Communication Mode
   const [isCustomerMode, setIsCustomerMode] = useState(false);
@@ -308,13 +313,12 @@ export function AACDashboard({
   }, [selectedWords, speak]);
 
   // Edit mode handlers
-  const handleDeleteCell = useCallback((cellId: string, targetBoardId?: string) => {
+  const handleDeleteCell = useCallback((cellId: string) => {
     const newBoards = { ...activeBoards };
-    const boardId = targetBoardId ?? navState.currentBoardId;
-    const board = newBoards[boardId];
+    const board = newBoards[navState.currentBoardId];
     if (!board) return;
 
-    newBoards[boardId] = {
+    newBoards[navState.currentBoardId] = {
       ...board,
       cells: board.cells.filter(c => c.id !== cellId),
     };
@@ -325,22 +329,14 @@ export function AACDashboard({
     });
   }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
 
-  const handleEditCell = useCallback((cell: AACCell, targetBoardId?: string) => {
+  const handleEditCell = useCallback((cell: AACCell) => {
     setEditingCell(cell);
-    setEditingBoardId(targetBoardId ?? navState.currentBoardId);
     setShowAddModal(true);
-  }, [navState.currentBoardId]);
-
-  const openAddItemModal = useCallback((targetBoardId?: string) => {
-    setEditingCell(null);
-    setEditingBoardId(targetBoardId ?? navState.currentBoardId);
-    setShowAddModal(true);
-  }, [navState.currentBoardId]);
+  }, []);
 
   const handleAddCell = useCallback((cellData: Omit<AACCell, 'id'>) => {
     const newBoards = { ...activeBoards };
-    const boardId = editingBoardId ?? navState.currentBoardId;
-    const board = newBoards[boardId];
+    const board = newBoards[navState.currentBoardId];
     if (!board) return;
 
     const newCell: AACCell = {
@@ -348,36 +344,33 @@ export function AACDashboard({
       id: `custom-${Date.now()}`,
     };
 
-    newBoards[boardId] = {
+    newBoards[navState.currentBoardId] = {
       ...board,
       cells: [...board.cells, newCell],
     };
     
     updateBoards(newBoards);
-    setEditingBoardId(null);
     toast({
       title: language === 'he' ? 'הפריט נוסף' : 'Item added',
     });
-  }, [activeBoards, editingBoardId, navState.currentBoardId, updateBoards, toast, language]);
+  }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
 
   const handleUpdateCell = useCallback((updatedCell: AACCell) => {
     const newBoards = { ...activeBoards };
-    const boardId = editingBoardId ?? navState.currentBoardId;
-    const board = newBoards[boardId];
+    const board = newBoards[navState.currentBoardId];
     if (!board) return;
 
-    newBoards[boardId] = {
+    newBoards[navState.currentBoardId] = {
       ...board,
       cells: board.cells.map(c => c.id === updatedCell.id ? updatedCell : c),
     };
     
     updateBoards(newBoards);
     setEditingCell(null);
-    setEditingBoardId(null);
     toast({
       title: language === 'he' ? 'הפריט עודכן' : 'Item updated',
     });
-  }, [activeBoards, editingBoardId, navState.currentBoardId, updateBoards, toast, language]);
+  }, [activeBoards, navState.currentBoardId, updateBoards, toast, language]);
 
   if (!currentBoard) {
     return <div className="text-center text-muted-foreground">Board not found</div>;
@@ -473,12 +466,9 @@ export function AACDashboard({
     }
 
     return {
-      servingBoardId: servingSection?.board.id,
-      serving: servingSection ? servingSection.board.cells.map((cell) => ({ boardId: servingSection.board.id, cell })) : [],
-      flavorsBoardId: flavorsSection?.board.id,
-      flavors: flavorsSection ? flavorsSection.board.cells.map((cell) => ({ boardId: flavorsSection.board.id, cell })) : [],
-      toppingsBoardId: toppingsSection?.board.id,
-      toppings: toppingsSection ? toppingsSection.board.cells.map((cell) => ({ boardId: toppingsSection.board.id, cell })) : [],
+      serving: servingSection?.board.cells ?? [],
+      flavors: flavorsSection?.board.cells ?? [],
+      toppings: toppingsSection?.board.cells ?? [],
       labels: {
         serving: servingSection?.label ?? (language === 'he' ? 'איך תרצה?' : 'How would you like it?'),
         flavors: flavorsSection?.label ?? (language === 'he' ? 'בחר טעם גלידה' : 'Choose a flavor'),
@@ -491,17 +481,14 @@ export function AACDashboard({
   const iceCreamPrompt = language === 'he' ? 'בחר טעם גלידה' : 'Choose Ice Cream Flavor';
   const iceCreamTitle = boardTitle || (language === 'he' ? 'גלידריה' : 'Ice Cream Shop');
   const iceCreamFlavorCards = displayGridCells.slice(0, 15);
-  const iceCreamRailVisuals: Record<string, { center?: string }> = {
+  const iceCreamRailVisuals: Record<string, { top?: string; center?: string; bottom?: string; accent?: string }> = {
+    'utility-want': { center: '🙂👉' },
+    'utility-more': { center: '🙌', bottom: '🟥', accent: '🙌' },
     'utility-yes': { center: '✅' },
     'utility-no': { center: '❌' },
+    'utility-thanks': { center: '🙏' },
+    'utility-price': { center: '💰' },
   };
-  const utilityRailImageVisuals: Record<string, { src: string; className?: string }> = {
-    'utility-want': { src: wantImage, className: 'scale-[1.18]' },
-    'utility-more': { src: moreImage, className: 'scale-[1.18]' },
-    'utility-thanks': { src: '/aac-local/תודה.png', className: 'scale-[1.15]' },
-    'utility-price': { src: howMuchImage, className: 'scale-[1.2]' },
-  };
-  const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
   const iceCreamCategoryButtons = [
     {
       id: 'toppings',
@@ -536,11 +523,11 @@ export function AACDashboard({
             <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-primary">
               <img
                 src="/favicon.png"
-                alt="TalktobiZ Logo"
+                alt="TalkBiz Logo"
                 className="h-full w-full object-cover"
               />
             </div>
-            <span className="hidden text-base font-bold text-foreground lg:inline">TalktobiZ</span>
+            <span className="hidden text-base font-bold text-foreground lg:inline">TalkBiz</span>
           </Link>
 
           <nav className="hidden items-center gap-4 lg:flex">
@@ -702,7 +689,7 @@ export function AACDashboard({
           </p>
           <Button
             size="sm"
-            onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal())}
+            onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => setShowAddModal(true))}
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -723,7 +710,7 @@ export function AACDashboard({
                     type="button"
                     onClick={() => handleCellClick(cell)}
                     className={cn(
-                      'flex h-[86px] min-w-[76px] shrink-0 flex-col items-center justify-start gap-1 rounded-[16px] border-[2px] border-[#cad3e4] bg-white px-1.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_2px_6px_rgba(15,23,42,0.06)]',
+                      'flex h-[86px] min-w-[76px] shrink-0 flex-col items-center justify-between rounded-[16px] border-[2px] border-[#cad3e4] bg-white px-1.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_2px_6px_rgba(15,23,42,0.06)]',
                       speakingCellId === cell.id && 'ring-2 ring-primary shadow-lg shadow-primary/20'
                     )}
                     aria-label={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -731,25 +718,16 @@ export function AACDashboard({
                     <span className="line-clamp-2 min-h-[1.6rem] text-[0.78rem] font-extrabold leading-tight text-slate-800">
                       {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                     </span>
-                    <div className="mt-0 flex h-[2.2rem] w-full items-center justify-center overflow-hidden">
-                      {utilityRailImageVisuals[cell.id] ? (
-                        <img
-                          src={getUtilityRailImageSrc(cell)}
-                          alt=""
-                          aria-hidden="true"
-                          className="max-h-full w-auto object-contain"
-                        />
-                      ) : (
-                        <span
-                          className={cn(
-                            'leading-none',
-                            cell.id === 'utility-question' ? 'text-[1.5rem]' : 'text-[1.3rem]'
-                          )}
-                          aria-hidden="true"
-                        >
-                          {cell.icon}
-                        </span>
-                      )}
+                    <div className="flex flex-1 items-center justify-center pb-0.5">
+                      <span
+                        className={cn(
+                          'leading-none',
+                          cell.id === 'utility-question' ? 'text-[2.1rem]' : 'text-[1.9rem]'
+                        )}
+                        aria-hidden="true"
+                      >
+                        {cell.icon}
+                      </span>
                     </div>
                   </button>
                 ))}
@@ -759,45 +737,8 @@ export function AACDashboard({
 
           {useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
-              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_112px]" style={{ direction: 'ltr' }}>
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]" style={{ direction: 'ltr' }}>
                 <section className="space-y-3" dir={contentDir}>
-                  {allowEdit && (
-                    <div className="flex items-center justify-end gap-2 rounded-[16px] border-[2px] border-[#c8d1e0] bg-white/95 px-3 py-2 shadow-[0_6px_18px_rgba(15,23,42,0.08)]">
-                      <Button
-                        variant={isEditMode ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => runSpokenAction(
-                          isEditMode
-                            ? (language === 'he' ? 'סיום עריכה' : 'Done')
-                            : (language === 'he' ? 'עריכה' : 'Edit'),
-                          () => setIsEditMode(!isEditMode),
-                        )}
-                        className="gap-2"
-                      >
-                        {isEditMode ? <Check className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
-                        {isEditMode ? (language === 'he' ? 'סיום עריכה' : 'Done') : (language === 'he' ? 'עריכה' : 'Edit')}
-                      </Button>
-                      {isEditMode && !useManualIceCreamLayout && (
-                        <Button
-                          size="sm"
-                          onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal())}
-                          className="gap-2"
-                        >
-                          <Plus className="h-4 w-4" />
-                          {language === 'he' ? 'הוסף פריט' : 'Add Item'}
-                        </Button>
-                      )}
-                    </div>
-                  )}
-
-                  {isEditMode && (
-                    <div className="rounded-[16px] border-[2px] border-primary/20 bg-primary/10 px-3 py-2 text-center text-sm font-medium text-primary">
-                      {language === 'he'
-                        ? '🛠️ מצב עריכה: לחץ על פריט כדי לערוך או למחוק אותו'
-                        : '🛠️ Edit mode: tap an item to edit or delete it'}
-                    </div>
-                  )}
-
                   <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white px-5 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
                     <div className="flex items-center justify-center gap-4">
                       <img
@@ -815,24 +756,14 @@ export function AACDashboard({
                   {useManualIceCreamLayout && manualIceCreamSections ? (
                     <>
                       <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
-                        <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="mb-3 text-center">
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.serving}
                           </h2>
-                          {isEditMode && manualIceCreamSections.servingBoardId && (
-                            <Button
-                              size="sm"
-                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.servingBoardId))}
-                              className="gap-2"
-                            >
-                              <Plus className="h-4 w-4" />
-                              {language === 'he' ? 'הוסף פריט' : 'Add Item'}
-                            </Button>
-                          )}
                         </div>
 
                         <div className={cn('grid gap-3', manualIceCreamSections.serving.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
-                          {manualIceCreamSections.serving.map(({ boardId, cell }: ManualIceCreamCellEntry) => (
+                          {manualIceCreamSections.serving.map((cell) => (
                             <AACCard
                               key={cell.id}
                               text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -847,8 +778,8 @@ export function AACDashboard({
                               labelPosition="top"
                               isEditMode={isEditMode}
                               isSpeaking={speakingCellId === cell.id}
-                              onDelete={() => handleDeleteCell(cell.id, boardId)}
-                              onEdit={() => handleEditCell(cell, boardId)}
+                              onDelete={() => handleDeleteCell(cell.id)}
+                              onEdit={() => handleEditCell(cell)}
                               className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
                           ))}
@@ -856,32 +787,14 @@ export function AACDashboard({
                       </div>
 
                       <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
-                        <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="mb-3 text-center">
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.flavors}
                           </h2>
-                          {isEditMode && manualIceCreamSections.flavorsBoardId && (
-                            <Button
-                              size="sm"
-                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.flavorsBoardId))}
-                              className="gap-2"
-                            >
-                              <Plus className="h-4 w-4" />
-                              {language === 'he' ? 'הוסף פריט' : 'Add Item'}
-                            </Button>
-                          )}
                         </div>
 
-                        <div className="max-h-[min(56vh,34rem)] overflow-y-auto pe-1">
-                          <div className="grid grid-cols-3 gap-4 md:gap-5">
-                          {manualIceCreamSections.flavors.map(({ boardId, cell }: ManualIceCreamCellEntry) => {
-                            const normalizedFlavorText = `${cell.text ?? ''} ${cell.textEn ?? ''}`.toLowerCase();
-                            const shouldEmphasizeFlavorImage = normalizedFlavorText.includes('תות')
-                              || normalizedFlavorText.includes('strawberry')
-                              || normalizedFlavorText.includes('גלידת וניל')
-                              || normalizedFlavorText.includes('vanilla');
-
-                            return (
+                        <div className="grid grid-cols-3 gap-2.5 md:gap-3">
+                          {manualIceCreamSections.flavors.map((cell) => (
                             <AACCard
                               key={cell.id}
                               text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -896,41 +809,23 @@ export function AACDashboard({
                               labelPosition="top"
                               isEditMode={isEditMode}
                               isSpeaking={speakingCellId === cell.id}
-                              onDelete={() => handleDeleteCell(cell.id, boardId)}
-                              onEdit={() => handleEditCell(cell, boardId)}
-                              className="h-[112px] min-h-[112px] gap-1.5 rounded-[14px] border-[2px] border-[#efcf63] px-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:h-[118px] md:min-h-[118px]"
-                              labelClassName="min-h-[1.45rem] text-[0.8rem] md:min-h-[1.55rem] md:text-[0.88rem]"
-                              imageContainerClassName="min-h-0 px-0 py-0"
-                              imageClassName={cn(
-                                'h-[84%] w-[84%] max-h-none max-w-none !scale-[1.0] -translate-y-[18%]',
-                                shouldEmphasizeFlavorImage && '!scale-[2.07] -translate-y-[20%]'
-                              )}
+                              onDelete={() => handleDeleteCell(cell.id)}
+                              onEdit={() => handleEditCell(cell)}
+                              className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
-                            );
-                          })}
-                          </div>
+                          ))}
                         </div>
                       </div>
 
                       <div className="rounded-[20px] border-[3px] border-[#30497a] bg-white p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
-                        <div className="mb-3 flex items-center justify-between gap-3">
+                        <div className="mb-3 text-center">
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.toppings}
                           </h2>
-                          {isEditMode && manualIceCreamSections.toppingsBoardId && (
-                            <Button
-                              size="sm"
-                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.toppingsBoardId))}
-                              className="gap-2"
-                            >
-                              <Plus className="h-4 w-4" />
-                              {language === 'he' ? 'הוסף פריט' : 'Add Item'}
-                            </Button>
-                          )}
                         </div>
 
                         <div className={cn('grid gap-3', manualIceCreamSections.toppings.length > 1 ? 'md:grid-cols-2' : 'md:grid-cols-1')}>
-                          {manualIceCreamSections.toppings.map(({ boardId, cell }: ManualIceCreamCellEntry) => (
+                          {manualIceCreamSections.toppings.map((cell) => (
                             <AACCard
                               key={cell.id}
                               text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
@@ -945,8 +840,8 @@ export function AACDashboard({
                               labelPosition="top"
                               isEditMode={isEditMode}
                               isSpeaking={speakingCellId === cell.id}
-                              onDelete={() => handleDeleteCell(cell.id, boardId)}
-                              onEdit={() => handleEditCell(cell, boardId)}
+                              onDelete={() => handleDeleteCell(cell.id)}
+                              onEdit={() => handleEditCell(cell)}
                               className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
                           ))}
@@ -1067,7 +962,7 @@ export function AACDashboard({
                   </div>
                 </section>
 
-                <aside className="grid h-[min(56vh,34rem)] grid-rows-4 gap-4 self-start pe-1" dir={contentDir}>
+                <aside className="grid auto-rows-fr gap-2.5" dir={contentDir}>
                   {sideRailCells.map((cell) => {
                     const visual = iceCreamRailVisuals[cell.id] ?? { center: cell.icon };
 
@@ -1077,26 +972,25 @@ export function AACDashboard({
                         type="button"
                         onClick={() => handleCellClick(cell)}
                         className={cn(
-                          'flex h-full min-h-0 flex-col items-center justify-start gap-1 rounded-[14px] border-[2px] border-[#c6cfdd] bg-white px-1.5 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
+                          'flex min-h-[88px] flex-col items-center justify-between rounded-[16px] border-[2.5px] border-[#c6cfdd] bg-white px-2 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.96)]',
                           speakingCellId === cell.id && 'ring-4 ring-primary shadow-lg shadow-primary/20'
                         )}
                       >
-                        <span className="text-[0.78rem] font-extrabold leading-tight text-slate-900">
+                        <span className="text-[0.98rem] font-extrabold leading-tight text-slate-900">
                           {language === 'he' || language === 'ar' ? cell.text : cell.textEn}
                         </span>
 
-                        <div className="mt-0 flex min-h-0 flex-1 w-full items-center justify-center overflow-hidden">
-                          {utilityRailImageVisuals[cell.id] ? (
-                            <img
-                              src={utilityRailImageVisuals[cell.id].src}
-                              alt=""
-                              aria-hidden="true"
-                              className={cn('h-full w-full max-h-none max-w-none object-contain', utilityRailImageVisuals[cell.id].className)}
-                            />
+                        <div className="flex flex-1 w-full items-center justify-center gap-2 py-1">
+                          {visual.center === '🙌' ? (
+                            <>
+                              <span className="text-[1.55rem] leading-none" aria-hidden="true">🙌</span>
+                              <span className="inline-flex h-6 w-6 items-center justify-center rounded-[4px] border border-[#c33] bg-[#dd3b3b] text-[0]" aria-hidden="true">■</span>
+                              <span className="text-[1.55rem] leading-none" aria-hidden="true">🙌</span>
+                            </>
                           ) : (
                             <span className={cn(
                               'leading-none',
-                              cell.id === 'utility-question' ? 'text-[1.5rem]' : 'text-[1.35rem]'
+                              cell.id === 'utility-question' ? 'text-[3rem]' : 'text-[2.5rem]'
                             )} aria-hidden="true">
                               {visual.center}
                             </span>
@@ -1332,7 +1226,7 @@ export function AACDashboard({
                       imageSearchTerms={[cell.text, cell.textEn]}
                       category={cell.category}
                       icon={cell.icon}
-                      imageUrl={getUtilityRailImageSrc(cell)}
+                      imageUrl={cell.imageUrl}
                       isFolder={!!cell.linkToBoardId}
                       onClick={() => handleCellClick(cell)}
                       size="md"
@@ -1392,7 +1286,6 @@ export function AACDashboard({
         onClose={() => {
           setShowAddModal(false);
           setEditingCell(null);
-          setEditingBoardId(null);
         }}
         onAddCell={handleAddCell}
         editingCell={editingCell}

@@ -3,18 +3,15 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AACBoardPreview } from './AACBoardPreview';
-import { useAuth } from '@/hooks/useAuth';
 
 export function HeroSection() {
   const { t, direction } = useLanguage();
-  const { user, isGuest, loading } = useAuth();
-  const createTarget = !loading && user && !isGuest ? '/create' : '/auth';
 
   return (
-    <section className="relative overflow-hidden bg-[linear-gradient(135deg,#2f9b93_0%,#3f97c8_100%)] py-20 lg:py-28">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-36 -left-24 h-72 w-72 rounded-full bg-white/8 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-white/6 blur-3xl" />
+    <section className="relative overflow-x-clip overflow-y-hidden bg-[linear-gradient(135deg,#2f9b93_0%,#3f97c8_100%)] py-20 lg:py-28">
+      <div className="pointer-events-none absolute inset-0 overflow-x-clip overflow-y-hidden">
+        <div className="absolute -top-10 -left-8 h-28 w-28 rounded-full bg-white/8 blur-3xl sm:-top-28 sm:-left-16 sm:h-56 sm:w-56 lg:-top-36 lg:-left-24 lg:h-72 lg:w-72" />
+        <div className="absolute -bottom-10 -right-10 h-36 w-36 rounded-full bg-white/6 blur-3xl sm:-bottom-20 sm:-right-20 sm:h-72 sm:w-72 lg:bottom-0 lg:right-0 lg:h-96 lg:w-96" />
       </div>
 
       <div className="container relative">
@@ -43,7 +40,7 @@ export function HeroSection() {
                 asChild
                 className="h-16 rounded-2xl bg-[#2f8a7d] px-10 text-xl font-bold text-white shadow-[0_10px_30px_rgba(0,0,0,0.16)] hover:bg-[#2a7c71]"
               >
-                <Link to={createTarget} className="gap-2">
+                <Link to="/create" className="gap-2">
                   {t('hero.cta')}
                   <ArrowRight className={`h-5 w-5 ${direction === 'rtl' ? '' : 'rotate-180'}`} />
                 </Link>

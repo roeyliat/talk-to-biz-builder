@@ -52,12 +52,28 @@ export function useAuth() {
   };
 
   const isGuest = user?.is_anonymous === true;
+  const metadata = {
+    ...(user?.app_metadata ?? {}),
+    ...(user?.user_metadata ?? {}),
+  } as Record<string, unknown>;
+  const roles = Array.isArray(metadata.roles) ? metadata.roles : [];
+  const isAdmin =
+    metadata.role === 'admin' ||
+    metadata.is_admin === true ||
+    roles.includes('admin');
+  const isApproved =
+    isAdmin ||
+    metadata.status === 'approved' ||
+    metadata.approved === true ||
+    metadata.is_approved === true;
 
   return {
     user,
     session,
     loading,
     isGuest,
+    isAdmin,
+    isApproved,
     signInAsGuest,
     signInWithPassword,
     signUp,
