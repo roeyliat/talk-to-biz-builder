@@ -2,9 +2,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 export function CTASection() {
   const { t, language, direction } = useLanguage();
+  const { user, isGuest, loading } = useAuth();
+  const createTarget = !loading && user && !isGuest ? '/create' : '/auth';
 
   return (
     <section className="py-20 bg-gradient-hero">
@@ -23,7 +26,7 @@ export function CTASection() {
             }
           </p>
           <Button variant="hero" size="xl" asChild>
-            <Link to="/create" className="gap-2">
+            <Link to={createTarget} className="gap-2">
               {t('hero.cta')}
               <ArrowRight className={`h-5 w-5 ${direction === 'rtl' ? 'rotate-180' : ''}`} />
             </Link>

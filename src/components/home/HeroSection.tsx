@@ -3,9 +3,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowRight, Play, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { AACBoardPreview } from './AACBoardPreview';
+import { useAuth } from '@/hooks/useAuth';
 
 export function HeroSection() {
   const { t, direction } = useLanguage();
+  const { user, isGuest, loading } = useAuth();
+  const createTarget = !loading && user && !isGuest ? '/create' : '/auth';
 
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(135deg,#2f9b93_0%,#3f97c8_100%)] py-20 lg:py-28">
@@ -40,7 +43,7 @@ export function HeroSection() {
                 asChild
                 className="h-16 rounded-2xl bg-[#2f8a7d] px-10 text-xl font-bold text-white shadow-[0_10px_30px_rgba(0,0,0,0.16)] hover:bg-[#2a7c71]"
               >
-                <Link to="/create" className="gap-2">
+                <Link to={createTarget} className="gap-2">
                   {t('hero.cta')}
                   <ArrowRight className={`h-5 w-5 ${direction === 'rtl' ? '' : 'rotate-180'}`} />
                 </Link>
