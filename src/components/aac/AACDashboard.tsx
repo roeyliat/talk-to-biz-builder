@@ -337,6 +337,79 @@ export function AACDashboard({
     setShowAddModal(true);
   }, [navState.currentBoardId]);
 
+  const openManualToppingsAddModal = useCallback(() => {
+    const existingBoardId = manualIceCreamSections?.toppingsBoardId;
+
+    if (existingBoardId && activeBoards[existingBoardId]) {
+      openAddItemModal(existingBoardId);
+      return;
+    }
+
+    if (businessType !== 'iceCream' || navState.currentBoardId !== rootBoardId) {
+      openAddItemModal();
+      return;
+    }
+
+    const rootBoard = activeBoards[rootBoardId];
+    if (!rootBoard) {
+      openAddItemModal();
+      return;
+    }
+
+    const toppingsRootCell = rootBoard.cells.find((cell) =>
+      Boolean(cell.linkToBoardId) && (
+        matchesAnyLabel(cell.text, ['תוספות', 'תוספת'])
+        || matchesAnyLabel(cell.textEn ?? '', ['toppings', 'topping'])
+      )
+    );
+
+    const targetBoardId = toppingsRootCell?.linkToBoardId ?? `manual-toppings-${Date.now()}`;
+    const nextBoards = { ...activeBoards };
+
+    if (!nextBoards[targetBoardId]) {
+      nextBoards[targetBoardId] = {
+        id: targetBoardId,
+        name: manualIceCreamSections?.labels.toppings ?? (language === 'he' ? 'תוספות' : 'Toppings'),
+        nameEn: 'Toppings',
+        parentBoardId: rootBoardId,
+        cells: [],
+        gridSize: { cols: 3, rows: 2 },
+      };
+    }
+
+    if (!toppingsRootCell) {
+      nextBoards[rootBoardId] = {
+        ...rootBoard,
+        cells: [
+          ...rootBoard.cells,
+          {
+            id: `manual-toppings-link-${Date.now()}`,
+            text: language === 'he' ? 'תוספות' : 'Toppings',
+            textEn: 'Toppings',
+            category: 'people',
+            icon: '🍫',
+            linkToBoardId: targetBoardId,
+          },
+        ],
+      };
+    }
+
+    updateBoards(nextBoards);
+    setEditingCell(null);
+    setEditingBoardId(targetBoardId);
+    setShowAddModal(true);
+  }, [
+    activeBoards,
+    businessType,
+    language,
+    manualIceCreamSections?.labels.toppings,
+    manualIceCreamSections?.toppingsBoardId,
+    navState.currentBoardId,
+    openAddItemModal,
+    rootBoardId,
+    updateBoards,
+  ]);
+
   const handleAddCell = useCallback((cellData: Omit<AACCell, 'id'>) => {
     const newBoards = { ...activeBoards };
     const boardId = editingBoardId ?? navState.currentBoardId;
@@ -923,10 +996,10 @@ export function AACDashboard({
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.toppings}
                           </h2>
-                          {isEditMode && manualIceCreamSections.toppingsBoardId && (
+                          {isEditMode && (
                             <Button
                               size="sm"
-                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.toppingsBoardId))}
+                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', openManualToppingsAddModal)}
                               className="gap-2"
                             >
                               <Plus className="h-4 w-4" />
