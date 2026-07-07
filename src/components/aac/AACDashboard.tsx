@@ -473,8 +473,11 @@ export function AACDashboard({
     }
 
     return {
+      servingBoardId: servingSection?.board.id,
       serving: servingSection ? servingSection.board.cells.map((cell) => ({ boardId: servingSection.board.id, cell })) : [],
+      flavorsBoardId: flavorsSection?.board.id,
       flavors: flavorsSection ? flavorsSection.board.cells.map((cell) => ({ boardId: flavorsSection.board.id, cell })) : [],
+      toppingsBoardId: toppingsSection?.board.id,
       toppings: toppingsSection ? toppingsSection.board.cells.map((cell) => ({ boardId: toppingsSection.board.id, cell })) : [],
       labels: {
         serving: servingSection?.label ?? (language === 'he' ? 'איך תרצה?' : 'How would you like it?'),
@@ -816,10 +819,10 @@ export function AACDashboard({
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.serving}
                           </h2>
-                          {isEditMode && manualIceCreamSections.serving[0] && (
+                          {isEditMode && manualIceCreamSections.servingBoardId && (
                             <Button
                               size="sm"
-                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.serving[0].boardId))}
+                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.servingBoardId))}
                               className="gap-2"
                             >
                               <Plus className="h-4 w-4" />
@@ -857,10 +860,10 @@ export function AACDashboard({
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.flavors}
                           </h2>
-                          {isEditMode && manualIceCreamSections.flavors[0] && (
+                          {isEditMode && manualIceCreamSections.flavorsBoardId && (
                             <Button
                               size="sm"
-                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.flavors[0].boardId))}
+                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.flavorsBoardId))}
                               className="gap-2"
                             >
                               <Plus className="h-4 w-4" />
@@ -914,10 +917,10 @@ export function AACDashboard({
                           <h2 className="text-[1.85rem] font-extrabold text-slate-900">
                             {manualIceCreamSections.labels.toppings}
                           </h2>
-                          {isEditMode && manualIceCreamSections.toppings[0] && (
+                          {isEditMode && manualIceCreamSections.toppingsBoardId && (
                             <Button
                               size="sm"
-                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.toppings[0].boardId))}
+                              onClick={() => runSpokenAction(language === 'he' ? 'הוסף פריט' : 'Add Item', () => openAddItemModal(manualIceCreamSections.toppingsBoardId))}
                               className="gap-2"
                             >
                               <Plus className="h-4 w-4" />
