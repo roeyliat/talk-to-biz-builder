@@ -42,13 +42,13 @@ export function Header() {
   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary overflow-hidden">
     <img
       src="/favicon.png"
-      alt="TalkBiz Logo"
+      alt="TalktobiZ Logo"
       className="h-full w-full object-cover"
     />
   </div>
 
   <span className="font-bold text-xl text-foreground">
-    TalkBiz
+    TalktobiZ
   </span>
 </Link>
 

@@ -536,11 +536,11 @@ export function AACDashboard({
             <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-primary">
               <img
                 src="/favicon.png"
-                alt="TalkBiz Logo"
+                alt="TalktobiZ Logo"
                 className="h-full w-full object-cover"
               />
             </div>
-            <span className="hidden text-base font-bold text-foreground lg:inline">TalkBiz</span>
+            <span className="hidden text-base font-bold text-foreground lg:inline">TalktobiZ</span>
           </Link>
 
           <nav className="hidden items-center gap-4 lg:flex">

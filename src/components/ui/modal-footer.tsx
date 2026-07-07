@@ -15,7 +15,7 @@ export const ModalFooter = forwardRef<HTMLDivElement>((_, ref) => {
   return (
     <div ref={ref} className="pt-4 mt-4 border-t border-border/50">
       <p className="text-xs text-center text-muted-foreground">
-        © {currentYear} TalkBiz. {texts[language] || texts.en}
+        © {currentYear} TalktobiZ. {texts[language] || texts.en}
       </p>
     </div>
   );

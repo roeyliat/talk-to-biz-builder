@@ -28,7 +28,7 @@ const translations: Record<Language, Record<string, string>> = {
     'hero.demo': 'צפו בדוגמה',
     
     // Features
-    'features.title': 'למה TalkBiz?',
+    'features.title': 'למה TalktobiZ?',
     'features.ai.title': 'מונע בינה מלאכותית',
     'features.ai.description': 'AI חכם שמבין את העסק שלכם ויוצר לוחות מותאמים אישית',
     'features.accessible.title': 'נגיש לכולם',
@@ -128,14 +128,14 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.aacBoard': 'AAC Board',
     
     // Hero
-    'hero.title': 'TalkBiz',
+    'hero.title': 'TalktobiZ',
     'hero.subtitle': 'Make Your Business Accessible to Everyone',
     'hero.description': 'Create custom visual communication boards for your business, so every customer can communicate with ease',
     'hero.cta': 'Get Started',
     'hero.demo': 'Watch Demo',
     
     // Features
-    'features.title': 'Why TalkBiz?',
+    'features.title': 'Why TalktobiZ?',
     'features.ai.title': 'AI-Powered',
     'features.ai.description': 'Smart AI that understands your business and creates personalized boards',
     'features.accessible.title': 'Accessible to All',
@@ -235,14 +235,14 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.aacBoard': 'لوحة التواصل',
     
     // Hero
-    'hero.title': 'TalkBiz',
+    'hero.title': 'TalktobiZ',
     'hero.subtitle': 'اجعل عملك متاحاً للجميع',
     'hero.description': 'أنشئ لوحات تواصل بصرية مخصصة لعملك، لكي يتمكن كل عميل من التواصل بسهولة',
     'hero.cta': 'ابدأ الآن',
     'hero.demo': 'شاهد العرض',
     
     // Features
-    'features.title': 'لماذا TalkBiz؟',
+    'features.title': 'لماذا TalktobiZ؟',
     'features.ai.title': 'مدعوم بالذكاء الاصطناعي',
     'features.ai.description': 'ذكاء اصطناعي يفهم عملك وينشئ لوحات مخصصة',
     'features.accessible.title': 'متاح للجميع',
@@ -342,14 +342,14 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.aacBoard': 'Коммуникационная доска',
     
     // Hero
-    'hero.title': 'TalkBiz',
+    'hero.title': 'TalktobiZ',
     'hero.subtitle': 'Сделайте свой бизнес доступным для всех',
     'hero.description': 'Создавайте персонализированные коммуникационные доски для вашего бизнеса, чтобы каждый клиент мог легко общаться',
     'hero.cta': 'Начать',
     'hero.demo': 'Смотреть демо',
     
     // Features
-    'features.title': 'Почему TalkBiz?',
+    'features.title': 'Почему TalktobiZ?',
     'features.ai.title': 'На основе ИИ',
     'features.ai.description': 'Умный ИИ, который понимает ваш бизнес и создает персонализированные доски',
     'features.accessible.title': 'Доступно для всех',
