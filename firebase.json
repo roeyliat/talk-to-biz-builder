@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "talktobiz",
     "public": "dist",
     "ignore": [
       "firebase.json",
