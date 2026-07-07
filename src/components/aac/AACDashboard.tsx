@@ -463,10 +463,16 @@ export function AACDashboard({
       matchesAnyLabel(label, ['טעמים', 'טעם', 'בחר טעם']) ||
       matchesAnyLabel(cell.text, ['טעמים', 'טעם', 'בחר טעם'])
     );
-    const toppingsSection = linkedBoards.find(({ label, cell }) =>
+    const matchedSectionIds = new Set(
+      [servingSection?.board.id, flavorsSection?.board.id].filter((boardId): boardId is string => Boolean(boardId))
+    );
+    const explicitToppingsSection = linkedBoards.find(({ label, cell }) =>
       matchesAnyLabel(label, ['תוספות', 'תוספת']) ||
       matchesAnyLabel(cell.text, ['תוספות', 'תוספת'])
     );
+    const remainingLinkedSections = linkedBoards.filter(({ board }) => !matchedSectionIds.has(board.id));
+    const toppingsSection = explicitToppingsSection
+      ?? (remainingLinkedSections.length === 1 ? remainingLinkedSections[0] : undefined);
 
     if (!servingSection && !flavorsSection && !toppingsSection) {
       return null;
