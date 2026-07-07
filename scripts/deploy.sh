@@ -123,6 +123,7 @@ require_command node
 require_git_worktree "$SOURCE_REPO"
 require_git_worktree "$MAIN_WORKTREE"
 [[ -f "$MAIN_WORKTREE/firebase.json" ]] || die "firebase.json not found in $MAIN_WORKTREE"
+[[ -f "$SOURCE_REPO/.firebaserc" ]] || die ".firebaserc not found in $SOURCE_REPO"
 [[ -f "$MAIN_WORKTREE/.firebaserc" ]] || die ".firebaserc not found in $MAIN_WORKTREE"
 
 current_branch=$(git -C "$SOURCE_REPO" branch --show-current)
@@ -131,7 +132,7 @@ current_branch=$(git -C "$SOURCE_REPO" branch --show-current)
 main_branch=$(git -C "$MAIN_WORKTREE" branch --show-current)
 [[ "$main_branch" == "$DEPLOY_BRANCH" ]] || die "Expected $MAIN_WORKTREE to be on $DEPLOY_BRANCH, found $main_branch"
 
-firebase_project=$(node -e "const fs=require('fs'); const path='$MAIN_WORKTREE/.firebaserc'; const data=JSON.parse(fs.readFileSync(path,'utf8')); if (!data.projects?.default) process.exit(1); process.stdout.write(data.projects.default);") || die "Could not read default Firebase project from $MAIN_WORKTREE/.firebaserc"
+firebase_project=$(node -e "const fs=require('fs'); const path='$SOURCE_REPO/.firebaserc'; const data=JSON.parse(fs.readFileSync(path,'utf8')); if (!data.projects?.default) process.exit(1); process.stdout.write(data.projects.default);") || die "Could not read default Firebase project from $SOURCE_REPO/.firebaserc"
 
 log "Preparing source worktree at $SOURCE_REPO"
 run git -C "$SOURCE_REPO" add --all
