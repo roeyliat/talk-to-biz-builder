@@ -59,7 +59,8 @@ export function BoardExportModal({
       qrDescription: 'סרקו את הקוד עם הטלפון לפתיחת הלוח',
       downloadQR: 'הורד קוד QR',
       copyLink: 'העתק קישור',
-      copied: 'הקישור הועתק!',
+      copied: 'הקישור הועתק',
+      copyFailed: 'לא ניתן היה להעתיק את הקישור',
       qrTooLarge: 'הקישור ארוך מדי עבור קוד QR. השתמשו בהעתקת הקישור.',
       printTitle: 'הדפסת לוח תקשורת',
       printDescription: 'הורידו PDF להדפסה ותלייה בעסק',
@@ -75,7 +76,8 @@ export function BoardExportModal({
       qrDescription: 'Scan the code with your phone to open the board',
       downloadQR: 'Download QR Code',
       copyLink: 'Copy Link',
-      copied: 'Link copied!',
+      copied: 'Link copied',
+      copyFailed: 'Could not copy the link',
       qrTooLarge: 'This link is too long for a QR code. Use Copy Link instead.',
       printTitle: 'Print Communication Board',
       printDescription: 'Download a PDF to print and display in your business',
@@ -91,7 +93,8 @@ export function BoardExportModal({
       qrDescription: 'امسح الرمز بهاتفك لفتح اللوحة',
       downloadQR: 'تحميل رمز QR',
       copyLink: 'نسخ الرابط',
-      copied: 'تم نسخ الرابط!',
+      copied: 'تم نسخ الرابط',
+      copyFailed: 'تعذر نسخ الرابط',
       qrTooLarge: 'هذا الرابط طويل جدًا لرمز QR. استخدم نسخ الرابط بدلاً من ذلك.',
       printTitle: 'طباعة لوحة التواصل',
       printDescription: 'قم بتحميل PDF للطباعة والعرض في عملك',
@@ -107,7 +110,8 @@ export function BoardExportModal({
       qrDescription: 'Отсканируйте код телефоном для открытия доски',
       downloadQR: 'Скачать QR-код',
       copyLink: 'Копировать ссылку',
-      copied: 'Ссылка скопирована!',
+      copied: 'Ссылка скопирована',
+      copyFailed: 'Не удалось скопировать ссылку',
       qrTooLarge: 'Ссылка слишком длинная для QR-кода. Используйте копирование ссылки.',
       printTitle: 'Печать доски',
       printDescription: 'Скачайте PDF для печати и размещения в вашем бизнесе',
@@ -155,6 +159,10 @@ export function BoardExportModal({
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+      toast({
+        title: t.copyFailed,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -260,18 +268,23 @@ export function BoardExportModal({
               </div>
             </div>
 
-            <div className="bg-muted/50 rounded-lg p-3 text-center">
-              <code className="text-sm text-muted-foreground break-all">{boardUrl}</code>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-muted/50 rounded-lg p-3">
+              <code className="text-sm text-muted-foreground break-all text-center sm:text-start flex-1" style={{ direction: 'ltr' }}>{boardUrl}</code>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLink}
+                className="gap-1.5 shrink-0 bg-background text-foreground border-border hover:bg-muted"
+              >
+                {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                {copied ? t.copied : t.copyLink}
+              </Button>
             </div>
 
-            <div className="flex gap-3 justify-center">
+            <div className="flex justify-center">
               <Button onClick={handleDownloadQR} className="gap-2">
                 <Download className="h-4 w-4" />
                 {t.downloadQR}
-              </Button>
-              <Button variant="outline" onClick={handleCopyLink} className="gap-2">
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? t.copied : t.copyLink}
               </Button>
             </div>
           </TabsContent>
