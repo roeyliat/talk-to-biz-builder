@@ -865,11 +865,7 @@ export function AACDashboard({
   };
   const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
   const isAtRoot = navState.breadcrumbs.length === 0;
-  const isFirstLevelFromRoot =
-    !isAtRoot &&
-    !useIceCreamLayout &&
-    navState.breadcrumbs.length === 1 &&
-    navState.breadcrumbs[0]?.id === rootBoardId;
+  const isPublicNestedBoardView = !isAtRoot && !useIceCreamLayout;
   const publicBoardPageLabels = {
     delete: language === 'he' ? 'מחק' : 'Delete',
     speak: language === 'he' ? 'השמע' : 'Speak',
@@ -998,7 +994,7 @@ export function AACDashboard({
             isAtRoot && !useIceCreamLayout ? 'bg-white p-0' : 'p-2 pb-4 md:p-3 md:pb-6',
           )}
         >
-          {showMockupSideRail && !useIceCreamLayout && !isAtRoot && !isFirstLevelFromRoot && (
+          {showMockupSideRail && !useIceCreamLayout && !isAtRoot && !isPublicNestedBoardView && (
             <div className="sticky top-0 z-20 -mx-2 mb-3 border-b border-slate-200 bg-[#eef2f8]/95 px-2 py-2 backdrop-blur lg:hidden md:-mx-3 md:px-3">
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {sideRailCells.map((cell) => (
@@ -1076,41 +1072,6 @@ export function AACDashboard({
               onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
               onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
               onUpload={(file) => console.log('File uploaded for AI processing:', file.name)}
-            />
-          ) : isFirstLevelFromRoot ? (
-            <PublicBoardPage
-              title={boardTitle}
-              boardEmoji={boardEmoji}
-              prompt={language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
-              gridCells={currentBoard.cells}
-              infoStripCells={[]}
-              sideRailCells={[]}
-              extraSocialCells={[]}
-              gridCols={2}
-              contentDir={contentDir}
-              language={language}
-              selectionSummary={selectionSummary}
-              selectedWordsCount={selectedWords.length}
-              isTransitioning={isTransitioning}
-              isEditMode={isEditMode}
-              isSpeaking={isSpeaking}
-              isCustomerMode={isCustomerMode}
-              speakingCellId={speakingCellId}
-              showAIUpload={false}
-              backIcon={BackIcon}
-              canGoBack
-              labels={publicBoardPageLabels}
-              getCellLabel={getCellLabel}
-              getUtilityRailImageSrc={getUtilityRailImageSrc}
-              onCellClick={handleCellClick}
-              onDeleteCell={handleDeleteCell}
-              onEditCell={handleEditCell}
-              onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
-              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
-              onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
-              onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
-              onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
-              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
             />
           ) : useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
@@ -1464,279 +1425,40 @@ export function AACDashboard({
               </div>
             </div>
           ) : (
-          <div className={cn(
-            'mx-auto flex min-h-full flex-col border-[3px] bg-[#fbfcff] shadow-[0_20px_60px_rgba(48,73,122,0.15)]',
-            'max-w-[1380px] rounded-[26px] border-[#30497a] p-3 md:p-4'
-          )}>
-            <div className={cn('grid min-h-0 gap-3', showMockupSideRail ? 'lg:grid-cols-[minmax(0,1fr)_172px]' : 'grid-cols-1')} style={{ direction: 'ltr' }}>
-              <section className="flex min-h-0 flex-col space-y-3" dir={contentDir}>
-                <div className={cn(
-                  'border-[3px] border-[#30497a] bg-white text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]',
-                  useIceCreamLayout ? 'rounded-[18px] px-4 py-3 md:px-6 md:py-4' : 'rounded-[22px] px-4 py-3 md:px-5'
-                )}>
-                  <div className="flex items-center justify-center gap-3">
-                    <img
-                      src="/aac-local/ice-cream.svg"
-                      alt=""
-                      aria-hidden="true"
-                      className={cn('h-10 w-10 object-contain', useIceCreamLayout && 'h-14 w-14')}
-                    />
-                    <h1 className={cn(
-                      'font-extrabold tracking-tight text-slate-900',
-                      useIceCreamLayout ? 'text-3xl md:text-[3.1rem]' : 'text-xl md:text-[2rem]'
-                    )}>
-                      {useIceCreamLayout ? iceCreamTitle : boardTitle}
-                    </h1>
-                  </div>
-                </div>
-
-                <div className={cn(
-                  'flex min-h-0 flex-1 flex-col border-[3px] border-[#30497a] bg-white',
-                  useIceCreamLayout ? 'rounded-[18px] p-3' : 'rounded-[22px] p-3 md:p-3.5'
-                )}>
-                  <div className="mb-3 text-center">
-                    <h2 className={cn(
-                      'font-extrabold text-slate-800',
-                      useIceCreamLayout ? 'text-lg md:text-[1.95rem]' : 'text-base md:text-xl'
-                    )}>
-                      {useIceCreamLayout ? iceCreamPrompt : language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
-                    </h2>
-                  </div>
-
-                  <div 
-                    className={cn(
-                      'grid gap-2.5 transition-all duration-150 md:gap-3',
-                      isTransitioning && 'scale-95 opacity-0',
-                      !isTransitioning && 'scale-100 opacity-100'
-                    )}
-                    style={{
-                      gridTemplateColumns: `repeat(${useIceCreamLayout ? 5 : effectiveGridCols}, minmax(0, 1fr))`,
-                    }}
-                  >
-                    {(useIceCreamLayout ? iceCreamFlavorCards : displayGridCells).map((cell) => (
-                      <AACCard
-                        key={cell.id}
-                        text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
-                        imageSearchTerms={[cell.text, cell.textEn]}
-                        category={cell.category}
-                        icon={cell.icon}
-                        imageUrl={cell.imageUrl}
-                        isFolder={useIceCreamLayout ? false : !!cell.linkToBoardId}
-                        onClick={() => handleCellClick(cell)}
-                        size="lg"
-                        variant="mockup"
-                        labelPosition="top"
-                        isEditMode={isEditMode}
-                        isSpeaking={speakingCellId === cell.id}
-                        onDelete={() => handleDeleteCell(cell.id)}
-                        onEdit={() => handleEditCell(cell)}
-                        className={cn(
-                          useIceCreamLayout
-                            ? 'min-h-[102px] rounded-[12px] px-2 py-2 md:min-h-[114px]'
-                            : 'min-h-[106px] rounded-[16px] px-2 py-2 md:min-h-[118px]'
-                        )}
-                      />
-                    ))}
-                  </div>
-
-                  {useIceCreamLayout ? (
-                    <div className="mt-3 grid gap-2.5 md:grid-cols-[1fr_1.45fr]">
-                      <button
-                        type="button"
-                        onClick={() => runSpokenAction(language === 'he' ? 'טעם אחר' : 'Another flavor', clearSelectedWords)}
-                        className="flex min-h-[60px] items-center justify-center gap-3 rounded-[12px] border-[2.5px] border-[#bba6de] bg-[linear-gradient(180deg,#efe4ff_0%,#dccbf7_100%)] px-4 text-lg font-bold text-slate-800"
-                      >
-                        <span>{language === 'he' ? 'טעם אחר' : 'Another flavor'}</span>
-                        <span className="text-2xl" aria-hidden="true">❔</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={selectedWords.length > 0 ? () => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords) : undefined}
-                        className="flex min-h-[60px] items-center justify-center gap-3 rounded-[12px] border-[2.5px] border-[#bba6de] bg-[linear-gradient(180deg,#efe4ff_0%,#dccbf7_100%)] px-4 text-lg font-extrabold text-slate-800"
-                      >
-                        <span>{language === 'he' ? 'סיימתי לבחור' : 'Done choosing'}</span>
-                        <Check className="h-8 w-8 text-emerald-600" />
-                      </button>
-                    </div>
-                  ) : infoStripCells.length > 0 && (
-                    <div className="mt-3 grid gap-2.5 md:grid-cols-3">
-                      {infoStripCells.map((cell) => (
-                        <AACCard
-                          key={cell.id}
-                          text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
-                          imageSearchTerms={[cell.text, cell.textEn]}
-                          category={cell.category}
-                          icon={cell.icon}
-                          imageUrl={cell.imageUrl}
-                          isFolder={!!cell.linkToBoardId}
-                          onClick={() => handleCellClick(cell)}
-                          size="md"
-                          variant="rail"
-                          labelPosition="top"
-                          isEditMode={isEditMode}
-                          isSpeaking={speakingCellId === cell.id}
-                          onDelete={() => handleDeleteCell(cell.id)}
-                          onEdit={() => handleEditCell(cell)}
-                          className="min-h-[82px] rounded-[16px] px-3"
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {useIceCreamReferenceLayout && (
-                  <div className="grid gap-2.5 md:grid-cols-3">
-                    <button type="button" onClick={() => runSpokenAction(language === 'he' ? 'תוספות' : 'Toppings', () => navigateToBoard('toppings'))} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
-                      <span>{language === 'he' ? 'תוספות' : 'Toppings'}</span>
-                      <span className="text-2xl" aria-hidden="true">🌈</span>
-                    </button>
-                    <button type="button" onClick={() => runSpokenAction(language === 'he' ? 'כמות' : 'Quantity', () => navigateToBreadcrumb(0))} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
-                      <span>{language === 'he' ? 'כמות' : 'Quantity'}</span>
-                      <span className="text-2xl" aria-hidden="true">🍦🍦🍦</span>
-                    </button>
-                    <button type="button" onClick={() => runSpokenAction(language === 'he' ? 'טעמים' : 'Flavors', () => navigateToBoard(navState.currentBoardId.includes('cone') ? 'flavors-cone' : 'flavors-cup'))} className="flex min-h-[56px] items-center justify-center gap-3 rounded-[14px] border-[2.5px] border-[#bcc7de] bg-white px-4 text-lg font-bold text-slate-800">
-                      <span>{language === 'he' ? 'טעמים' : 'Flavors'}</span>
-                      <span className="text-2xl" aria-hidden="true">🍨</span>
-                    </button>
-                  </div>
-                )}
-
-                <div className={cn('grid gap-2.5', useIceCreamLayout ? 'md:grid-cols-5' : 'md:grid-cols-5')}>
-                  <button
-                    type="button"
-                    onClick={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
-                    className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    {language === 'he' ? 'מחק' : 'Delete'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={selectedWords.length > 0 ? () => runSpokenAction(useIceCreamLayout ? (language === 'he' ? 'כן' : 'Yes') : language === 'he' ? 'השמע' : 'Speak', speakAllWords) : undefined}
-                    disabled={!useIceCreamLayout && (selectedWords.length === 0 || isSpeaking)}
-                    className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)] disabled:opacity-50"
-                  >
-                    {useIceCreamLayout ? <Check className="h-6 w-6 text-emerald-600" /> : <Volume2 className={cn('h-5 w-5', isSpeaking && 'animate-pulse')} />}
-                    {useIceCreamLayout ? (language === 'he' ? 'כן' : 'Yes') : language === 'he' ? 'השמע' : 'Speak'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={useIceCreamLayout
-                      ? () => runSpokenAction(language === 'he' ? 'לא' : 'No', clearSelectedWords)
-                      : () => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
-                    className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
-                  >
-                    {useIceCreamLayout ? <X className="h-6 w-6 text-rose-500" /> : <MessageCircle className="h-5 w-5" />}
-                    {useIceCreamLayout ? (language === 'he' ? 'לא' : 'No') : language === 'he' ? 'דבר' : 'Talk'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
-                    disabled={navState.breadcrumbs.length === 0}
-                    className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)] disabled:opacity-50"
-                  >
-                    <BackIcon className="h-5 w-5" />
-                    {language === 'he' ? 'חזור' : 'Back'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
-                    className="flex min-h-[60px] items-center justify-center gap-2 rounded-[14px] border-[2.5px] border-[#c8d1e0] bg-white px-3 text-base font-bold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
-                  >
-                    <Home className="h-5 w-5" />
-                    {language === 'he' ? 'דף ראשי' : 'Home'}
-                  </button>
-                </div>
-
-                {!useIceCreamLayout && (
-                <div className="grid gap-2.5 md:grid-cols-[minmax(0,1fr)_220px]">
-                  <div className="flex min-h-[72px] items-center justify-between gap-4 rounded-[16px] border-[3px] border-[#c9b4e8] bg-[linear-gradient(180deg,#f3ebff_0%,#e9ddff_100%)] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]">
-                    <span className="text-base font-bold text-slate-700 md:text-lg">
-                      {selectionSummary}
-                    </span>
-                    <span className="text-2xl" aria-hidden="true">{selectedWords.length > 0 ? '💬' : '❔'}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={selectedWords.length > 0 ? () => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords) : undefined}
-                    className="flex min-h-[72px] items-center justify-center gap-2 rounded-[16px] border-[3px] border-[#c9b4e8] bg-[linear-gradient(180deg,#f3ebff_0%,#e9ddff_100%)] px-4 text-base font-extrabold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)]"
-                  >
-                    <Check className="h-6 w-6 text-emerald-600" />
-                    {language === 'he' ? 'סיימתי לבחור' : 'Done choosing'}
-                  </button>
-                </div>
-                )}
-
-                {showAIUpload && navState.currentBoardId === rootBoardId && !isEditMode && (
-                  <AIUploadPlaceholder 
-                    className="mx-auto mt-2 max-w-2xl"
-                    onUpload={(file) => {
-                      console.log('File uploaded for AI processing:', file.name);
-                    }}
-                  />
-                )}
-              </section>
-
-              {showMockupSideRail && (
-                <aside className={cn('hidden space-y-2.5 ps-1 lg:block', useIceCreamLayout && 'ps-0')} dir={contentDir}>
-                  <div className="grid auto-rows-fr gap-2.5">
-                  {sideRailCells.map((cell) => (
-                    <AACCard
-                      key={cell.id}
-                      text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
-                      imageSearchTerms={[cell.text, cell.textEn]}
-                      category={cell.category}
-                      icon={cell.icon}
-                      imageUrl={getUtilityRailImageSrc(cell)}
-                      isFolder={!!cell.linkToBoardId}
-                      onClick={() => handleCellClick(cell)}
-                      size="md"
-                      variant="utility"
-                      labelPosition="top"
-                      isEditMode={isEditMode}
-                      isSpeaking={speakingCellId === cell.id}
-                      className={cn(
-                        useIceCreamLayout
-                          ? 'min-h-[76px] rounded-[14px] px-2 py-2 text-[0.9rem]'
-                          : 'min-h-[116px] rounded-[20px] px-2.5 py-3 text-base'
-                      )}
-                    />
-                  ))}
-                  </div>
-
-                  {extraSocialCells.length > 0 && !useIceCreamLayout && (
-                    <div className="rounded-[20px] border-[3px] border-[#d7dfec] bg-white/90 p-2 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
-                      <div className="mb-2 px-2 text-center text-sm font-extrabold text-slate-500">
-                        {language === 'he' ? 'עוד מסרים' : 'More messages'}
-                      </div>
-                      <div className="grid gap-2">
-                        {extraSocialCells.map((cell) => (
-                          <AACCard
-                            key={cell.id}
-                            text={language === 'he' || language === 'ar' ? cell.text : cell.textEn}
-                            imageSearchTerms={[cell.text, cell.textEn]}
-                            category={cell.category}
-                            icon={cell.icon}
-                            imageUrl={cell.imageUrl}
-                            isFolder={!!cell.linkToBoardId}
-                            onClick={() => handleCellClick(cell)}
-                            size="sm"
-                            variant="utility"
-                            labelPosition="top"
-                            isEditMode={isEditMode}
-                            isSpeaking={speakingCellId === cell.id}
-                            onDelete={() => handleDeleteCell(cell.id)}
-                            onEdit={() => handleEditCell(cell)}
-                            className="min-h-[86px] rounded-[16px] px-2 py-2"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </aside>
-              )}
-            </div>
-          </div>
+            <PublicBoardPage
+              title={boardTitle}
+              boardEmoji={boardEmoji}
+              prompt={language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
+              gridCells={currentBoard.cells}
+              infoStripCells={[]}
+              sideRailCells={[]}
+              extraSocialCells={[]}
+              gridCols={2}
+              contentDir={contentDir}
+              language={language}
+              selectionSummary={selectionSummary}
+              selectedWordsCount={selectedWords.length}
+              isTransitioning={isTransitioning}
+              isEditMode={isEditMode}
+              isSpeaking={isSpeaking}
+              isCustomerMode={isCustomerMode}
+              speakingCellId={speakingCellId}
+              showAIUpload={false}
+              backIcon={BackIcon}
+              canGoBack
+              labels={publicBoardPageLabels}
+              getCellLabel={getCellLabel}
+              getUtilityRailImageSrc={getUtilityRailImageSrc}
+              onCellClick={handleCellClick}
+              onDeleteCell={handleDeleteCell}
+              onEditCell={handleEditCell}
+              onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
+              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
+              onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
+              onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
+              onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
+              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
+            />
           )}
         </main>
       </div>
