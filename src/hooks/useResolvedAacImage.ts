@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { searchArasaac } from '@/lib/arasaac';
-import { findFirstLocalImageUrl, normalizeImageKey, normalizeLocalAssetUrl } from '@/lib/localImageCatalog';
+import {
+  findFirstLocalImageUrl,
+  normalizeImageKey,
+  normalizeLocalAssetUrl,
+} from '@/lib/localImageCatalog';
 
 const cloudImageCache = new Map<string, string | null>();
 
@@ -27,6 +31,21 @@ const resolveCloudImage = async (query: string) => {
   }
 };
 
+const isNestedAacLocalPath = (value: string) => {
+  const decoded = decodeURIComponent(value).toLowerCase();
+  return /\/aac-local\/[^/]+\//.test(decoded);
+};
+
+const remappedKeepsNestedPath = (explicitUrl: string, normalizedUrl: string) => {
+  if (!isNestedAacLocalPath(explicitUrl)) {
+    return true;
+  }
+
+  const decodedNormalized = decodeURIComponent(normalizedUrl).toLowerCase();
+  // Reject basename collapse: /aac-local/flavors/x.png → /assets/aac-local/x.PNG
+  return decodedNormalized.includes('/flavors/') || decodedNormalized.includes('flavors/');
+};
+
 interface UseResolvedAacImageInput {
   text?: string;
   imageUrl?: string;
@@ -40,16 +59,23 @@ export function useResolvedAacImage({
   fallbackTerms = [],
   allowCloudFallback = true,
 }: UseResolvedAacImageInput) {
-  const normalizedImageUrl = useMemo(() => normalizeLocalAssetUrl(imageUrl) ?? imageUrl, [imageUrl]);
+  const preferredImageUrl = useMemo(() => {
+    const explicitUrl = imageUrl?.trim();
+    if (explicitUrl) {
+      // Public Hosting serves /aac-local/flavors/* directly — do not remap via Vite discovery.
+      if (explicitUrl.startsWith('/aac-local/flavors/')) {
+        return explicitUrl;
+      }
 
-  const localImageUrl = useMemo(
-    () => findFirstLocalImageUrl(text, ...fallbackTerms),
-    [fallbackTerms, text],
-  );
+      const normalizedExplicitUrl = normalizeLocalAssetUrl(explicitUrl);
+      if (normalizedExplicitUrl && remappedKeepsNestedPath(explicitUrl, normalizedExplicitUrl)) {
+        return normalizedExplicitUrl;
+      }
+      return explicitUrl;
+    }
 
-  const preferredImageUrl = normalizedImageUrl === imageUrl
-    ? localImageUrl ?? normalizedImageUrl
-    : normalizedImageUrl ?? localImageUrl ?? imageUrl;
+    return findFirstLocalImageUrl(text, ...fallbackTerms);
+  }, [fallbackTerms, imageUrl, text]);
 
   const [resolvedImageUrl, setResolvedImageUrl] = useState<string | undefined>(preferredImageUrl);
 
