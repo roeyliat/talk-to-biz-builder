@@ -1,16 +1,17 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { AACBoard, AACCell, BoardNavigationState } from '@/types/aac';
 import { AACCard } from './AACCard';
-import { LanguageSwitcher } from './LanguageSwitcher';
+import { BoardTopNavigation } from './BoardTopNavigation';
+import { PublicBoardPage } from './PublicBoardPage';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { BoardEditModal } from './BoardEditModal';
 import { CustomerModeOverlay } from './CustomerModeOverlay';
 import { VoiceSettingsModal } from '@/components/settings/VoiceSettingsModal';
 import { GuestWatermark } from './GuestWatermark';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X, Settings, LogOut, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
@@ -107,7 +108,354 @@ const matchesAnyLabel = (value: string, labels: string[]) => {
   return labels.some((label) => normalizedValue.includes(normalizeCategoryLabel(label)));
 };
 
-export function AACDashboard({ 
+const normalizeHebrewText = (value: string) =>
+  value.trim().replace(/[?؟!.,:：'"]/g, '').toLowerCase();
+
+type RootCommunicationSlotSpec = {
+  knownIds: string[];
+  texts: string[];
+  fallback: AACCell;
+};
+
+const ROOT_WANT_ORDER_FALLBACK_ID = 'ui-root-want-order';
+const ROOT_HELP_FALLBACK_ID = 'ui-root-help';
+const ROOT_WANT_TASTE_FALLBACK_ID = 'ui-root-want-taste';
+const ROOT_WANT_PAY_FALLBACK_ID = 'ui-root-want-pay';
+const ROOT_HELP_BOARD_ID = 'root-help-board';
+const ROOT_TASTE_BOARD_ID = 'root-taste-board';
+const ROOT_PAYMENT_BOARD_ID = 'root-payment-board';
+
+const UI_ONLY_ROOT_BOARD_IDS = new Set([
+  ROOT_HELP_BOARD_ID,
+  ROOT_TASTE_BOARD_ID,
+  ROOT_PAYMENT_BOARD_ID,
+]);
+
+const createUiOnlyRootFallbackBoards = (rootBoardId: string): Record<string, AACBoard> => ({
+  [ROOT_HELP_BOARD_ID]: {
+    id: ROOT_HELP_BOARD_ID,
+    name: 'עזרה',
+    nameEn: 'Help',
+    parentBoardId: rootBoardId,
+    cells: [
+      {
+        id: 'ui-help-staff',
+        text: 'סליחה, אתה יכול לעזור לי?',
+        textEn: 'Excuse me, can you help me?',
+        category: 'social',
+        icon: '🙋',
+      },
+      {
+        id: 'ui-help-menu',
+        text: 'איפה התפריט?',
+        textEn: 'Where is the menu?',
+        category: 'social',
+        icon: '📋',
+      },
+      {
+        id: 'ui-help-restroom',
+        text: 'איפה השירותים?',
+        textEn: 'Where is the restroom?',
+        category: 'social',
+        icon: '🚻',
+      },
+      {
+        id: 'ui-help-allergy',
+        text: 'יש לי אלרגיה',
+        textEn: 'I have an allergy',
+        category: 'social',
+        icon: '⚠️',
+      },
+    ],
+    gridSize: { cols: 2, rows: 2 },
+  },
+  [ROOT_TASTE_BOARD_ID]: {
+    id: ROOT_TASTE_BOARD_ID,
+    name: 'לטעום',
+    nameEn: 'Taste',
+    parentBoardId: rootBoardId,
+    cells: [
+      {
+        id: 'ui-taste-sample',
+        text: 'אפשר לטעום?',
+        textEn: 'Can I taste?',
+        category: 'social',
+        icon: '👅',
+      },
+      {
+        id: 'ui-taste-small-piece',
+        text: 'אפשר חתיכה קטנה?',
+        textEn: 'Can I have a small piece?',
+        category: 'social',
+        icon: '🍽️',
+      },
+      {
+        id: 'ui-taste-before-buy',
+        text: 'אפשר לטעום לפני שאני קונה?',
+        textEn: 'Can I taste before I buy?',
+        category: 'social',
+        icon: '🤔',
+      },
+      {
+        id: 'ui-taste-which',
+        text: 'מה אפשר לטעום?',
+        textEn: 'What can I taste?',
+        category: 'social',
+        icon: '❓',
+      },
+    ],
+    gridSize: { cols: 2, rows: 2 },
+  },
+  [ROOT_PAYMENT_BOARD_ID]: {
+    id: ROOT_PAYMENT_BOARD_ID,
+    name: 'לשלם',
+    nameEn: 'Pay',
+    parentBoardId: rootBoardId,
+    cells: [
+      {
+        id: 'ui-pay-card',
+        text: 'אני משלם באשראי',
+        textEn: 'I pay by credit card',
+        category: 'social',
+        icon: '💳',
+      },
+      {
+        id: 'ui-pay-cash',
+        text: 'אני משלם במזומן',
+        textEn: 'I pay cash',
+        category: 'social',
+        icon: '💵',
+      },
+      {
+        id: 'ui-pay-app',
+        text: 'אני משלם באפליקציה',
+        textEn: 'I pay by phone app',
+        category: 'social',
+        icon: '📱',
+      },
+      {
+        id: 'ui-pay-bill',
+        text: 'אפשר את החשבון?',
+        textEn: 'Can I have the bill?',
+        category: 'social',
+        icon: '🧾',
+      },
+    ],
+    gridSize: { cols: 2, rows: 2 },
+  },
+});
+
+const withUiOnlyRootFallbackBoards = (
+  boards: Record<string, AACBoard>,
+  rootBoardId: string,
+): Record<string, AACBoard> => {
+  const mergedBoards = { ...boards };
+  const uiOnlyBoards = createUiOnlyRootFallbackBoards(rootBoardId);
+
+  Object.entries(uiOnlyBoards).forEach(([boardId, board]) => {
+    if (!mergedBoards[boardId]) {
+      mergedBoards[boardId] = board;
+    }
+  });
+
+  return mergedBoards;
+};
+
+const stripUiOnlyRootFallbackBoards = (boards: Record<string, AACBoard>) => {
+  const persistableBoards = { ...boards };
+
+  UI_ONLY_ROOT_BOARD_IDS.forEach((boardId) => {
+    delete persistableBoards[boardId];
+  });
+
+  return persistableBoards;
+};
+
+const ensureNavigableRootCellLink = (
+  cell: AACCell,
+  activeBoards: Record<string, AACBoard>,
+  preferredBoardIds: string[],
+  uiFallbackBoardId: string,
+): AACCell => {
+  if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
+    return cell;
+  }
+
+  const linkToBoardId =
+    resolveLinkedBoardId(activeBoards, [...preferredBoardIds, uiFallbackBoardId]) ?? uiFallbackBoardId;
+
+  return {
+    ...cell,
+    linkToBoardId,
+  };
+};
+
+const findFirstCategoryBoardLink = (
+  boardCells: AACCell[],
+  activeBoards: Record<string, AACBoard>,
+) => {
+  const orderMenuCell = boardCells.find((cell) => cell.linkToBoardId === 'order-menu');
+  if (orderMenuCell?.linkToBoardId && activeBoards[orderMenuCell.linkToBoardId]) {
+    return orderMenuCell.linkToBoardId;
+  }
+
+  const linkedCell = boardCells.find(
+    (cell) => cell.linkToBoardId && activeBoards[cell.linkToBoardId],
+  );
+
+  return linkedCell?.linkToBoardId;
+};
+
+const resolveLinkedBoardId = (
+  activeBoards: Record<string, AACBoard>,
+  candidateBoardIds: string[],
+) => candidateBoardIds.find((boardId) => Boolean(activeBoards[boardId]));
+
+const findRootCommunicationCell = (
+  boardCells: AACCell[],
+  spec: Pick<RootCommunicationSlotSpec, 'knownIds' | 'texts'>,
+) => {
+  for (const id of spec.knownIds) {
+    const cellById = boardCells.find((cell) => cell.id === id);
+    if (cellById) {
+      return cellById;
+    }
+  }
+
+  const normalizedTargets = new Set(spec.texts.map(normalizeHebrewText));
+  return boardCells.find((cell) => normalizedTargets.has(normalizeHebrewText(cell.text)));
+};
+
+const buildRootWantOrderFallback = (
+  boardCells: AACCell[],
+  activeBoards: Record<string, AACBoard>,
+): AACCell => {
+  const linkToBoardId = findFirstCategoryBoardLink(boardCells, activeBoards);
+
+  return {
+    id: ROOT_WANT_ORDER_FALLBACK_ID,
+    text: 'אני רוצה להזמין',
+    textEn: 'I want to order',
+    category: 'verbs',
+    icon: '📝',
+    imageUrl: wantImage,
+    ...(linkToBoardId ? { linkToBoardId } : {}),
+  };
+};
+
+const buildRootHelpFallback = (
+  activeBoards: Record<string, AACBoard>,
+): AACCell => {
+  const linkToBoardId =
+    resolveLinkedBoardId(activeBoards, ['help', 'staff', ROOT_HELP_BOARD_ID]) ?? ROOT_HELP_BOARD_ID;
+
+  return {
+    id: ROOT_HELP_FALLBACK_ID,
+    text: 'עזרה',
+    textEn: 'Help',
+    category: 'social',
+    icon: '🙋',
+    linkToBoardId,
+  };
+};
+
+const buildRootWantTasteFallback = (
+  activeBoards: Record<string, AACBoard>,
+): AACCell => {
+  const linkToBoardId =
+    resolveLinkedBoardId(activeBoards, ['taste-menu', 'taste', ROOT_TASTE_BOARD_ID]) ?? ROOT_TASTE_BOARD_ID;
+
+  return {
+    id: ROOT_WANT_TASTE_FALLBACK_ID,
+    text: 'אני רוצה לטעום',
+    textEn: 'I want to taste',
+    category: 'verbs',
+    icon: '👅',
+    linkToBoardId,
+  };
+};
+
+const buildRootWantPayFallback = (
+  activeBoards: Record<string, AACBoard>,
+): AACCell => {
+  const linkToBoardId =
+    resolveLinkedBoardId(activeBoards, ['pay-menu', 'checkout', ROOT_PAYMENT_BOARD_ID]) ?? ROOT_PAYMENT_BOARD_ID;
+
+  return {
+    id: ROOT_WANT_PAY_FALLBACK_ID,
+    text: 'אני רוצה לשלם',
+    textEn: 'I want to pay',
+    category: 'social',
+    icon: '💳',
+    linkToBoardId,
+  };
+};
+
+const buildRootCommunicationCells = (
+  boardCells: AACCell[],
+  activeBoards: Record<string, AACBoard>,
+): AACCell[] => {
+  const utilityPrice = utilityRailCells.find((cell) => cell.id === 'utility-price');
+  const utilityThanks = utilityRailCells.find((cell) => cell.id === 'utility-thanks');
+
+  if (!utilityPrice || !utilityThanks) {
+    return [];
+  }
+
+  const wantOrderSpec: RootCommunicationSlotSpec = {
+    knownIds: ['root-want-order', 'want-order', 'order'],
+    texts: ['אני רוצה להזמין'],
+    fallback: buildRootWantOrderFallback(boardCells, activeBoards),
+  };
+  const helpSpec: RootCommunicationSlotSpec = {
+    knownIds: ['root-help', 'help'],
+    texts: ['עזרה'],
+    fallback: buildRootHelpFallback(activeBoards),
+  };
+  const wantTasteSpec: RootCommunicationSlotSpec = {
+    knownIds: ['root-want-taste', 'want-taste', 'taste'],
+    texts: ['אני רוצה לטעום', 'לטעום'],
+    fallback: buildRootWantTasteFallback(activeBoards),
+  };
+  const wantPaySpec: RootCommunicationSlotSpec = {
+    knownIds: ['root-want-pay', 'want-pay', 'bill', 'checkout'],
+    texts: ['אני רוצה לשלם'],
+    fallback: buildRootWantPayFallback(activeBoards),
+  };
+
+  const resolveSlot = (spec: RootCommunicationSlotSpec) =>
+    findRootCommunicationCell(boardCells, spec) ?? spec.fallback;
+
+  const helpCell = ensureNavigableRootCellLink(
+    resolveSlot(helpSpec),
+    activeBoards,
+    ['help', 'staff'],
+    ROOT_HELP_BOARD_ID,
+  );
+  const wantTasteCell = ensureNavigableRootCellLink(
+    resolveSlot(wantTasteSpec),
+    activeBoards,
+    ['taste-menu', 'taste'],
+    ROOT_TASTE_BOARD_ID,
+  );
+  const wantPayCell = ensureNavigableRootCellLink(
+    resolveSlot(wantPaySpec),
+    activeBoards,
+    ['pay-menu', 'checkout'],
+    ROOT_PAYMENT_BOARD_ID,
+  );
+
+  return [
+    utilityPrice,
+    resolveSlot(wantOrderSpec),
+    helpCell,
+    wantTasteCell,
+    utilityThanks,
+    wantPayCell,
+  ];
+};
+
+export function AACDashboard({
   boards,
   rootBoardId = 'main',
   showAIUpload = true,
@@ -122,7 +470,10 @@ export function AACDashboard({
     return { ...getBoardsForBusinessType(businessType) };
   });
   
-  const activeBoards = localBoards;
+  const activeBoards = useMemo(
+    () => withUiOnlyRootFallbackBoards(localBoards, rootBoardId),
+    [localBoards, rootBoardId],
+  );
   const { language, direction, t } = useLanguage();
   const { speak, isSpeaking, speakingCellId, isSupported } = useTextToSpeech();
   const { toast } = useToast();
@@ -182,8 +533,9 @@ export function AACDashboard({
   }, [boards, businessType, rootBoardId]);
 
   const updateBoards = useCallback((newBoards: Record<string, AACBoard>) => {
-    setLocalBoards(newBoards);
-    onBoardsChange?.(newBoards);
+    const persistableBoards = stripUiOnlyRootFallbackBoards(newBoards);
+    setLocalBoards(persistableBoards);
+    onBoardsChange?.(persistableBoards);
   }, [onBoardsChange]);
 
   const navigateToBoard = useCallback((boardId: string) => {
@@ -421,6 +773,15 @@ export function AACDashboard({
     (cell) => !utilityRailCells.some((utilityCell) => utilityCell.text === cell.text || utilityCell.textEn === cell.textEn)
   ).slice(0, 4);
   const infoStripCells = [...descriptorCells, ...verbCells].slice(0, 3);
+  const rootCommunicationCells = useMemo(() => {
+    if (navState.breadcrumbs.length !== 0) {
+      return [];
+    }
+
+    return buildRootCommunicationCells(currentBoard.cells, activeBoards);
+  }, [activeBoards, currentBoard.cells, navState.breadcrumbs.length]);
+  const rootPublicGridCols = Math.min(2, Math.max(1, rootCommunicationCells.length));
+
   const featuredCellIds = new Set([...socialCells, ...infoStripCells].map((cell) => cell.id));
   const mainGridCells = peopleCells.length > 0 ? peopleCells : sortedCells.filter((cell) => !featuredCellIds.has(cell.id));
   const displayGridCells = mainGridCells.length > 0 ? mainGridCells : sortedCells;
@@ -500,8 +861,28 @@ export function AACDashboard({
     'utility-more': { src: moreImage, className: 'scale-[1.18]' },
     'utility-thanks': { src: '/aac-local/תודה.png', className: 'scale-[1.15]' },
     'utility-price': { src: howMuchImage, className: 'scale-[1.2]' },
+    [ROOT_WANT_ORDER_FALLBACK_ID]: { src: wantImage, className: 'scale-[1.18]' },
   };
   const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
+  const isAtRoot = navState.breadcrumbs.length === 0;
+  const isFirstLevelFromRoot =
+    !isAtRoot &&
+    !useIceCreamLayout &&
+    navState.breadcrumbs.length === 1 &&
+    navState.breadcrumbs[0]?.id === rootBoardId;
+  const publicBoardPageLabels = {
+    delete: language === 'he' ? 'מחק' : 'Delete',
+    speak: language === 'he' ? 'השמע' : 'Speak',
+    talk: language === 'he' ? 'דבר' : 'Talk',
+    back: language === 'he' ? 'חזור' : 'Back',
+    home: language === 'he' ? 'דף ראשי' : 'Home',
+    doneChoosing: language === 'he' ? 'סיימתי לבחור' : 'Done choosing',
+    moreMessages: language === 'he' ? 'עוד מסרים' : 'More messages',
+  };
+  const getCellLabel = useCallback((cell: AACCell) => (
+    language === 'he' || language === 'ar' ? cell.text : cell.textEn
+  ), [language]);
+
   const iceCreamCategoryButtons = [
     {
       id: 'toppings',
@@ -530,154 +911,52 @@ export function AACDashboard({
     <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-[#eef2f8] text-base', className)}>
       {/* Top Bar */}
       {!useIceCreamLayout && (
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-3 py-2 backdrop-blur-sm">
-        <div className="flex min-w-0 items-center gap-3">
-          <Link to="/" className="flex shrink-0 items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-primary">
-              <img
-                src="/favicon.png"
-                alt="TalkBiz Logo"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <span className="hidden text-base font-bold text-foreground lg:inline">TalkBiz</span>
-          </Link>
-
-          <nav className="hidden items-center gap-4 lg:flex">
-            <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              {t('nav.home')}
-            </Link>
-            <Link to="/dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              {t('nav.dashboard')}
-            </Link>
-            <Link to="/create" className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-              {t('nav.create')}
-            </Link>
-          </nav>
-
-          {navState.breadcrumbs.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => runSpokenAction(t('aac.back'), navigateBack)}
-              className="shrink-0 gap-2 border-slate-300 bg-white"
-            >
-              <BackIcon className="h-4 w-4" />
-              {t('aac.back')}
-            </Button>
-          )}
-          
-          {/* Breadcrumbs */}
-          <nav className="flex min-w-0 items-center gap-1 overflow-x-auto text-sm">
-            {navState.breadcrumbs.map((crumb, index) => (
-              <div key={crumb.id} className="flex items-center gap-1">
-                {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground/50" />}
-                <button
-                  onClick={() => runSpokenAction(language === 'he' || language === 'ar' ? crumb.name : crumb.nameEn, () => navigateToBreadcrumb(index))}
-                  className="text-muted-foreground hover:text-foreground transition-colors truncate max-w-[100px]"
-                >
-                  {language === 'he' || language === 'ar' ? crumb.name : crumb.nameEn}
-                </button>
-              </div>
-            ))}
-            
-            {navState.breadcrumbs.length > 0 && (
-              <div className="flex items-center gap-1">
-                <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
-                <span className="font-medium text-foreground truncate max-w-[100px]">
-                  {language === 'he' || language === 'ar' ? currentBoard.name : currentBoard.nameEn}
-                </span>
-              </div>
-            )}
-          </nav>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1.5">
-          {/* Customer Mode Toggle */}
-          <Button
-            variant={isCustomerMode ? "default" : "outline"}
-            size="sm"
-            onClick={() => runSpokenAction(
-              isCustomerMode
-                ? (language === 'he' ? 'צא ממצב לקוח' : 'Exit Customer Mode')
-                : (language === 'he' ? 'אני רוצה לדבר' : 'I Want To Talk'),
-              () => {
-                setIsCustomerMode(!isCustomerMode);
-                if (isEditMode) setIsEditMode(false);
-              },
-            )}
-            className={cn(
-              'gap-2 border-slate-300 bg-white',
-              isCustomerMode && "bg-green-600 hover:bg-green-700 text-white"
-            )}
-          >
-            {isCustomerMode ? (
-              <>
-                <X className="h-4 w-4" />
-                {language === 'he' ? 'צא ממצב לקוח' : 'Exit Customer Mode'}
-              </>
-            ) : (
-              <>
-                <MessageCircle className="h-4 w-4" />
-                {language === 'he' ? 'אני רוצה לדבר' : 'I Want To Talk'}
-              </>
-            )}
-          </Button>
-
-          {/* Edit Mode Toggle */}
-          {allowEdit && !isCustomerMode && (
-            <Button
-              variant={isEditMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => runSpokenAction(
-                isEditMode
-                  ? (language === 'he' ? 'סיום עריכה' : 'Done')
-                  : (language === 'he' ? 'עריכה' : 'Edit'),
-                () => setIsEditMode(!isEditMode),
-              )}
-              className="gap-2 border-slate-300 bg-white"
-            >
-              {isEditMode ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  {language === 'he' ? 'סיום עריכה' : 'Done'}
-                </>
-              ) : (
-                <>
-                  <Pencil className="h-4 w-4" />
-                  {language === 'he' ? 'עריכה' : 'Edit'}
-                </>
-              )}
-            </Button>
-          )}
-
-          {/* Voice Settings Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => runSpokenAction(language === 'he' ? 'הגדרות קול' : 'Voice Settings', () => setShowVoiceSettings(true))}
-            className="shrink-0"
-            aria-label={language === 'he' ? 'הגדרות קול' : 'Voice Settings'}
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-
-          <LanguageSwitcher variant="compact" />
-
-          {!authLoading && user && (
-            <div className="hidden items-center gap-2 lg:flex">
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span className="max-w-[180px] truncate">{isGuest ? (language === 'he' ? 'אורח' : 'Guest') : user.email}</span>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => runSpokenAction(language === 'he' ? 'התנתק' : 'Sign Out', () => { void handleSignOut(); })} className="gap-2">
-                <LogOut className="h-4 w-4" />
-                {language === 'he' ? 'התנתק' : 'Sign Out'}
-              </Button>
-            </div>
-          )}
-        </div>
-      </header>
+      <BoardTopNavigation
+        backLabel={t('aac.back')}
+        backIcon={BackIcon}
+        homeLabel={t('nav.home')}
+        dashboardLabel={t('nav.dashboard')}
+        createLabel={t('nav.create')}
+        breadcrumbs={navState.breadcrumbs}
+        currentBoardName={boardTitle}
+        language={language}
+        isCustomerMode={isCustomerMode}
+        isEditMode={isEditMode}
+        allowEdit={allowEdit}
+        authLoading={authLoading}
+        userEmail={user?.email}
+        isGuest={isGuest}
+        guestLabel={language === 'he' ? 'אורח' : 'Guest'}
+        signOutLabel={language === 'he' ? 'התנתק' : 'Sign Out'}
+        voiceSettingsLabel={language === 'he' ? 'הגדרות קול' : 'Voice Settings'}
+        customerModeOnLabel={language === 'he' ? 'צא ממצב לקוח' : 'Exit Customer Mode'}
+        customerModeOffLabel={language === 'he' ? 'אני רוצה לדבר' : 'I Want To Talk'}
+        editOnLabel={language === 'he' ? 'סיום עריכה' : 'Done'}
+        editOffLabel={language === 'he' ? 'עריכה' : 'Edit'}
+        onBack={() => runSpokenAction(t('aac.back'), navigateBack)}
+        onBreadcrumb={(index) => runSpokenAction(
+          language === 'he' || language === 'ar' ? navState.breadcrumbs[index].name : navState.breadcrumbs[index].nameEn,
+          () => navigateToBreadcrumb(index),
+        )}
+        onToggleCustomerMode={() => runSpokenAction(
+          isCustomerMode
+            ? (language === 'he' ? 'צא ממצב לקוח' : 'Exit Customer Mode')
+            : (language === 'he' ? 'אני רוצה לדבר' : 'I Want To Talk'),
+          () => {
+            setIsCustomerMode(!isCustomerMode);
+            if (isEditMode) setIsEditMode(false);
+          },
+        )}
+        onToggleEditMode={() => runSpokenAction(
+          isEditMode
+            ? (language === 'he' ? 'סיום עריכה' : 'Done')
+            : (language === 'he' ? 'עריכה' : 'Edit'),
+          () => setIsEditMode(!isEditMode),
+        )}
+        onVoiceSettings={() => runSpokenAction(language === 'he' ? 'הגדרות קול' : 'Voice Settings', () => setShowVoiceSettings(true))}
+        onSignOut={() => runSpokenAction(language === 'he' ? 'התנתק' : 'Sign Out', () => { void handleSignOut(); })}
+        isRootView={isAtRoot}
+      />
       )}
 
       {/* Customer Mode Indicator Bar */}
@@ -713,8 +992,13 @@ export function AACDashboard({
 
       {/* Main Content */}
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-2 pb-4 md:p-3 md:pb-6">
-          {showMockupSideRail && !useIceCreamLayout && (
+        <main
+          className={cn(
+            'min-h-0 flex-1 overflow-x-hidden overflow-y-auto',
+            isAtRoot && !useIceCreamLayout ? 'bg-white p-0' : 'p-2 pb-4 md:p-3 md:pb-6',
+          )}
+        >
+          {showMockupSideRail && !useIceCreamLayout && !isAtRoot && !isFirstLevelFromRoot && (
             <div className="sticky top-0 z-20 -mx-2 mb-3 border-b border-slate-200 bg-[#eef2f8]/95 px-2 py-2 backdrop-blur lg:hidden md:-mx-3 md:px-3">
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {sideRailCells.map((cell) => (
@@ -757,7 +1041,78 @@ export function AACDashboard({
             </div>
           )}
 
-          {useIceCreamLayout ? (
+          {isAtRoot ? (
+            <PublicBoardPage
+              title={boardTitle}
+              boardEmoji={boardEmoji}
+              prompt={language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
+              gridCells={rootCommunicationCells}
+              infoStripCells={[]}
+              sideRailCells={[]}
+              extraSocialCells={[]}
+              gridCols={rootPublicGridCols}
+              contentDir={contentDir}
+              language={language}
+              selectionSummary={selectionSummary}
+              selectedWordsCount={selectedWords.length}
+              isTransitioning={isTransitioning}
+              isEditMode={isEditMode}
+              isSpeaking={isSpeaking}
+              isCustomerMode={isCustomerMode}
+              speakingCellId={speakingCellId}
+              showAIUpload={showAIUpload && navState.currentBoardId === rootBoardId}
+              backIcon={BackIcon}
+              canGoBack={navState.breadcrumbs.length > 0}
+              labels={publicBoardPageLabels}
+              getCellLabel={getCellLabel}
+              getUtilityRailImageSrc={getUtilityRailImageSrc}
+              onCellClick={handleCellClick}
+              onDeleteCell={handleDeleteCell}
+              onEditCell={handleEditCell}
+              onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
+              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
+              onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
+              onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
+              onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
+              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
+              onUpload={(file) => console.log('File uploaded for AI processing:', file.name)}
+            />
+          ) : isFirstLevelFromRoot ? (
+            <PublicBoardPage
+              title={boardTitle}
+              boardEmoji={boardEmoji}
+              prompt={language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
+              gridCells={currentBoard.cells}
+              infoStripCells={[]}
+              sideRailCells={[]}
+              extraSocialCells={[]}
+              gridCols={2}
+              contentDir={contentDir}
+              language={language}
+              selectionSummary={selectionSummary}
+              selectedWordsCount={selectedWords.length}
+              isTransitioning={isTransitioning}
+              isEditMode={isEditMode}
+              isSpeaking={isSpeaking}
+              isCustomerMode={isCustomerMode}
+              speakingCellId={speakingCellId}
+              showAIUpload={false}
+              backIcon={BackIcon}
+              canGoBack
+              labels={publicBoardPageLabels}
+              getCellLabel={getCellLabel}
+              getUtilityRailImageSrc={getUtilityRailImageSrc}
+              onCellClick={handleCellClick}
+              onDeleteCell={handleDeleteCell}
+              onEditCell={handleEditCell}
+              onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
+              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
+              onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
+              onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
+              onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
+              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
+            />
+          ) : useIceCreamLayout ? (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_112px]" style={{ direction: 'ltr' }}>
                 <section className="space-y-3" dir={contentDir}>
