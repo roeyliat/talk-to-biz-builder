@@ -463,12 +463,11 @@ const iceCreamBoards: Record<string, AACBoard> = {
     nameEn: 'Alcoholic Flavors',
     parentBoardId: 'order-menu',
     cells: [
+      imageCell('coffee-baileys', 'קפה בייליס', 'Coffee Baileys', 'people', '☕', '/aac-local/flavors/קפה בייליס.png'),
       imageCell('aperol-orange', 'אפרול תפוז', 'Aperol Orange', 'people', '🍊', '/aac-local/flavors/אפרול תפוז.png'),
       imageCell('bergamot-ouzo', 'ברגמונט אוזו', 'Bergamot Ouzo', 'people', '🍸', '/aac-local/flavors/ברגמונט אוזו.png'),
-      imageCell('coffee-baileys', 'קפה בייליס', 'Coffee Baileys', 'people', '☕', '/aac-local/flavors/קפה בייליס.png'),
-      imageCell('affogato', 'אפוגטו', 'Affogato', 'people', '🍨', '/aac-local/flavors/אפוגטו.png'),
     ],
-    gridSize: { cols: 2, rows: 2 },
+    gridSize: { cols: 3, rows: 1 },
   },
   'flavors-cup': {
     id: 'flavors-cup',
