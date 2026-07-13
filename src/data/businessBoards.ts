@@ -571,14 +571,11 @@ const iceCreamBoards: Record<string, AACBoard> = {
     nameEn: 'Desserts',
     parentBoardId: 'order-menu',
     cells: [
-      imageCell('waffle', 'וופל', 'Waffle', 'people', '🧇', '/aac-local/flavors/פנקייק.png'),
+      imageCell('pancake', 'פנקייק', 'Pancake', 'people', '🥞', '/aac-local/flavors/פנקייק.png'),
       imageCell('crepe', 'קרפ', 'Crepe', 'people', '🥞', '/aac-local/flavors/קרפ.png'),
-      cell('brownie', 'בראוני', 'Brownie', 'people', '🍫'),
-      cell('sundae', 'סאנדיי', 'Sundae', 'people', '🍨'),
-      cell('banana-split', 'בננה ספליט', 'Banana Split', 'people', '🍌'),
-      imageCell('pancake-balls', 'פנקייק כדורים', 'Pancake Balls', 'people', '🥞', '/aac-local/flavors/פנקייק כדורים.png'),
+      imageCell('affogato', 'אפוגטו', 'Affogato', 'people', '🍨', '/aac-local/flavors/אפוגטו.png'),
     ],
-    gridSize: { cols: 3, rows: 2 },
+    gridSize: { cols: 3, rows: 1 },
   },
 };
 
