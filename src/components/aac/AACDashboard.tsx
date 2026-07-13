@@ -906,7 +906,7 @@ export function AACDashboard({
   return (
     <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-[#eef2f8] text-base', className)}>
       {/* Top Bar */}
-      {!useIceCreamLayout && (
+      {(isAtRoot || !useIceCreamLayout) && (
       <BoardTopNavigation
         backLabel={t('aac.back')}
         backIcon={BackIcon}
