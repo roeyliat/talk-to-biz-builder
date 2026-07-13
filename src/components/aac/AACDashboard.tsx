@@ -69,34 +69,13 @@ type ManualIceCreamCellEntry = {
 };
 
 const buildInitialNavState = (
-  activeBoards: Record<string, AACBoard>,
-  businessType: BusinessType,
+  _activeBoards: Record<string, AACBoard>,
+  _businessType: BusinessType,
   rootBoardId: string,
-): BoardNavigationState => {
-  if (businessType !== 'iceCream' || !activeBoards['flavors-cup'] || !activeBoards['ice-cream-type']) {
-    return {
-      currentBoardId: rootBoardId,
-      breadcrumbs: [],
-    };
-  }
-
-  const rootBoard = activeBoards[rootBoardId];
-  const iceCreamTypeBoard = activeBoards['ice-cream-type'];
-
-  return {
-    currentBoardId: 'flavors-cup',
-    breadcrumbs: [
-      ...(rootBoard
-        ? [{ id: rootBoard.id, name: rootBoard.name, nameEn: rootBoard.nameEn }]
-        : []),
-      {
-        id: iceCreamTypeBoard.id,
-        name: iceCreamTypeBoard.name,
-        nameEn: iceCreamTypeBoard.nameEn,
-      },
-    ],
-  };
-};
+): BoardNavigationState => ({
+  currentBoardId: rootBoardId,
+  breadcrumbs: [],
+});
 
 const isBuiltInIceCreamBoardSet = (activeBoards: Record<string, AACBoard>) =>
   ['ice-cream-type', 'flavors-cup', 'flavors-cone'].every((boardId) => Boolean(activeBoards[boardId]));
@@ -257,6 +236,199 @@ const withUiOnlyRootFallbackBoards = (
       mergedBoards[boardId] = board;
     }
   });
+  
+  return mergedBoards;
+};
+
+const RUNTIME_ICE_CREAM_ENSURE_BOARD_IDS = [
+  'ice-cream-type',
+  'flavors-cup',
+  'flavors-cone',
+  'sorbet-type',
+  'yogurt-type',
+  'toppings',
+  'cold-drinks',
+  'hot-drinks',
+  'desserts',
+  'alcoholic-flavors',
+] as const;
+
+const RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS = [
+  'ice-cream-type',
+  'flavors-cup',
+  'flavors-cone',
+  'cold-drinks',
+] as const;
+
+const RUNTIME_ICE_CREAM_ORDER_MENU_CARD_ORDER = [
+  { cellId: 'ice-cream', hebrewText: 'גלידה', linkToBoardId: 'ice-cream-type' },
+  { cellId: 'cold-drinks', hebrewText: 'שתייה קרה', linkToBoardId: 'cold-drinks' },
+  { cellId: 'hot-drinks', hebrewText: 'שתייה חמה', linkToBoardId: 'hot-drinks' },
+  { cellId: 'desserts', hebrewText: 'קינוחים', linkToBoardId: 'desserts' },
+  { cellId: 'alcoholic-flavors', hebrewText: 'טעמים אלכוהוליים', linkToBoardId: 'alcoholic-flavors' },
+] as const;
+
+const isSavedGenericCategoryBoardId = (boardId?: string) =>
+  Boolean(boardId?.startsWith('category-'));
+
+const findTemplateOrderCategoryCell = (
+  templateBoards: Record<string, AACBoard>,
+  cellId: string,
+  hebrewText: string,
+): AACCell | undefined => {
+  const templateOrderMenu = templateBoards['order-menu'];
+  const templateMain = templateBoards.main;
+  const normalizedHebrew = normalizeHebrewText(hebrewText);
+
+  const fromOrderMenu = templateOrderMenu?.cells.find(
+    (cell) => cell.id === cellId || normalizeHebrewText(cell.text) === normalizedHebrew,
+  );
+  if (fromOrderMenu) {
+    return fromOrderMenu;
+  }
+
+  return templateMain?.cells.find(
+    (cell) => cell.id === cellId || normalizeHebrewText(cell.text) === normalizedHebrew,
+  );
+};
+
+const buildRuntimeIceCreamOrderMenuBoard = (
+  boards: Record<string, AACBoard>,
+  templateBoards: Record<string, AACBoard>,
+  rootBoardId: string,
+): AACBoard | null => {
+  const templateOrderMenu = templateBoards['order-menu'];
+  const cells: AACCell[] = [];
+
+  RUNTIME_ICE_CREAM_ORDER_MENU_CARD_ORDER.forEach(({ cellId, hebrewText, linkToBoardId }) => {
+    if (isSavedGenericCategoryBoardId(linkToBoardId)) {
+      return;
+    }
+
+    if (!boards[linkToBoardId] && !templateBoards[linkToBoardId]) {
+      return;
+    }
+
+    const templateCell = findTemplateOrderCategoryCell(templateBoards, cellId, hebrewText);
+    if (!templateCell) {
+      return;
+    }
+
+    cells.push({
+      ...templateCell,
+      linkToBoardId,
+    });
+  });
+
+  if (cells.length === 0) {
+    return null;
+  }
+
+  return {
+    id: 'order-menu',
+    name: templateOrderMenu?.name ?? 'להזמין',
+    nameEn: templateOrderMenu?.nameEn ?? 'Order',
+    parentBoardId: rootBoardId,
+    cells,
+    gridSize: {
+      cols: 2,
+      rows: Math.max(1, Math.ceil(cells.length / 2)),
+    },
+  };
+};
+
+const injectMissingTemplateBoard = (
+  mergedBoards: Record<string, AACBoard>,
+  templateBoards: Record<string, AACBoard>,
+  boardId: string,
+) => {
+  if (!mergedBoards[boardId] && templateBoards[boardId]) {
+    mergedBoards[boardId] = templateBoards[boardId];
+  }
+};
+
+const injectMissingTemplateBoardsForCells = (
+  mergedBoards: Record<string, AACBoard>,
+  templateBoards: Record<string, AACBoard>,
+  cells: AACCell[],
+) => {
+  cells.forEach((cell) => {
+    if (!cell.linkToBoardId) {
+      return;
+    }
+
+    injectMissingTemplateBoard(mergedBoards, templateBoards, cell.linkToBoardId);
+  });
+};
+
+const normalizeIceCreamServingCellLink = (
+  cell: AACCell,
+  targetBoardId: string,
+  boards: Record<string, AACBoard>,
+): AACCell => {
+  if (cell.linkToBoardId && boards[cell.linkToBoardId]) {
+    return cell;
+  }
+
+  return {
+    ...cell,
+    linkToBoardId: targetBoardId,
+  };
+};
+
+const withRuntimeIceCreamOrderBoards = (
+  boards: Record<string, AACBoard>,
+  businessType: BusinessType,
+  rootBoardId: string,
+): Record<string, AACBoard> => {
+  if (businessType !== 'iceCream') {
+    return boards;
+  }
+
+  const mergedBoards = { ...boards };
+  const templateBoards = getBoardsForBusinessType('iceCream');
+
+  RUNTIME_ICE_CREAM_ENSURE_BOARD_IDS.forEach((boardId) => {
+    injectMissingTemplateBoard(mergedBoards, templateBoards, boardId);
+  });
+
+  const runtimeOrderMenu = buildRuntimeIceCreamOrderMenuBoard(
+    mergedBoards,
+    templateBoards,
+    rootBoardId,
+  );
+  if (runtimeOrderMenu) {
+    mergedBoards['order-menu'] = runtimeOrderMenu;
+    injectMissingTemplateBoardsForCells(mergedBoards, templateBoards, runtimeOrderMenu.cells);
+  } else if (templateBoards['order-menu']) {
+    mergedBoards['order-menu'] = {
+      ...templateBoards['order-menu'],
+      parentBoardId: rootBoardId,
+      cells: templateBoards['order-menu'].cells
+        .filter((cell) => !isSavedGenericCategoryBoardId(cell.linkToBoardId))
+        .map((cell) =>
+          normalizeHebrewText(cell.text) === normalizeHebrewText('גלידה')
+            || cell.id === 'ice-cream'
+            ? { ...cell, linkToBoardId: 'ice-cream-type' }
+            : { ...cell },
+        ),
+    };
+    injectMissingTemplateBoardsForCells(
+      mergedBoards,
+      templateBoards,
+      mergedBoards['order-menu']?.cells ?? [],
+    );
+  }
+
+  RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS.forEach((boardId) => {
+    const templateBoard = templateBoards[boardId];
+    if (!templateBoard) {
+      return;
+    }
+
+    mergedBoards[boardId] = templateBoard;
+    injectMissingTemplateBoardsForCells(mergedBoards, templateBoards, templateBoard.cells);
+  });
 
   return mergedBoards;
 };
@@ -330,7 +502,9 @@ const buildRootWantOrderFallback = (
   boardCells: AACCell[],
   activeBoards: Record<string, AACBoard>,
 ): AACCell => {
-  const linkToBoardId = findFirstCategoryBoardLink(boardCells, activeBoards);
+  const linkToBoardId =
+    (activeBoards['order-menu'] ? 'order-menu' : undefined)
+    ?? findFirstCategoryBoardLink(boardCells, activeBoards);
 
   return {
     id: ROOT_WANT_ORDER_FALLBACK_ID,
@@ -426,6 +600,12 @@ const buildRootCommunicationCells = (
   const resolveSlot = (spec: RootCommunicationSlotSpec) =>
     findRootCommunicationCell(boardCells, spec) ?? spec.fallback;
 
+  const wantOrderCell = ensureNavigableRootCellLink(
+    resolveSlot(wantOrderSpec),
+    activeBoards,
+    ['order-menu'],
+    'order-menu',
+  );
   const helpCell = ensureNavigableRootCellLink(
     resolveSlot(helpSpec),
     activeBoards,
@@ -447,7 +627,7 @@ const buildRootCommunicationCells = (
 
   return [
     utilityPrice,
-    resolveSlot(wantOrderSpec),
+    wantOrderCell,
     helpCell,
     wantTasteCell,
     utilityThanks,
@@ -471,8 +651,11 @@ export function AACDashboard({
   });
   
   const activeBoards = useMemo(
-    () => withUiOnlyRootFallbackBoards(localBoards, rootBoardId),
-    [localBoards, rootBoardId],
+    () => withUiOnlyRootFallbackBoards(
+      withRuntimeIceCreamOrderBoards(localBoards, businessType, rootBoardId),
+      rootBoardId,
+    ),
+    [localBoards, businessType, rootBoardId],
   );
   const { language, direction, t } = useLanguage();
   const { speak, isSpeaking, speakingCellId, isSupported } = useTextToSpeech();
@@ -497,6 +680,11 @@ export function AACDashboard({
   const [selectedCell, setSelectedCell] = useState<AACCell | null>(null);
 
   const currentBoard = activeBoards[navState.currentBoardId];
+//added 13072026
+console.log('CURRENT BOARD ID', navState.currentBoardId);
+
+//added 13072026
+
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
   const contentDir = direction === 'rtl' ? 'rtl' : 'ltr';
 
@@ -865,7 +1053,8 @@ export function AACDashboard({
   };
   const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
   const isAtRoot = navState.breadcrumbs.length === 0;
-  const isPublicNestedBoardView = !isAtRoot && !useIceCreamLayout;
+  const isPublicNestedBoardView = !isAtRoot && (businessType !== 'iceCream' ? !useIceCreamLayout : true);
+  const showPublicBoardChrome = isAtRoot || isPublicNestedBoardView;
   const publicBoardPageLabels = {
     delete: language === 'he' ? 'מחק' : 'Delete',
     speak: language === 'he' ? 'השמע' : 'Speak',
@@ -906,7 +1095,7 @@ export function AACDashboard({
   return (
     <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-[#eef2f8] text-base', className)}>
       {/* Top Bar */}
-      {(isAtRoot || !useIceCreamLayout) && (
+      {showPublicBoardChrome && (
       <BoardTopNavigation
         backLabel={t('aac.back')}
         backIcon={BackIcon}
@@ -956,7 +1145,7 @@ export function AACDashboard({
       )}
 
       {/* Customer Mode Indicator Bar */}
-      {isCustomerMode && !isEditMode && !useIceCreamLayout && (
+      {isCustomerMode && !isEditMode && showPublicBoardChrome && (
         <div className="flex items-center justify-center gap-2 border-b border-green-600/30 bg-green-600/20 px-3 py-2">
           <MessageCircle className="h-5 w-5 text-green-700" />
           <p className="text-sm text-green-800 dark:text-green-300 font-medium">
@@ -968,7 +1157,7 @@ export function AACDashboard({
       )}
 
       {/* Edit Mode Bar */}
-      {isEditMode && !useIceCreamLayout && (
+      {isEditMode && showPublicBoardChrome && (
         <div className="flex items-center justify-between gap-3 border-b border-primary/20 bg-primary/10 px-3 py-2">
           <p className="text-sm text-primary font-medium">
             {language === 'he' 
@@ -991,7 +1180,7 @@ export function AACDashboard({
         <main
           className={cn(
             'min-h-0 flex-1 overflow-x-hidden overflow-y-auto',
-            isAtRoot && !useIceCreamLayout ? 'bg-white p-0' : 'p-2 pb-4 md:p-3 md:pb-6',
+            showPublicBoardChrome ? 'bg-white p-0' : 'p-2 pb-4 md:p-3 md:pb-6',
           )}
         >
           {showMockupSideRail && !useIceCreamLayout && !isAtRoot && !isPublicNestedBoardView && (
@@ -1073,7 +1262,42 @@ export function AACDashboard({
               onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
               onUpload={(file) => console.log('File uploaded for AI processing:', file.name)}
             />
-          ) : useIceCreamLayout ? (
+          ) : isPublicNestedBoardView ? (
+            <PublicBoardPage
+              title={boardTitle}
+              boardEmoji={boardEmoji}
+              prompt={language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
+              gridCells={currentBoard.cells}
+              infoStripCells={[]}
+              sideRailCells={[]}
+              extraSocialCells={[]}
+              gridCols={2}
+              contentDir={contentDir}
+              language={language}
+              selectionSummary={selectionSummary}
+              selectedWordsCount={selectedWords.length}
+              isTransitioning={isTransitioning}
+              isEditMode={isEditMode}
+              isSpeaking={isSpeaking}
+              isCustomerMode={isCustomerMode}
+              speakingCellId={speakingCellId}
+              showAIUpload={false}
+              backIcon={BackIcon}
+              canGoBack
+              labels={publicBoardPageLabels}
+              getCellLabel={getCellLabel}
+              getUtilityRailImageSrc={getUtilityRailImageSrc}
+              onCellClick={handleCellClick}
+              onDeleteCell={handleDeleteCell}
+              onEditCell={handleEditCell}
+              onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
+              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
+              onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
+              onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
+              onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
+              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
+            />
+          ) : (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_112px]" style={{ direction: 'ltr' }}>
                 <section className="space-y-3" dir={contentDir}>
@@ -1424,41 +1648,6 @@ export function AACDashboard({
                 </aside>
               </div>
             </div>
-          ) : (
-            <PublicBoardPage
-              title={boardTitle}
-              boardEmoji={boardEmoji}
-              prompt={language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
-              gridCells={currentBoard.cells}
-              infoStripCells={[]}
-              sideRailCells={[]}
-              extraSocialCells={[]}
-              gridCols={2}
-              contentDir={contentDir}
-              language={language}
-              selectionSummary={selectionSummary}
-              selectedWordsCount={selectedWords.length}
-              isTransitioning={isTransitioning}
-              isEditMode={isEditMode}
-              isSpeaking={isSpeaking}
-              isCustomerMode={isCustomerMode}
-              speakingCellId={speakingCellId}
-              showAIUpload={false}
-              backIcon={BackIcon}
-              canGoBack
-              labels={publicBoardPageLabels}
-              getCellLabel={getCellLabel}
-              getUtilityRailImageSrc={getUtilityRailImageSrc}
-              onCellClick={handleCellClick}
-              onDeleteCell={handleDeleteCell}
-              onEditCell={handleEditCell}
-              onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
-              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
-              onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
-              onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
-              onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
-              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
-            />
           )}
         </main>
       </div>
