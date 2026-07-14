@@ -361,7 +361,7 @@ const iceCreamBoards: Record<string, AACBoard> = {
     name: 'גלידריה',
     nameEn: 'Ice Cream Shop',
     cells: [
-      cell('root-want-order', 'אני רוצה להזמין', 'I want to order', 'verbs', '📝', 'order-menu'),
+      imageCell('root-want-order', 'אני רוצה להזמין', 'I want to order', 'verbs', '📝', '/aac-local/flavors/אני רוצה להזמין.png', 'order-menu'),
       cell('ice-cream', 'גלידה', 'Ice Cream', 'people', '🍦', 'ice-cream-type'),
       cell('sorbet', 'סורבה', 'Sorbet', 'people', '🍧', 'sorbet-type'),
       cell('yogurt', 'יוגורט קפוא', 'Frozen Yogurt', 'people', '🥛', 'yogurt-type'),
@@ -370,6 +370,7 @@ const iceCreamBoards: Record<string, AACBoard> = {
       cell('desserts', 'קינוחים', 'Desserts', 'people', '🍰', 'desserts'),
       cell('alcoholic-flavors', 'טעמים אלכוהוליים', 'Alcoholic Flavors', 'people', '🍸', 'alcoholic-flavors'),
       cell('want', 'רוצה', 'Want', 'verbs', '👆'),
+      imageCell('root-want-taste', 'אני רוצה לטעום', 'I want to taste', 'verbs', '👅', '/aac-local/flavors/לטעום.png', 'flavors-cup'),
       cell('taste', 'לטעום', 'Taste', 'verbs', '👅'),
       cell('small', 'קטן', 'Small', 'descriptors', '🔹'),
       cell('medium', 'בינוני', 'Medium', 'descriptors', '🔶'),

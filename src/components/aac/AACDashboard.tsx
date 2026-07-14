@@ -5,6 +5,7 @@ import { AACBoard, AACCell, BoardNavigationState } from '@/types/aac';
 import { AACCard } from './AACCard';
 import { BoardTopNavigation } from './BoardTopNavigation';
 import { PublicBoardPage } from './PublicBoardPage';
+import { CoreCommunicationBarContext, type CoreCommunicationAction } from './CoreActionsBar';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { BoardEditModal } from './BoardEditModal';
 import { CustomerModeOverlay } from './CustomerModeOverlay';
@@ -18,9 +19,12 @@ import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useClickSound } from '@/hooks/useClickSound';
-import wantImage from '@/assets/aac-local/אני רוצה.png';
 import moreImage from '@/assets/aac-local/עוד.png';
 import howMuchImage from '@/assets/aac-local/כמה עולה.png';
+import wantImage from '@/assets/aac-local/אני רוצה.png';
+
+const ROOT_WANT_ORDER_IMAGE_URL = '/aac-local/flavors/אני רוצה להזמין.png';
+const ROOT_WANT_TASTE_IMAGE_URL = '/aac-local/flavors/לטעום.png';
 
 const utilityRailCells: AACCell[] = [
   {
@@ -501,6 +505,7 @@ const findRootCommunicationCell = (
 const buildRootWantOrderFallback = (
   boardCells: AACCell[],
   activeBoards: Record<string, AACBoard>,
+  businessType: BusinessType,
 ): AACCell => {
   const linkToBoardId =
     (activeBoards['order-menu'] ? 'order-menu' : undefined)
@@ -512,7 +517,7 @@ const buildRootWantOrderFallback = (
     textEn: 'I want to order',
     category: 'verbs',
     icon: '📝',
-    imageUrl: wantImage,
+    imageUrl: businessType === 'iceCream' ? ROOT_WANT_ORDER_IMAGE_URL : wantImage,
     ...(linkToBoardId ? { linkToBoardId } : {}),
   };
 };
@@ -535,9 +540,15 @@ const buildRootHelpFallback = (
 
 const buildRootWantTasteFallback = (
   activeBoards: Record<string, AACBoard>,
+  businessType: BusinessType,
 ): AACCell => {
+  const preferredBoardIds =
+    businessType === 'iceCream'
+      ? ['flavors-cup', 'flavors-cone', 'taste-menu', 'taste', ROOT_TASTE_BOARD_ID]
+      : ['taste-menu', 'taste', ROOT_TASTE_BOARD_ID];
   const linkToBoardId =
-    resolveLinkedBoardId(activeBoards, ['taste-menu', 'taste', ROOT_TASTE_BOARD_ID]) ?? ROOT_TASTE_BOARD_ID;
+    resolveLinkedBoardId(activeBoards, preferredBoardIds)
+    ?? (businessType === 'iceCream' ? 'flavors-cup' : ROOT_TASTE_BOARD_ID);
 
   return {
     id: ROOT_WANT_TASTE_FALLBACK_ID,
@@ -545,6 +556,7 @@ const buildRootWantTasteFallback = (
     textEn: 'I want to taste',
     category: 'verbs',
     icon: '👅',
+    ...(businessType === 'iceCream' ? { imageUrl: ROOT_WANT_TASTE_IMAGE_URL } : {}),
     linkToBoardId,
   };
 };
@@ -568,6 +580,7 @@ const buildRootWantPayFallback = (
 const buildRootCommunicationCells = (
   boardCells: AACCell[],
   activeBoards: Record<string, AACBoard>,
+  businessType: BusinessType,
 ): AACCell[] => {
   const utilityPrice = utilityRailCells.find((cell) => cell.id === 'utility-price');
   const utilityThanks = utilityRailCells.find((cell) => cell.id === 'utility-thanks');
@@ -579,18 +592,25 @@ const buildRootCommunicationCells = (
   const wantOrderSpec: RootCommunicationSlotSpec = {
     knownIds: ['root-want-order', 'want-order', 'order'],
     texts: ['אני רוצה להזמין'],
-    fallback: buildRootWantOrderFallback(boardCells, activeBoards),
+    fallback: buildRootWantOrderFallback(boardCells, activeBoards, businessType),
   };
   const helpSpec: RootCommunicationSlotSpec = {
     knownIds: ['root-help', 'help'],
     texts: ['עזרה'],
     fallback: buildRootHelpFallback(activeBoards),
   };
-  const wantTasteSpec: RootCommunicationSlotSpec = {
-    knownIds: ['root-want-taste', 'want-taste', 'taste'],
-    texts: ['אני רוצה לטעום', 'לטעום'],
-    fallback: buildRootWantTasteFallback(activeBoards),
-  };
+  const wantTasteSpec: RootCommunicationSlotSpec =
+    businessType === 'iceCream'
+      ? {
+          knownIds: ['root-want-taste', 'want-taste'],
+          texts: ['אני רוצה לטעום'],
+          fallback: buildRootWantTasteFallback(activeBoards, businessType),
+        }
+      : {
+          knownIds: ['root-want-taste', 'want-taste', 'taste'],
+          texts: ['אני רוצה לטעום', 'לטעום'],
+          fallback: buildRootWantTasteFallback(activeBoards, businessType),
+        };
   const wantPaySpec: RootCommunicationSlotSpec = {
     knownIds: ['root-want-pay', 'want-pay', 'bill', 'checkout'],
     texts: ['אני רוצה לשלם'],
@@ -600,24 +620,41 @@ const buildRootCommunicationCells = (
   const resolveSlot = (spec: RootCommunicationSlotSpec) =>
     findRootCommunicationCell(boardCells, spec) ?? spec.fallback;
 
-  const wantOrderCell = ensureNavigableRootCellLink(
+  const wantOrderLinked = ensureNavigableRootCellLink(
     resolveSlot(wantOrderSpec),
     activeBoards,
     ['order-menu'],
     'order-menu',
   );
+  const wantOrderCell: AACCell =
+    businessType === 'iceCream'
+      ? { ...wantOrderLinked, imageUrl: ROOT_WANT_ORDER_IMAGE_URL }
+      : wantOrderLinked;
   const helpCell = ensureNavigableRootCellLink(
     resolveSlot(helpSpec),
     activeBoards,
     ['help', 'staff'],
     ROOT_HELP_BOARD_ID,
   );
-  const wantTasteCell = ensureNavigableRootCellLink(
-    resolveSlot(wantTasteSpec),
-    activeBoards,
-    ['taste-menu', 'taste'],
-    ROOT_TASTE_BOARD_ID,
-  );
+
+  const wantTasteResolved = resolveSlot(wantTasteSpec);
+  const iceCreamTastePreferred = ['flavors-cup', 'flavors-cone', 'taste-menu', 'taste'];
+  const wantTasteCell: AACCell =
+    businessType === 'iceCream'
+      ? {
+          ...wantTasteResolved,
+          linkToBoardId:
+            resolveLinkedBoardId(activeBoards, [...iceCreamTastePreferred, ROOT_TASTE_BOARD_ID])
+            ?? 'flavors-cup',
+          imageUrl: ROOT_WANT_TASTE_IMAGE_URL,
+        }
+      : ensureNavigableRootCellLink(
+          wantTasteResolved,
+          activeBoards,
+          ['taste-menu', 'taste'],
+          ROOT_TASTE_BOARD_ID,
+        );
+
   const wantPayCell = ensureNavigableRootCellLink(
     resolveSlot(wantPaySpec),
     activeBoards,
@@ -680,10 +717,6 @@ export function AACDashboard({
   const [selectedCell, setSelectedCell] = useState<AACCell | null>(null);
 
   const currentBoard = activeBoards[navState.currentBoardId];
-//added 13072026
-console.log('CURRENT BOARD ID', navState.currentBoardId);
-
-//added 13072026
 
   const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
   const contentDir = direction === 'rtl' ? 'rtl' : 'ltr';
@@ -837,6 +870,20 @@ console.log('CURRENT BOARD ID', navState.currentBoardId);
     setSelectedWords(prev => [...prev, text]);
   }, [t, speakButtonLabel]);
 
+  const speakAndAddCommunicationWord = useCallback((word: string) => {
+    runSpokenAction(word, () => setSelectedWords((prev) => [...prev, word]));
+  }, [runSpokenAction]);
+
+  const coreCommunicationActions = useMemo<CoreCommunicationAction[]>(
+    () => [
+      { key: 'yes', label: 'כן', onClick: () => speakAndAddCommunicationWord('כן') },
+      { key: 'no', label: 'לא', onClick: () => speakAndAddCommunicationWord('לא') },
+      { key: 'thanks', label: 'תודה', onClick: () => speakAndAddCommunicationWord('תודה') },
+      { key: 'more', label: 'עוד', onClick: () => speakAndAddCommunicationWord('עוד') },
+    ],
+    [speakAndAddCommunicationWord],
+  );
+
   const clearSelectedWords = useCallback(() => {
     setSelectedWords([]);
   }, []);
@@ -966,8 +1013,8 @@ console.log('CURRENT BOARD ID', navState.currentBoardId);
       return [];
     }
 
-    return buildRootCommunicationCells(currentBoard.cells, activeBoards);
-  }, [activeBoards, currentBoard.cells, navState.breadcrumbs.length]);
+    return buildRootCommunicationCells(currentBoard.cells, activeBoards, businessType);
+  }, [activeBoards, businessType, currentBoard.cells, navState.breadcrumbs.length]);
   const rootPublicGridCols = Math.min(2, Math.max(1, rootCommunicationCells.length));
 
   const featuredCellIds = new Set([...socialCells, ...infoStripCells].map((cell) => cell.id));
@@ -1049,7 +1096,8 @@ console.log('CURRENT BOARD ID', navState.currentBoardId);
     'utility-more': { src: moreImage, className: 'scale-[1.18]' },
     'utility-thanks': { src: '/aac-local/תודה.png', className: 'scale-[1.15]' },
     'utility-price': { src: howMuchImage, className: 'scale-[1.2]' },
-    [ROOT_WANT_ORDER_FALLBACK_ID]: { src: wantImage, className: 'scale-[1.18]' },
+    [ROOT_WANT_ORDER_FALLBACK_ID]: { src: ROOT_WANT_ORDER_IMAGE_URL, className: 'scale-[1.18]' },
+    [ROOT_WANT_TASTE_FALLBACK_ID]: { src: ROOT_WANT_TASTE_IMAGE_URL, className: 'scale-[1.18]' },
   };
   const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
   const isAtRoot = navState.breadcrumbs.length === 0;
@@ -1226,7 +1274,9 @@ console.log('CURRENT BOARD ID', navState.currentBoardId);
             </div>
           )}
 
-          {isAtRoot ? (
+          {isAtRoot || isPublicNestedBoardView ? (
+            <CoreCommunicationBarContext.Provider value={coreCommunicationActions}>
+              {isAtRoot ? (
             <PublicBoardPage
               title={boardTitle}
               boardEmoji={boardEmoji}
@@ -1262,7 +1312,7 @@ console.log('CURRENT BOARD ID', navState.currentBoardId);
               onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
               onUpload={(file) => console.log('File uploaded for AI processing:', file.name)}
             />
-          ) : isPublicNestedBoardView ? (
+              ) : (
             <PublicBoardPage
               title={boardTitle}
               boardEmoji={boardEmoji}
@@ -1297,6 +1347,8 @@ console.log('CURRENT BOARD ID', navState.currentBoardId);
               onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
               onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
             />
+              )}
+            </CoreCommunicationBarContext.Provider>
           ) : (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_112px]" style={{ direction: 'ltr' }}>
