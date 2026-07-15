@@ -94,6 +94,29 @@ const matchesAnyLabel = (value: string, labels: string[]) => {
 const normalizeHebrewText = (value: string) =>
   value.trim().replace(/[?؟!.,:：'"]/g, '').toLowerCase();
 
+const ICE_CREAM_FLAVOR_BOARD_IDS = new Set(['flavors-cup', 'flavors-cone']);
+const FLAVOR_ACTION_MORE_ID = 'more-flavor';
+const FLAVOR_ACTION_READY_ID = 'ready-to-order';
+
+const isMilkshakeCell = (cell: AACCell) => {
+  if (cell.id === 'milkshake') {
+    return true;
+  }
+
+  return normalizeHebrewText(cell.text) === normalizeHebrewText('מילקשייק')
+    || cell.textEn.trim().toLowerCase() === 'milkshake';
+};
+
+const getTakeAwayFlavorLimit = (cellId: string): number | null => {
+  if (cellId === 'box-small') {
+    return 3;
+  }
+  if (cellId === 'box-large') {
+    return 4;
+  }
+  return null;
+};
+
 type RootCommunicationSlotSpec = {
   knownIds: string[];
   texts: string[];
@@ -714,6 +737,8 @@ export function AACDashboard({
   );
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
+  const [selectedOrderFlavors, setSelectedOrderFlavors] = useState<string[]>([]);
+  const [takeAwayFlavorLimit, setTakeAwayFlavorLimit] = useState<number | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCell, setEditingCell] = useState<AACCell | null>(null);
@@ -813,6 +838,8 @@ export function AACDashboard({
           currentBoardId: rootBoardId,
           breadcrumbs: [],
         });
+        setTakeAwayFlavorLimit(null);
+        setSelectedOrderFlavors([]);
         setIsTransitioning(false);
       }, 150);
       return;
@@ -849,13 +876,20 @@ export function AACDashboard({
     action();
   }, [speakButtonLabel]);
 
+  const beginFlavorSelectionSession = useCallback((limit: number | null) => {
+    setTakeAwayFlavorLimit(limit);
+    setSelectedOrderFlavors([]);
+  }, []);
+
   const handleCellClick = useCallback((cell: AACCell) => {
     if (isEditMode) return;
     const text = getSpokenCellText(cell);
-    speakButtonLabel(text, cell.id);
-    
+    const currentBoardId = navState.currentBoardId;
+    const onFlavorBoard = businessType === 'iceCream' && ICE_CREAM_FLAVOR_BOARD_IDS.has(currentBoardId);
+
     // Customer Mode: Show enlarged cell with TTS
     if (isCustomerMode) {
+      speakButtonLabel(text, cell.id);
       if (!cell.linkToBoardId) {
         setSelectedCell(cell);
         setSelectedWords((prev) => [...prev, text]);
@@ -865,13 +899,89 @@ export function AACDashboard({
       return;
     }
 
-    // Always append so navigable items (e.g. flavors → toppings) still build the sentence.
+    if (businessType === 'iceCream' && isMilkshakeCell(cell)) {
+      speakButtonLabel(text, cell.id);
+      setSelectedWords((prev) => [...prev, text]);
+      beginFlavorSelectionSession(null);
+      if (activeBoards['flavors-cup']) {
+        navigateToBoard('flavors-cup');
+      }
+      return;
+    }
+
+    if (businessType === 'iceCream' && (cell.id === 'box-small' || cell.id === 'box-medium' || cell.id === 'box-large')) {
+      speakButtonLabel(text, cell.id);
+      setSelectedWords((prev) => [...prev, text]);
+      beginFlavorSelectionSession(getTakeAwayFlavorLimit(cell.id));
+      if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
+        navigateToBoard(cell.linkToBoardId);
+      }
+      return;
+    }
+
+    if (
+      businessType === 'iceCream'
+      && cell.linkToBoardId
+      && ICE_CREAM_FLAVOR_BOARD_IDS.has(cell.linkToBoardId)
+      && activeBoards[cell.linkToBoardId]
+    ) {
+      speakButtonLabel(text, cell.id);
+      setSelectedWords((prev) => [...prev, text]);
+      beginFlavorSelectionSession(null);
+      navigateToBoard(cell.linkToBoardId);
+      return;
+    }
+
+    if (onFlavorBoard) {
+      if (cell.id === FLAVOR_ACTION_MORE_ID) {
+        speakButtonLabel(text, cell.id);
+        setSelectedWords((prev) => [...prev, text]);
+        return;
+      }
+
+      if (cell.id === FLAVOR_ACTION_READY_ID) {
+        speakButtonLabel(text, cell.id);
+        setSelectedWords((prev) => [...prev, text]);
+        if (activeBoards['toppings']) {
+          navigateToBoard('toppings');
+        }
+        return;
+      }
+
+      if (takeAwayFlavorLimit != null && selectedOrderFlavors.length >= takeAwayFlavorLimit) {
+        const limitMessage = takeAwayFlavorLimit === 3
+          ? 'ניתן לבחור עד 3 טעמים בקופסא קטנה'
+          : 'ניתן לבחור עד 4 טעמים בקופסא גדולה';
+        toast({ title: limitMessage });
+        speakButtonLabel(limitMessage);
+        return;
+      }
+
+      speakButtonLabel(text, cell.id);
+      setSelectedOrderFlavors((prev) => [...prev, cell.id]);
+      setSelectedWords((prev) => [...prev, text]);
+      return;
+    }
+
+    speakButtonLabel(text, cell.id);
     setSelectedWords((prev) => [...prev, text]);
-    
     if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
       navigateToBoard(cell.linkToBoardId);
     }
-  }, [activeBoards, getSpokenCellText, navigateToBoard, speakButtonLabel, isEditMode, isCustomerMode]);
+  }, [
+    activeBoards,
+    beginFlavorSelectionSession,
+    businessType,
+    getSpokenCellText,
+    isCustomerMode,
+    isEditMode,
+    navState.currentBoardId,
+    navigateToBoard,
+    selectedOrderFlavors.length,
+    speakButtonLabel,
+    takeAwayFlavorLimit,
+    toast,
+  ]);
 
   const handleCoreWordClick = useCallback((word: { textKey: string }) => {
     const text = t(word.textKey);
