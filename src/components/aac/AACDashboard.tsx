@@ -257,6 +257,7 @@ const RUNTIME_ICE_CREAM_ENSURE_BOARD_IDS = [
   'hot-drinks',
   'desserts',
   'alcoholic-flavors',
+  'take-away',
 ] as const;
 
 const RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS = [
@@ -266,14 +267,16 @@ const RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS = [
   'flavors-cup',
   'flavors-cone',
   'cold-drinks',
+  'take-away',
 ] as const;
 
 const RUNTIME_ICE_CREAM_ORDER_MENU_CARD_ORDER = [
   { cellId: 'ice-cream', hebrewText: 'גלידה', linkToBoardId: 'ice-cream-type' },
+  { cellId: 'desserts', hebrewText: 'קינוחים', linkToBoardId: 'desserts' },
   { cellId: 'cold-drinks', hebrewText: 'שתייה קרה', linkToBoardId: 'cold-drinks' },
   { cellId: 'hot-drinks', hebrewText: 'שתייה חמה', linkToBoardId: 'hot-drinks' },
-  { cellId: 'desserts', hebrewText: 'קינוחים', linkToBoardId: 'desserts' },
   { cellId: 'alcoholic-flavors', hebrewText: 'טעמים אלכוהוליים', linkToBoardId: 'alcoholic-flavors' },
+  { cellId: 'take-away', hebrewText: 'לקחת הביתה', linkToBoardId: 'take-away' },
 ] as const;
 
 const isSavedGenericCategoryBoardId = (boardId?: string) =>
