@@ -5,7 +5,7 @@ import { AACBoard, AACCell, BoardNavigationState } from '@/types/aac';
 import { AACCard } from './AACCard';
 import { BoardTopNavigation } from './BoardTopNavigation';
 import { PublicBoardPage } from './PublicBoardPage';
-import { CoreCommunicationBarContext, type CoreCommunicationAction } from './CoreActionsBar';
+import { CoreCommunicationBarContext, SentenceSpeechContext, type CoreCommunicationAction } from './CoreActionsBar';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { BoardEditModal } from './BoardEditModal';
 import { CustomerModeOverlay } from './CustomerModeOverlay';
@@ -246,6 +246,8 @@ const withUiOnlyRootFallbackBoards = (
 
 const RUNTIME_ICE_CREAM_ENSURE_BOARD_IDS = [
   'ice-cream-type',
+  'ice-cream-size-cup',
+  'ice-cream-size-cone',
   'flavors-cup',
   'flavors-cone',
   'sorbet-type',
@@ -259,6 +261,8 @@ const RUNTIME_ICE_CREAM_ENSURE_BOARD_IDS = [
 
 const RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS = [
   'ice-cream-type',
+  'ice-cream-size-cup',
+  'ice-cream-size-cone',
   'flavors-cup',
   'flavors-cone',
   'cold-drinks',
@@ -851,16 +855,18 @@ export function AACDashboard({
     if (isCustomerMode) {
       if (!cell.linkToBoardId) {
         setSelectedCell(cell);
+        setSelectedWords((prev) => [...prev, text]);
       } else if (activeBoards[cell.linkToBoardId]) {
         navigateToBoard(cell.linkToBoardId);
       }
       return;
     }
+
+    // Always append so navigable items (e.g. flavors → toppings) still build the sentence.
+    setSelectedWords((prev) => [...prev, text]);
     
     if (cell.linkToBoardId && activeBoards[cell.linkToBoardId]) {
       navigateToBoard(cell.linkToBoardId);
-    } else {
-      setSelectedWords(prev => [...prev, text]);
     }
   }, [activeBoards, getSpokenCellText, navigateToBoard, speakButtonLabel, isEditMode, isCustomerMode]);
 
@@ -893,6 +899,15 @@ export function AACDashboard({
       speak(selectedWords.join(' '));
     }
   }, [selectedWords, speak]);
+
+  const sentenceSpeechValue = useMemo(
+    () => ({
+      speakSentence: speakAllWords,
+      canSpeak: selectedWords.length > 0,
+      isSpeaking: Boolean(isSpeaking),
+    }),
+    [isSpeaking, selectedWords.length, speakAllWords],
+  );
 
   // Edit mode handlers
   const handleDeleteCell = useCallback((cellId: string, targetBoardId?: string) => {
@@ -1025,7 +1040,7 @@ export function AACDashboard({
   const showMockupSideRail = sideRailCells.length > 0;
   const boardEmoji = boardTypeIcon[businessType] || '🗂️';
   const selectionSummary = selectedWords.length > 0
-    ? selectedWords.join(' • ')
+    ? selectedWords.join(' ')
     : infoStripCells[0]
       ? (language === 'he' || language === 'ar' ? infoStripCells[0].text : infoStripCells[0].textEn)
       : language === 'he'
@@ -1171,6 +1186,7 @@ export function AACDashboard({
           language === 'he' || language === 'ar' ? navState.breadcrumbs[index].name : navState.breadcrumbs[index].nameEn,
           () => navigateToBreadcrumb(index),
         )}
+        onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
         onToggleCustomerMode={() => runSpokenAction(
           isCustomerMode
             ? (language === 'he' ? 'צא ממצב לקוח' : 'Exit Customer Mode')
@@ -1228,7 +1244,9 @@ export function AACDashboard({
         <main
           className={cn(
             'min-h-0 flex-1 overflow-x-hidden overflow-y-auto',
-            showPublicBoardChrome ? 'bg-white p-0' : 'p-2 pb-4 md:p-3 md:pb-6',
+            showPublicBoardChrome
+              ? 'bg-white p-0 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]'
+              : 'p-2 pb-4 md:p-3 md:pb-6',
           )}
         >
           {showMockupSideRail && !useIceCreamLayout && !isAtRoot && !isPublicNestedBoardView && (
@@ -1276,6 +1294,7 @@ export function AACDashboard({
 
           {isAtRoot || isPublicNestedBoardView ? (
             <CoreCommunicationBarContext.Provider value={coreCommunicationActions}>
+            <SentenceSpeechContext.Provider value={sentenceSpeechValue}>
               {isAtRoot ? (
             <PublicBoardPage
               title={boardTitle}
@@ -1305,11 +1324,11 @@ export function AACDashboard({
               onDeleteCell={handleDeleteCell}
               onEditCell={handleEditCell}
               onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
-              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
+              onSpeakSelection={speakAllWords}
               onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
               onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
               onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
-              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
+              onDoneChoosing={speakAllWords}
               onUpload={(file) => console.log('File uploaded for AI processing:', file.name)}
             />
               ) : (
@@ -1341,13 +1360,14 @@ export function AACDashboard({
               onDeleteCell={handleDeleteCell}
               onEditCell={handleEditCell}
               onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
-              onSpeakSelection={() => runSpokenAction(language === 'he' ? 'השמע' : 'Speak', speakAllWords)}
+              onSpeakSelection={speakAllWords}
               onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
               onBack={() => runSpokenAction(language === 'he' ? 'חזור' : 'Back', navigateBack)}
               onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
-              onDoneChoosing={() => runSpokenAction(language === 'he' ? 'סיימתי לבחור' : 'Done choosing', speakAllWords)}
+              onDoneChoosing={speakAllWords}
             />
               )}
+            </SentenceSpeechContext.Provider>
             </CoreCommunicationBarContext.Provider>
           ) : (
             <div className="mx-auto max-w-[1020px] rounded-[30px] border-[3px] border-[#30497a] bg-[#f7f7f2] p-3 shadow-[0_18px_45px_rgba(48,73,122,0.14)]">

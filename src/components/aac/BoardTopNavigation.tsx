@@ -42,6 +42,7 @@ interface BoardTopNavigationProps {
   editOffLabel: string;
   onBack: () => void;
   onBreadcrumb: (index: number) => void;
+  onHome: () => void;
   onToggleCustomerMode: () => void;
   onToggleEditMode: () => void;
   onVoiceSettings: () => void;
@@ -66,6 +67,7 @@ export function BoardTopNavigation({
   language,
   isCustomerMode,
   isEditMode,
+  onHome,
   onToggleCustomerMode,
   onToggleEditMode,
   onVoiceSettings,
@@ -90,17 +92,48 @@ export function BoardTopNavigation({
     <header className="z-40 mx-auto w-full max-w-[375px] shrink-0 bg-white pt-[env(safe-area-inset-top,0px)]">
       <nav
         className="flex w-full flex-col py-2"
+        dir={isRtl ? 'rtl' : 'ltr'}
         aria-label={isRtl ? 'ניווט ראשי' : 'Primary navigation'}
       >
+        {isRootView && (
+          <div
+            className={cn(
+              'mb-1 flex w-full shrink-0 items-center gap-1 px-9',
+              isRtl ? 'justify-start' : 'justify-end',
+            )}
+          >
+            <LanguageSwitcher variant="compact" />
+            {!authLoading && userEmail && (
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="shrink-0 rounded p-0.5 text-[#a09cab] transition-colors hover:text-[#1c1b1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                aria-label={signOutLabel}
+                title={isGuest ? guestLabel : userEmail}
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
+            <Link
+              to="/"
+              className="shrink-0 text-[11px] font-semibold leading-none tracking-[0.2px] text-[#a09cab] transition-colors hover:text-[#1c1b1f]"
+            >
+              TalkBiz
+            </Link>
+          </div>
+        )}
+
         <div className="flex w-full items-start justify-between px-9">
-          <Link
-            to="/"
+          <button
+            type="button"
+            onClick={onHome}
             className={navItemClassName}
             aria-current={isRootView ? 'page' : undefined}
+            aria-label={homeLabel}
           >
             <Home className={iconClassName(isRootView)} aria-hidden="true" />
             <span className={labelClassName(isRootView)}>{homeLabel}</span>
-          </Link>
+          </button>
 
           {allowEdit ? (
             <button
@@ -152,31 +185,6 @@ export function BoardTopNavigation({
               {isCustomerMode ? customerModeOnLabel : customerModeOffLabel}
             </span>
           </button>
-
-          {isRootView && (
-            <div className="flex w-[53px] shrink-0 flex-col items-center justify-between gap-1">
-              <div className="flex h-6 items-center justify-center gap-0.5">
-                <LanguageSwitcher variant="compact" />
-                {!authLoading && userEmail && (
-                  <button
-                    type="button"
-                    onClick={onSignOut}
-                    className="rounded p-0.5 text-[#a09cab] transition-colors hover:text-[#1c1b1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    aria-label={signOutLabel}
-                    title={isGuest ? guestLabel : userEmail}
-                  >
-                    <LogOut className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                )}
-              </div>
-              <Link
-                to="/"
-                className="text-[11px] font-semibold leading-none tracking-[0.2px] text-[#a09cab] transition-colors hover:text-[#1c1b1f]"
-              >
-                TalkBiz
-              </Link>
-            </div>
-          )}
         </div>
       </nav>
     </header>
