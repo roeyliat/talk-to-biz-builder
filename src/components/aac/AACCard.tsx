@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { CSSProperties, forwardRef, useEffect, useState } from 'react';
-import { FolderOpen, X, Pencil } from 'lucide-react';
+import { FolderOpen, X, Pencil, Volume2 } from 'lucide-react';
 import { useResolvedAacImage } from '@/hooks/useResolvedAacImage';
 
 export type FitzgeraldCategory = 'people' | 'verbs' | 'descriptors' | 'social';
@@ -23,6 +23,8 @@ interface AACCardProps {
   isSpeaking?: boolean; // NEW: Visual feedback during speech
   onDelete?: () => void;
   onEdit?: () => void;
+  onPreview?: () => void;
+  previewAriaLabel?: string;
   labelClassName?: string;
   imageContainerClassName?: string;
   imageClassName?: string;
@@ -49,7 +51,7 @@ const variantStyles = {
 };
 
 export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
-  ({ text, imageSearchTerms = [], category, icon, imageUrl, size = 'md', variant = 'fitzgerald', labelPosition, isFolder, onClick, className, style, disabled, isEditMode, isSpeaking, onDelete, onEdit, labelClassName, imageContainerClassName, imageClassName }, ref) => {
+  ({ text, imageSearchTerms = [], category, icon, imageUrl, size = 'md', variant = 'fitzgerald', labelPosition, isFolder, onClick, className, style, disabled, isEditMode, isSpeaking, onDelete, onEdit, onPreview, previewAriaLabel, labelClassName, imageContainerClassName, imageClassName }, ref) => {
     const usesMockupSurface = variant !== 'fitzgerald';
     const isMockupCard = variant === 'mockup';
     const isRailCard = variant === 'rail';
@@ -79,8 +81,6 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
       || decodedImageUrl.includes('שוקולד.png');
     const shouldBoostBelgianChocolateFlavorImage = ['שוקולד בלגי', 'belgian chocolate'].includes(normalizedText)
       || decodedImageUrl.includes('שוקולד בלגי');
-    const shouldBoostStrawberryFlavorImage = ['תות', 'strawberry'].includes(normalizedText)
-      || decodedImageUrl.includes('תות.png');
     const shouldShrinkBrownSprinklesImage = normalizedText.includes('סוכריות חומות') || decodedImageUrl.includes('סוכריות חומות');
     const shouldBoostColorfulSprinklesImage = normalizedText.includes('סוכריות צבעוניות') || decodedImageUrl.includes('סוכריות צבעוניות');
 
@@ -134,6 +134,29 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
           </>
         )}
 
+        {/* Audio preview - speaks the item BEFORE selection, without selecting/navigating */}
+        {onPreview && !isEditMode && (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPreview();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onPreview();
+              }
+            }}
+            aria-label={previewAriaLabel ?? text}
+            className="absolute top-2 start-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-sm ring-1 ring-inset ring-black/10 transition-transform hover:scale-110 hover:text-slate-900"
+          >
+            <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
+          </div>
+        )}
+
         {/* Folder indicator */}
         {isFolder && !isEditMode && (
           <div className={cn(
@@ -176,7 +199,6 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
                 shouldBoostVanillaImage && 'scale-[2.58]',
                 shouldBoostChocolateFlavorImage && 'scale-[1.18]',
                 shouldBoostBelgianChocolateFlavorImage && 'scale-[1.16]',
-                shouldBoostStrawberryFlavorImage && 'scale-[2.37]',
                 shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
                 shouldBoostColorfulSprinklesImage && 'scale-[2.25]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',

@@ -11,7 +11,7 @@ import { Download, QrCode, FileText, Printer, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AACBoard } from '@/types/aac';
 import { AACCard } from '@/components/aac/AACCard';
-import { canRenderBoardUrlAsQr, createSharedBoardUrl } from '@/lib/sharedBoard';
+import { canRenderBoardUrlAsQr, createSharedBoardUrl, isValidSavedBoardId } from '@/lib/sharedBoard';
 
 const QR_LEVELS = ['H', 'Q', 'M', 'L'] as const;
 
@@ -39,12 +39,14 @@ export function BoardExportModal({
   const printRef = useRef<HTMLDivElement>(null);
   
   const baseUrl = window.location.origin;
+  // Saved boards (Dashboard selectedBoard.id) use a short stable URL.
+  // Only unsaved / custom boards fall back to embedding boards in ?s=.
   const boardUrl = createSharedBoardUrl({
     baseUrl,
     boardId,
     businessType,
     boardName,
-    boards,
+    boards: isValidSavedBoardId(boardId) ? undefined : boards,
   });
   const qrLevel = QR_LEVELS.find((level) => canRenderBoardUrlAsQr(boardUrl, level)) ?? null;
   const canRenderMainQr = qrLevel !== null;

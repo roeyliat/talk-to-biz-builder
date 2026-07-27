@@ -11,10 +11,18 @@ interface BoardCardProps {
   onClick: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
+  onPreview?: () => void;
+  previewAriaLabel?: string;
   className?: string;
 }
 
 const isFlavorCard = (cell: AACCell) => cell.linkToBoardId === 'toppings';
+
+// This root icon ships as a flat PNG with a baked-in white background.
+// Multiply-blending removes the visible white box on colored card backgrounds
+// without needing to re-export the source asset.
+const WHITE_BACKGROUND_ICON_TEXTS = new Set(['כמה עולה']);
+const hasWhiteBackgroundIcon = (cell: AACCell) => WHITE_BACKGROUND_ICON_TEXTS.has(cell.text.trim());
 
 const isLongFlavorLabel = (label: string) => {
   const trimmed = label.trim();
@@ -31,6 +39,8 @@ export function BoardCard({
   onClick,
   onDelete,
   onEdit,
+  onPreview,
+  previewAriaLabel,
   className,
 }: BoardCardProps) {
   const categoryClassName = {
@@ -42,6 +52,7 @@ export function BoardCard({
 
   const flavorCard = isFlavorCard(cell);
   const longLabel = flavorCard && isLongFlavorLabel(label);
+  const boxedIcon = hasWhiteBackgroundIcon(cell);
 
   return (
     <AACCard
@@ -59,6 +70,8 @@ export function BoardCard({
       isSpeaking={isSpeaking}
       onDelete={onDelete}
       onEdit={onEdit}
+      onPreview={onPreview}
+      previewAriaLabel={previewAriaLabel}
       className={cn(
         'relative mx-auto flex !h-[153px] !min-h-[153px] !max-h-[153px] w-full max-w-[153px] flex-col !gap-0 !rounded-[24px] border !px-2 !py-0 shadow-[0_2px_4px_rgba(0,0,0,0.06)]',
         '[&>div.rounded-md]:top-3 [&>div.rounded-md]:end-3',
@@ -80,6 +93,7 @@ export function BoardCard({
           // Cap at ~90% of image region; neutralize AACCard flavor scale-* boosts
           ? '!h-[90%] !w-[90%] !max-h-[90%] !max-w-[90%] !scale-100 !transform-none'
           : '!h-full !w-full !max-h-full !max-w-full',
+        boxedIcon && 'mix-blend-multiply',
       )}
     />
   );

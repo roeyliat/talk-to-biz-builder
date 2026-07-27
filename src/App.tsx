@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { FirstLaunchDisclaimer } from "@/components/layout/FirstLaunchDisclaimer";
+import { useDisclaimerAcceptance } from "@/hooks/useDisclaimerAcceptance";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import CreateBoard from "./pages/CreateBoard";
@@ -14,30 +16,38 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/create" element={<CreateBoard />} />
-            <Route path="/demo" element={<BoardDemo />} />
-            <Route path="/b" element={<AACBoard />} />
-            <Route path="/b/:boardId" element={<AACBoard />} />
-            <Route path="/board" element={<AACBoard />} />
-            <Route path="/board/:boardId" element={<AACBoard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const { accepted, accept } = useDisclaimerAcceptance();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          {accepted ? (
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/create" element={<CreateBoard />} />
+                <Route path="/demo" element={<BoardDemo />} />
+                <Route path="/b" element={<AACBoard />} />
+                <Route path="/b/:boardId" element={<AACBoard />} />
+                <Route path="/board" element={<AACBoard />} />
+                <Route path="/board/:boardId" element={<AACBoard />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          ) : (
+            <FirstLaunchDisclaimer onAccept={accept} />
+          )}
+        </TooltipProvider>
+      </LanguageProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

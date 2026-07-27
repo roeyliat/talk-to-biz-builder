@@ -11,6 +11,8 @@ const normalizeImageKey = (value: string) =>
 const imageModules = import.meta.glob([
   '../assets/aac-local/*.{png,jpg,jpeg,webp,svg,avif}',
   '../assets/aac-local/*.{PNG,JPG,JPEG,WEBP,SVG,AVIF}',
+  '../assets/aac-local/**/*.{png,jpg,jpeg,webp,svg,avif}',
+  '../assets/aac-local/**/*.{PNG,JPG,JPEG,WEBP,SVG,AVIF}',
 ], {
   eager: true,
   import: 'default',
@@ -27,7 +29,20 @@ const extractExtension = (filePath: string) => filePath.split('.').pop()?.toLowe
 
 const extractFileBasename = (filePath: string) => filePath.split('/').pop() ?? filePath;
 
-const toBundledImageUrl = (filePath: string) => imageModules[filePath] ?? encodeURI(`/aac-local/${extractFileBasename(filePath)}`);
+const extractAacLocalRelativePath = (filePath: string) =>
+  filePath.replace(/^\.\.\/assets\/aac-local\//, '');
+
+const toBundledImageUrl = (filePath: string) =>
+  imageModules[filePath] ?? encodeURI(`/aac-local/${extractAacLocalRelativePath(filePath)}`);
+
+const normalizeRelativeAssetPath = (relativePath: string) =>
+  relativePath
+    .trim()
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0591-\u05C7]/g, '')
+    .replace(/\.[^.]+$/, '')
+    .replace(/-[A-Za-z0-9_]{6,}$/, '');
 
 const buildAliasMap = (entries: Array<{ imageUrl: string; aliases: string[] }>) => {
   const aliasMap = new Map<string, string>();
@@ -100,6 +115,13 @@ const DISCOVERED_LOCAL_IMAGES = imageModulePaths
 
 const stableDiscoveredImageMap = new Map(
   DISCOVERED_LOCAL_IMAGES.map((entry) => [normalizeImageKey(entry.aliases[0] ?? ''), entry.imageUrl]),
+);
+
+const stableDiscoveredRelativePathMap = new Map(
+  imageModulePaths.map((filePath) => [
+    normalizeRelativeAssetPath(extractAacLocalRelativePath(filePath)),
+    toBundledImageUrl(filePath),
+  ]),
 );
 
 const findDiscoveredImageUrl = (...aliases: string[]) =>
@@ -277,6 +299,21 @@ export function findFirstLocalImageUrl(...names: Array<string | undefined>) {
   return undefined;
 }
 
+/**
+ * Prefer an explicit cell imageUrl over text/catalog lookup.
+ * Catalog lookup runs only when no explicit imageUrl is provided.
+ */
+export function resolvePreferredLocalImageUrl(
+  imageUrl?: string,
+  ...names: Array<string | undefined>
+) {
+  if (imageUrl?.trim()) {
+    return normalizeLocalAssetUrl(imageUrl) ?? imageUrl;
+  }
+
+  return findFirstLocalImageUrl(...names);
+}
+
 export function normalizeLocalAssetUrl(imageUrl?: string) {
   if (!imageUrl) {
     return undefined;
@@ -290,6 +327,15 @@ export function normalizeLocalAssetUrl(imageUrl?: string) {
     const pathname = decodeURIComponent(parsedUrl.pathname);
     if (!pathname.includes('/aac-local/') && !pathname.includes('/assets/')) {
       return undefined;
+    }
+
+    const aacLocalIndex = pathname.indexOf('/aac-local/');
+    if (aacLocalIndex >= 0) {
+      const relativePath = pathname.slice(aacLocalIndex + '/aac-local/'.length);
+      const relativePathMatch = stableDiscoveredRelativePathMap.get(normalizeRelativeAssetPath(relativePath));
+      if (relativePathMatch) {
+        return relativePathMatch;
+      }
     }
 
     const basename = extractFileBasename(pathname);

@@ -2,6 +2,8 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { Check, LucideIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const THANKS_ICON_SRC = '/aac-local/flavors/תודה.png';
+
 export type CoreCommunicationAction = {
   key: string;
   label: string;
@@ -15,6 +17,7 @@ export type SentenceSpeechContextValue = {
   speakSentence: () => void;
   canSpeak: boolean;
   isSpeaking?: boolean;
+  isListeningMode?: boolean;
 };
 
 export const SentenceSpeechContext = createContext<SentenceSpeechContextValue | null>(null);
@@ -43,6 +46,7 @@ export function CoreActionsBar({
   canGoBack,
   isSpeaking,
   onBack,
+  backIcon: BackIcon,
 }: CoreActionsBarProps) {
   const communicationActions = useContext(CoreCommunicationBarContext);
 
@@ -54,6 +58,9 @@ export function CoreActionsBar({
       'text-[13px] font-semibold leading-none tracking-[0.2px]',
       isActive ? 'text-[#1c1b1f]' : 'text-[#a09cab]',
     );
+
+  const iconClassName = (isActive: boolean) =>
+    cn('h-6 w-6', isActive ? 'text-[#1c1b1f]' : 'text-[#a09cab]');
 
   const actions = useMemo(() => {
     const fromContext = (communicationActions ?? []).filter((action) => action.key !== 'more');
@@ -100,6 +107,29 @@ export function CoreActionsBar({
           >
             <X className="h-7 w-7 stroke-[3]" />
           </span>
+          <span className={labelClassName(!disabled)}>{action.label}</span>
+        </>
+      );
+    }
+
+    if (action.key === 'thanks') {
+      return (
+        <>
+          <img
+            src={THANKS_ICON_SRC}
+            alt=""
+            aria-hidden="true"
+            className={cn('h-6 w-6 object-contain', disabled && 'opacity-60')}
+          />
+          <span className={labelClassName(!disabled)}>{action.label}</span>
+        </>
+      );
+    }
+
+    if (action.key === 'back' && BackIcon) {
+      return (
+        <>
+          <BackIcon className={iconClassName(!disabled)} aria-hidden="true" />
           <span className={labelClassName(!disabled)}>{action.label}</span>
         </>
       );

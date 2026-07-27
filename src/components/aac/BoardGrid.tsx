@@ -12,6 +12,8 @@ interface BoardGridProps {
   onCellClick: (cell: AACCell) => void;
   onDeleteCell?: (cellId: string) => void;
   onEditCell?: (cell: AACCell) => void;
+  onPreviewCell?: (cell: AACCell) => void;
+  previewAriaLabelPrefix?: string;
   prompt: string;
 }
 
@@ -25,6 +27,8 @@ export function BoardGrid({
   onCellClick,
   onDeleteCell,
   onEditCell,
+  onPreviewCell,
+  previewAriaLabelPrefix,
   prompt,
 }: BoardGridProps) {
   const visibleColumns = Math.min(2, Math.max(1, gridCols));
@@ -52,6 +56,8 @@ export function BoardGrid({
             onClick={() => onCellClick(cell)}
             onDelete={onDeleteCell ? () => onDeleteCell(cell.id) : undefined}
             onEdit={onEditCell ? () => onEditCell(cell) : undefined}
+            onPreview={onPreviewCell ? () => onPreviewCell(cell) : undefined}
+            previewAriaLabel={previewAriaLabelPrefix ? `${previewAriaLabelPrefix} ${getLabel(cell)}` : undefined}
           />
         ))}
       </div>

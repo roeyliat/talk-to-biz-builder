@@ -25,6 +25,8 @@ import wantImage from '@/assets/aac-local/אני רוצה.png';
 
 const ROOT_WANT_ORDER_IMAGE_URL = '/aac-local/flavors/אני רוצה להזמין.png';
 const ROOT_WANT_TASTE_IMAGE_URL = '/aac-local/flavors/לטעום.png';
+const ROOT_HOW_MUCH_IMAGE_URL = '/aac-local/flavors/כמה עולה.png';
+const ROOT_WANT_PAY_IMAGE_URL = '/aac-local/flavors/אני רוצה לשלם.png';
 
 const utilityRailCells: AACCell[] = [
   {
@@ -279,8 +281,15 @@ const RUNTIME_ICE_CREAM_ENSURE_BOARD_IDS = [
   'cold-drinks',
   'hot-drinks',
   'desserts',
+  'dessert-spreads',
   'alcoholic-flavors',
   'take-away',
+  'help',
+  'coffee-size',
+  'coffee-type',
+  'coffee-milk',
+  'allergy-info',
+  'allergy-more',
 ] as const;
 
 const RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS = [
@@ -290,7 +299,12 @@ const RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS = [
   'flavors-cup',
   'flavors-cone',
   'cold-drinks',
+  'hot-drinks',
   'take-away',
+  'desserts',
+  'dessert-spreads',
+  'toppings',
+  'help',
 ] as const;
 
 const RUNTIME_ICE_CREAM_ORDER_MENU_CARD_ORDER = [
@@ -381,6 +395,33 @@ const injectMissingTemplateBoard = (
   }
 };
 
+const REQUIRED_PAYMENT_BILL_TEXTS = [
+  'אפשר חשבון?',
+  'קבלה בבקשה',
+  'תשלום במזומן',
+  'תשלום באשראי',
+].map(normalizeHebrewText);
+
+const implementsRequiredPaymentBillFlow = (board?: AACBoard) => {
+  if (!board || board.id !== 'payment-bill') {
+    return false;
+  }
+
+  const texts = new Set(board.cells.map((cell) => normalizeHebrewText(cell.text)));
+  return REQUIRED_PAYMENT_BILL_TEXTS.every((text) => texts.has(text));
+};
+
+const ensureRuntimePaymentFlowBoards = (
+  mergedBoards: Record<string, AACBoard>,
+  templateBoards: Record<string, AACBoard>,
+) => {
+  const templateBill = templateBoards['payment-bill'];
+
+  if (templateBill && !implementsRequiredPaymentBillFlow(mergedBoards['payment-bill'])) {
+    mergedBoards['payment-bill'] = templateBill;
+  }
+};
+
 const injectMissingTemplateBoardsForCells = (
   mergedBoards: Record<string, AACBoard>,
   templateBoards: Record<string, AACBoard>,
@@ -463,6 +504,8 @@ const withRuntimeIceCreamOrderBoards = (
     mergedBoards[boardId] = templateBoard;
     injectMissingTemplateBoardsForCells(mergedBoards, templateBoards, templateBoard.cells);
   });
+
+  ensureRuntimePaymentFlowBoards(mergedBoards, templateBoards);
 
   return mergedBoards;
 };
@@ -593,9 +636,15 @@ const buildRootWantTasteFallback = (
 
 const buildRootWantPayFallback = (
   activeBoards: Record<string, AACBoard>,
+  businessType: BusinessType,
 ): AACCell => {
+  const preferredBoardIds =
+    businessType === 'iceCream'
+      ? ['payment-bill', 'pay-menu', 'checkout', ROOT_PAYMENT_BOARD_ID]
+      : ['pay-menu', 'checkout', 'payment-bill', ROOT_PAYMENT_BOARD_ID];
   const linkToBoardId =
-    resolveLinkedBoardId(activeBoards, ['pay-menu', 'checkout', ROOT_PAYMENT_BOARD_ID]) ?? ROOT_PAYMENT_BOARD_ID;
+    resolveLinkedBoardId(activeBoards, preferredBoardIds)
+    ?? (businessType === 'iceCream' ? 'payment-bill' : ROOT_PAYMENT_BOARD_ID);
 
   return {
     id: ROOT_WANT_PAY_FALLBACK_ID,
@@ -644,7 +693,7 @@ const buildRootCommunicationCells = (
   const wantPaySpec: RootCommunicationSlotSpec = {
     knownIds: ['root-want-pay', 'want-pay', 'bill', 'checkout'],
     texts: ['אני רוצה לשלם'],
-    fallback: buildRootWantPayFallback(activeBoards),
+    fallback: buildRootWantPayFallback(activeBoards, businessType),
   };
 
   const resolveSlot = (spec: RootCommunicationSlotSpec) =>
@@ -685,20 +734,45 @@ const buildRootCommunicationCells = (
           ROOT_TASTE_BOARD_ID,
         );
 
-  const wantPayCell = ensureNavigableRootCellLink(
-    resolveSlot(wantPaySpec),
-    activeBoards,
-    ['pay-menu', 'checkout'],
-    ROOT_PAYMENT_BOARD_ID,
-  );
+  const wantPayResolved = resolveSlot(wantPaySpec);
+  const wantPayCell: AACCell =
+    businessType === 'iceCream'
+      ? {
+          ...wantPayResolved,
+          linkToBoardId:
+            resolveLinkedBoardId(activeBoards, ['payment-bill', 'pay-menu', 'checkout', ROOT_PAYMENT_BOARD_ID])
+            ?? 'payment-bill',
+        }
+      : ensureNavigableRootCellLink(
+          wantPayResolved,
+          activeBoards,
+          ['pay-menu', 'checkout', 'payment-bill'],
+          ROOT_PAYMENT_BOARD_ID,
+        );
+
+  // Root screen renders these six cells in a 2-column RTL grid: array order
+  // [0,2,4] fills the right column and [1,3,5] fills the left column.
+  // Colors reuse BoardCard's existing category palette (verbs/people = green,
+  // descriptors = blue, social = white with a black border) instead of adding
+  // a new styling mechanism.
+  const priceCell: AACCell = {
+    ...utilityPrice,
+    category: 'descriptors',
+    imageUrl: ROOT_HOW_MUCH_IMAGE_URL,
+  };
+  const payCell: AACCell = {
+    ...wantPayCell,
+    category: 'verbs',
+    imageUrl: ROOT_WANT_PAY_IMAGE_URL,
+  };
 
   return [
-    utilityPrice,
     wantOrderCell,
-    helpCell,
+    priceCell,
     wantTasteCell,
+    helpCell,
+    payCell,
     utilityThanks,
-    wantPayCell,
   ];
 };
 
@@ -747,6 +821,9 @@ export function AACDashboard({
   // Customer Communication Mode
   const [isCustomerMode, setIsCustomerMode] = useState(false);
   const [selectedCell, setSelectedCell] = useState<AACCell | null>(null);
+
+  // Listening/playback mode: tapping an item only speaks it (no select/append/navigate)
+  const [isListeningMode, setIsListeningMode] = useState(false);
 
   const currentBoard = activeBoards[navState.currentBoardId];
 
@@ -876,6 +953,12 @@ export function AACDashboard({
     action();
   }, [speakButtonLabel]);
 
+  // Audio preview: speaks the item's label without selecting it, navigating,
+  // or adding it to the accumulated sentence.
+  const handlePreviewCell = useCallback((cell: AACCell) => {
+    speakButtonLabel(getSpokenCellText(cell), cell.id);
+  }, [getSpokenCellText, speakButtonLabel]);
+
   const beginFlavorSelectionSession = useCallback((limit: number | null) => {
     setTakeAwayFlavorLimit(limit);
     setSelectedOrderFlavors([]);
@@ -886,6 +969,12 @@ export function AACDashboard({
     const text = getSpokenCellText(cell);
     const currentBoardId = navState.currentBoardId;
     const onFlavorBoard = businessType === 'iceCream' && ICE_CREAM_FLAVOR_BOARD_IDS.has(currentBoardId);
+
+    // Listening/playback mode: speak the label only - no selection, no sentence append, no navigation
+    if (isListeningMode) {
+      speakButtonLabel(text, cell.id);
+      return;
+    }
 
     // Customer Mode: Show enlarged cell with TTS
     if (isCustomerMode) {
@@ -909,7 +998,7 @@ export function AACDashboard({
       return;
     }
 
-    if (businessType === 'iceCream' && (cell.id === 'box-small' || cell.id === 'box-medium' || cell.id === 'box-large')) {
+    if (businessType === 'iceCream' && (cell.id === 'box-small' || cell.id === 'box-large')) {
       speakButtonLabel(text, cell.id);
       setSelectedWords((prev) => [...prev, text]);
       beginFlavorSelectionSession(getTakeAwayFlavorLimit(cell.id));
@@ -975,6 +1064,7 @@ export function AACDashboard({
     getSpokenCellText,
     isCustomerMode,
     isEditMode,
+    isListeningMode,
     navState.currentBoardId,
     navigateToBoard,
     selectedOrderFlavors.length,
@@ -1018,8 +1108,9 @@ export function AACDashboard({
       speakSentence: speakAllWords,
       canSpeak: selectedWords.length > 0,
       isSpeaking: Boolean(isSpeaking),
+      isListeningMode,
     }),
-    [isSpeaking, selectedWords.length, speakAllWords],
+    [isListeningMode, isSpeaking, selectedWords.length, speakAllWords],
   );
 
   // Edit mode handlers
@@ -1283,6 +1374,7 @@ export function AACDashboard({
         language={language}
         isCustomerMode={isCustomerMode}
         isEditMode={isEditMode}
+        isListeningMode={isListeningMode}
         allowEdit={allowEdit}
         authLoading={authLoading}
         userEmail={user?.email}
@@ -1294,6 +1386,8 @@ export function AACDashboard({
         customerModeOffLabel={language === 'he' ? 'אני רוצה לדבר' : 'I Want To Talk'}
         editOnLabel={language === 'he' ? 'סיום עריכה' : 'Done'}
         editOffLabel={language === 'he' ? 'עריכה' : 'Edit'}
+        listeningModeOnLabel={language === 'he' ? 'מצב השמעה' : 'Listening Mode'}
+        listeningModeOffLabel={language === 'he' ? 'מצב השמעה' : 'Listening Mode'}
         onBack={() => runSpokenAction(t('aac.back'), navigateBack)}
         onBreadcrumb={(index) => runSpokenAction(
           language === 'he' || language === 'ar' ? navState.breadcrumbs[index].name : navState.breadcrumbs[index].nameEn,
@@ -1307,6 +1401,7 @@ export function AACDashboard({
           () => {
             setIsCustomerMode(!isCustomerMode);
             if (isEditMode) setIsEditMode(false);
+            if (isListeningMode) setIsListeningMode(false);
           },
         )}
         onToggleEditMode={() => runSpokenAction(
@@ -1314,6 +1409,14 @@ export function AACDashboard({
             ? (language === 'he' ? 'סיום עריכה' : 'Done')
             : (language === 'he' ? 'עריכה' : 'Edit'),
           () => setIsEditMode(!isEditMode),
+        )}
+        onToggleListeningMode={() => runSpokenAction(
+          language === 'he' ? 'מצב השמעה' : 'Listening Mode',
+          () => {
+            setIsListeningMode((prev) => !prev);
+            if (isEditMode) setIsEditMode(false);
+            if (isCustomerMode) setIsCustomerMode(false);
+          },
         )}
         onVoiceSettings={() => runSpokenAction(language === 'he' ? 'הגדרות קול' : 'Voice Settings', () => setShowVoiceSettings(true))}
         onSignOut={() => runSpokenAction(language === 'he' ? 'התנתק' : 'Sign Out', () => { void handleSignOut(); })}
@@ -1436,6 +1539,7 @@ export function AACDashboard({
               onCellClick={handleCellClick}
               onDeleteCell={handleDeleteCell}
               onEditCell={handleEditCell}
+              onPreviewCell={handlePreviewCell}
               onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
               onSpeakSelection={speakAllWords}
               onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}
@@ -1472,6 +1576,7 @@ export function AACDashboard({
               onCellClick={handleCellClick}
               onDeleteCell={handleDeleteCell}
               onEditCell={handleEditCell}
+              onPreviewCell={handlePreviewCell}
               onClearSelection={() => runSpokenAction(language === 'he' ? 'מחק' : 'Delete', clearSelectedWords)}
               onSpeakSelection={speakAllWords}
               onToggleCustomerMode={() => runSpokenAction(language === 'he' ? 'דבר' : 'Talk', () => setIsCustomerMode((prev) => !prev))}

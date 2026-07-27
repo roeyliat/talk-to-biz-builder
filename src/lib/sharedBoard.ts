@@ -92,6 +92,15 @@ const isSharedBoardPayload = (value: unknown): value is SharedBoardPayload => {
     && typeof payload.boards === 'object';
 };
 
+export const isValidSavedBoardId = (boardId?: string | null) => {
+  if (typeof boardId !== 'string') {
+    return false;
+  }
+
+  const normalizedBoardId = boardId.trim();
+  return normalizedBoardId.length > 0 && normalizedBoardId !== 'custom';
+};
+
 export const createSharedBoardUrl = (input: {
   baseUrl: string;
   boardId: string;
@@ -99,6 +108,14 @@ export const createSharedBoardUrl = (input: {
   boardName: string;
   boards?: Record<string, AACBoard>;
 }) => {
+  // Prefer a stable ID-based link whenever a saved board ID is available.
+  if (isValidSavedBoardId(input.boardId)) {
+    const url = new URL(`/board/${input.boardId.trim()}`, input.baseUrl);
+    url.searchParams.set('type', input.businessType);
+    return url.toString();
+  }
+
+  // Fallback for unsaved / local-only boards that have no stable saved ID.
   if (input.boards) {
     const url = new URL('/b', input.baseUrl);
     const payload: SharedBoardPayload = {

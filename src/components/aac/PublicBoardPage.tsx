@@ -41,6 +41,7 @@ interface PublicBoardPageProps {
   onCellClick: (cell: AACCell) => void;
   onDeleteCell: (cellId: string) => void;
   onEditCell: (cell: AACCell) => void;
+  onPreviewCell?: (cell: AACCell) => void;
   onClearSelection: () => void;
   onSpeakSelection: () => void;
   onToggleCustomerMode: () => void;
@@ -77,6 +78,7 @@ export function PublicBoardPage({
   onCellClick,
   onDeleteCell,
   onEditCell,
+  onPreviewCell,
   onClearSelection,
   onSpeakSelection,
   onToggleCustomerMode,
@@ -92,6 +94,8 @@ export function PublicBoardPage({
         doneLabel={labels.doneChoosing}
         hasSelection={selectedWordsCount > 0}
         onDone={onDoneChoosing}
+        onClear={onClearSelection}
+        clearLabel={labels.delete}
       />
 
       <BoardPageTitle title={title} emoji={boardEmoji} />
@@ -107,6 +111,8 @@ export function PublicBoardPage({
           onCellClick={onCellClick}
           onDeleteCell={onDeleteCell}
           onEditCell={onEditCell}
+          onPreviewCell={onPreviewCell}
+          previewAriaLabelPrefix={labels.speak}
           prompt={prompt}
         />
 

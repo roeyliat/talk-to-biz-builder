@@ -3,6 +3,7 @@ import {
   CircleHelp,
   Check,
   Grid2X2,
+  Headphones,
   Home,
   LogOut,
   Settings,
@@ -29,6 +30,7 @@ interface BoardTopNavigationProps {
   language: string;
   isCustomerMode: boolean;
   isEditMode: boolean;
+  isListeningMode: boolean;
   allowEdit: boolean;
   authLoading: boolean;
   userEmail?: string | null;
@@ -40,11 +42,14 @@ interface BoardTopNavigationProps {
   customerModeOffLabel: string;
   editOnLabel: string;
   editOffLabel: string;
+  listeningModeOnLabel: string;
+  listeningModeOffLabel: string;
   onBack: () => void;
   onBreadcrumb: (index: number) => void;
   onHome: () => void;
   onToggleCustomerMode: () => void;
   onToggleEditMode: () => void;
+  onToggleListeningMode: () => void;
   onVoiceSettings: () => void;
   onSignOut: () => void;
   isRootView?: boolean;
@@ -64,12 +69,16 @@ export function BoardTopNavigation({
   customerModeOffLabel,
   editOnLabel,
   editOffLabel,
+  listeningModeOnLabel,
+  listeningModeOffLabel,
   language,
   isCustomerMode,
   isEditMode,
+  isListeningMode,
   onHome,
   onToggleCustomerMode,
   onToggleEditMode,
+  onToggleListeningMode,
   onVoiceSettings,
   onSignOut,
   isRootView = false,
@@ -116,9 +125,15 @@ export function BoardTopNavigation({
             )}
             <Link
               to="/"
-              className="shrink-0 text-[11px] font-semibold leading-none tracking-[0.2px] text-[#a09cab] transition-colors hover:text-[#1c1b1f]"
+              className="flex shrink-0 items-center gap-1 opacity-80 transition-opacity hover:opacity-100"
+              aria-label="TalkToBiz"
             >
-              TalkBiz
+              <span className="flex h-5 w-5 items-center justify-center overflow-hidden rounded-md bg-primary">
+                <img src="/favicon.png" alt="" aria-hidden="true" className="h-full w-full object-cover" />
+              </span>
+              <span className="text-[11px] font-semibold leading-none tracking-[0.2px] text-[#a09cab]">
+                TalkBiz
+              </span>
             </Link>
           </div>
         )}
@@ -183,6 +198,22 @@ export function BoardTopNavigation({
             )}
             <span className={labelClassName(isCustomerMode)}>
               {isCustomerMode ? customerModeOnLabel : customerModeOffLabel}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onToggleListeningMode}
+            className={navItemClassName}
+            aria-pressed={isListeningMode}
+            aria-label={isListeningMode ? listeningModeOnLabel : listeningModeOffLabel}
+          >
+            <Headphones
+              className={cn('h-6 w-6 shrink-0', isListeningMode ? 'text-[#22c55e]' : 'text-[#a09cab]')}
+              aria-hidden="true"
+            />
+            <span className={cn('text-[11px] font-semibold leading-none tracking-[0.2px]', isListeningMode ? 'text-[#22c55e]' : 'text-[#a09cab]')}>
+              {isListeningMode ? listeningModeOnLabel : listeningModeOffLabel}
             </span>
           </button>
         </div>
