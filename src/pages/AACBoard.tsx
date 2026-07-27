@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { AACDashboard } from '@/components/aac/AACDashboard';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
+import { getBoardsForBusinessType, businessBoardsData, BusinessType } from '@/data/businessBoards';
 import { AACBoard as AACBoardType } from '@/types/aac';
 import { getSavedBoardById, updateSavedBoardBoards } from '@/lib/savedBoards';
 import { useAuth } from '@/hooks/useAuth';
 import { parseSharedBoardPayload } from '@/lib/sharedBoard';
 
 const shouldUseLatestBusinessTemplate = (businessType: BusinessType) => businessType === 'iceCream';
+
+const isKnownBusinessType = (value: string): value is BusinessType => value in businessBoardsData;
 
 const matchesTemplateCell = (savedCell: AACBoardType['cells'][number], latestCell: AACBoardType['cells'][number]) => (
   savedCell.id === latestCell.id
@@ -73,6 +75,11 @@ const AACBoard = () => {
   const { user, isGuest, loading: authLoading } = useAuth();
   
   const [boards, setBoards] = useState<Record<string, AACBoardType>>(() => getBoardsForBusinessType(businessType));
+  // The URL's `?type=` param is only a hint for the optimistic first paint. Once a saved
+  // board record loads, its persisted business_type is the source of truth - if the URL
+  // param is missing/stale/wrong, using it instead would silently skip all iceCream-only
+  // runtime repairs (e.g. the allergy flow) for that saved board.
+  const [effectiveBusinessType, setEffectiveBusinessType] = useState<BusinessType>(businessType);
 
   useEffect(() => {
     let isMounted = true;
@@ -105,8 +112,19 @@ const AACBoard = () => {
 
       const savedBoard = await getSavedBoardById(boardId, user && !isGuest ? user.id : undefined);
       if (savedBoard) {
-        if (shouldUseLatestBusinessTemplate(businessType)) {
-          const latestBoards = getBoardsForBusinessType(businessType);
+        // The saved record's own business_type is authoritative - the URL's `?type=`
+        // param may be missing or stale (e.g. older/bookmarked links), which would
+        // otherwise silently disable the iceCream-only runtime repairs below.
+        const savedBusinessType = isKnownBusinessType(savedBoard.business_type)
+          ? savedBoard.business_type
+          : businessType;
+
+        if (isMounted && savedBusinessType !== effectiveBusinessType) {
+          setEffectiveBusinessType(savedBusinessType);
+        }
+
+        if (shouldUseLatestBusinessTemplate(savedBusinessType)) {
+          const latestBoards = getBoardsForBusinessType(savedBusinessType);
           const shouldRefreshTemplate = shouldRefreshSavedTemplateBoards(savedBoard.boards_data, latestBoards);
 
           if (shouldRefreshTemplate) {
@@ -155,7 +173,7 @@ const AACBoard = () => {
       <AACDashboard 
         boards={boards}
         rootBoardId="main"
-        businessType={businessType}
+        businessType={effectiveBusinessType}
         showAIUpload={false}
         allowEdit={editMode}
         onBoardsChange={handleBoardsChange}
