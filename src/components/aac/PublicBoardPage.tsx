@@ -23,6 +23,7 @@ interface PublicBoardPageProps {
   isEditMode?: boolean;
   isSpeaking?: boolean;
   isCustomerMode?: boolean;
+  isRootView?: boolean;
   speakingCellId?: string | null;
   showAIUpload?: boolean;
   backIcon: LucideIcon;
@@ -68,6 +69,7 @@ export function PublicBoardPage({
   isEditMode,
   isSpeaking,
   isCustomerMode,
+  isRootView,
   speakingCellId,
   showAIUpload,
   backIcon,
@@ -107,6 +109,7 @@ export function PublicBoardPage({
           getLabel={getCellLabel}
           isTransitioning={isTransitioning}
           isEditMode={isEditMode}
+          isRootView={isRootView}
           speakingCellId={speakingCellId}
           onCellClick={onCellClick}
           onDeleteCell={onDeleteCell}

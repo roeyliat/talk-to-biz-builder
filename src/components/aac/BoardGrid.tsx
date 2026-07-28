@@ -8,6 +8,7 @@ interface BoardGridProps {
   getLabel: (cell: AACCell) => string;
   isTransitioning?: boolean;
   isEditMode?: boolean;
+  isRootView?: boolean;
   speakingCellId?: string | null;
   onCellClick: (cell: AACCell) => void;
   onDeleteCell?: (cellId: string) => void;
@@ -23,6 +24,7 @@ export function BoardGrid({
   getLabel,
   isTransitioning,
   isEditMode,
+  isRootView,
   speakingCellId,
   onCellClick,
   onDeleteCell,
@@ -52,6 +54,7 @@ export function BoardGrid({
             label={getLabel(cell)}
             isFolder={!!cell.linkToBoardId}
             isEditMode={isEditMode}
+            isRootCard={isRootView}
             isSpeaking={speakingCellId === cell.id}
             onClick={() => onCellClick(cell)}
             onDelete={onDeleteCell ? () => onDeleteCell(cell.id) : undefined}

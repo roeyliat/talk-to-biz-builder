@@ -115,12 +115,16 @@ export function CoreActionsBar({
     if (action.key === 'thanks') {
       return (
         <>
-          <img
-            src={THANKS_ICON_SRC}
-            alt=""
-            aria-hidden="true"
-            className={cn('h-6 w-6 object-contain', disabled && 'opacity-60')}
-          />
+          {/* Source PNG has more built-in transparent padding than the icon
+              needs at this size; crop/zoom presentationally (file untouched)
+              to match the tighter icon crop used everywhere else in this bar. */}
+          <span className="flex h-6 w-6 items-center justify-center overflow-hidden" aria-hidden="true">
+            <img
+              src={THANKS_ICON_SRC}
+              alt=""
+              className={cn('h-full w-full scale-125 object-contain', disabled && 'opacity-60')}
+            />
+          </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
         </>
       );

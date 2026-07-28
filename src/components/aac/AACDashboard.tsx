@@ -12,7 +12,7 @@ import { CustomerModeOverlay } from './CustomerModeOverlay';
 import { VoiceSettingsModal } from '@/components/settings/VoiceSettingsModal';
 import { GuestWatermark } from './GuestWatermark';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X } from 'lucide-react';
+import { ArrowLeftCircle, ArrowRightCircle, Home, ChevronRight, Volume2, Trash2, Pencil, Plus, Check, MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTextToSpeech } from '@/hooks/useTextToSpeech';
 import { getBoardsForBusinessType, BusinessType } from '@/data/businessBoards';
@@ -27,6 +27,7 @@ const ROOT_WANT_ORDER_IMAGE_URL = '/aac-local/flavors/אני רוצה להזמי
 const ROOT_WANT_TASTE_IMAGE_URL = '/aac-local/flavors/לטעום.png';
 const ROOT_HOW_MUCH_IMAGE_URL = '/aac-local/flavors/כמה עולה.png';
 const ROOT_WANT_PAY_IMAGE_URL = '/aac-local/flavors/אני רוצה לשלם.png';
+const ROOT_HELP_IMAGE_URL = '/aac-local/flavors/עזרה.png';
 
 const utilityRailCells: AACCell[] = [
   {
@@ -709,12 +710,15 @@ const buildRootCommunicationCells = (
     businessType === 'iceCream'
       ? { ...wantOrderLinked, imageUrl: ROOT_WANT_ORDER_IMAGE_URL }
       : wantOrderLinked;
-  const helpCell = ensureNavigableRootCellLink(
-    resolveSlot(helpSpec),
-    activeBoards,
-    ['help', 'staff'],
-    ROOT_HELP_BOARD_ID,
-  );
+  const helpCell: AACCell = {
+    ...ensureNavigableRootCellLink(
+      resolveSlot(helpSpec),
+      activeBoards,
+      ['help', 'staff'],
+      ROOT_HELP_BOARD_ID,
+    ),
+    imageUrl: ROOT_HELP_IMAGE_URL,
+  };
 
   const wantTasteResolved = resolveSlot(wantTasteSpec);
   const iceCreamTastePreferred = ['flavors-cup', 'flavors-cone', 'taste-menu', 'taste'];
@@ -827,7 +831,7 @@ export function AACDashboard({
 
   const currentBoard = activeBoards[navState.currentBoardId];
 
-  const BackIcon = direction === 'rtl' ? ArrowRight : ArrowLeft;
+  const BackIcon = direction === 'rtl' ? ArrowRightCircle : ArrowLeftCircle;
   const contentDir = direction === 'rtl' ? 'rtl' : 'ltr';
 
   const handleSignOut = useCallback(async () => {
@@ -1185,6 +1189,19 @@ export function AACDashboard({
     });
   }, [activeBoards, editingBoardId, navState.currentBoardId, updateBoards, toast, language]);
 
+  // Resolves the same "help" destination used by the root grid's own עזרה tile,
+  // so the top-nav עזרה tab reaches the identical board regardless of which
+  // screen the user is currently on (not gated to the root breadcrumb). Declared
+  // above the `!currentBoard` early return below so this hook always runs.
+  const topNavHelpCell = useMemo(() => {
+    const helpSpec: Pick<RootCommunicationSlotSpec, 'knownIds' | 'texts'> = {
+      knownIds: ['root-help', 'help'],
+      texts: ['עזרה'],
+    };
+    const resolved = findRootCommunicationCell(currentBoard?.cells ?? [], helpSpec) ?? buildRootHelpFallback(activeBoards);
+    return ensureNavigableRootCellLink(resolved, activeBoards, ['help', 'staff'], ROOT_HELP_BOARD_ID);
+  }, [activeBoards, currentBoard?.cells]);
+
   if (!currentBoard) {
     return <div className="text-center text-muted-foreground">Board not found</div>;
   }
@@ -1388,6 +1405,17 @@ export function AACDashboard({
         editOffLabel={language === 'he' ? 'עריכה' : 'Edit'}
         listeningModeOnLabel={language === 'he' ? 'מצב השמעה' : 'Listening Mode'}
         listeningModeOffLabel={language === 'he' ? 'מצב השמעה' : 'Listening Mode'}
+        keyboardLabel={language === 'he' ? 'מקלדת' : 'Keyboard'}
+        helpLabel={language === 'he' ? 'עזרה' : 'Help'}
+        onKeyboard={() => runSpokenAction(language === 'he' ? 'מקלדת' : 'Keyboard', () => {})}
+        onHelp={() => runSpokenAction(
+          getSpokenCellText(topNavHelpCell),
+          () => {
+            if (topNavHelpCell.linkToBoardId && activeBoards[topNavHelpCell.linkToBoardId]) {
+              navigateToBoard(topNavHelpCell.linkToBoardId);
+            }
+          },
+        )}
         onBack={() => runSpokenAction(t('aac.back'), navigateBack)}
         onBreadcrumb={(index) => runSpokenAction(
           language === 'he' || language === 'ar' ? navState.breadcrumbs[index].name : navState.breadcrumbs[index].nameEn,
@@ -1517,6 +1545,7 @@ export function AACDashboard({
               boardEmoji={boardEmoji}
               prompt={language === 'he' ? 'בחר אפשרות' : 'Choose an option'}
               gridCells={rootCommunicationCells}
+              isRootView={isAtRoot}
               infoStripCells={[]}
               sideRailCells={[]}
               extraSocialCells={[]}

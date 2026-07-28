@@ -8,6 +8,7 @@ interface BoardCardProps {
   isFolder?: boolean;
   isEditMode?: boolean;
   isSpeaking?: boolean;
+  isRootCard?: boolean;
   onClick: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
@@ -36,6 +37,7 @@ export function BoardCard({
   isFolder,
   isEditMode,
   isSpeaking,
+  isRootCard,
   onClick,
   onDelete,
   onEdit,
@@ -74,6 +76,9 @@ export function BoardCard({
       previewAriaLabel={previewAriaLabel}
       className={cn(
         'relative mx-auto flex !h-[153px] !min-h-[153px] !max-h-[153px] w-full max-w-[153px] flex-col !gap-0 !rounded-[24px] border !px-2 !py-0 shadow-[0_2px_4px_rgba(0,0,0,0.06)]',
+        // Figma opacity-80 was verified against the root communication cards only;
+        // nested boards (flavors/toppings/allergies/drinks/etc.) stay full opacity.
+        isRootCard && 'opacity-80',
         '[&>div.rounded-md]:top-3 [&>div.rounded-md]:end-3',
         // Fixed title band (~30% of 153px) — AACCard bottom label is a direct span child
         '[&>span]:flex [&>span]:h-[46px] [&>span]:min-h-[46px] [&>span]:max-h-[46px] [&>span]:shrink-0 [&>span]:grow-0',
@@ -94,6 +99,10 @@ export function BoardCard({
           ? '!h-[90%] !w-[90%] !max-h-[90%] !max-w-[90%] !scale-100 !transform-none'
           : '!h-full !w-full !max-h-full !max-w-full',
         boxedIcon && 'mix-blend-multiply',
+        // "כמה עולה" source art carries less built-in canvas padding than sibling
+        // icons, so it reads visibly smaller at the shared 107px box; matches the
+        // scale-[1.2] already used for this same icon on the utility side-rail.
+        boxedIcon && 'scale-[1.2]',
       )}
     />
   );

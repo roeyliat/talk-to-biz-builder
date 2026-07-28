@@ -73,17 +73,15 @@ export function SpeechOutputBar({
         )}
       </button>
 
-      {onClear && (
+      {onClear && hasSelection && (
         <button
           type="button"
-          onClick={hasSelection ? onClear : undefined}
-          disabled={!hasSelection}
+          onClick={onClear}
           className={cn(
             'absolute top-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#8e8e93] shadow-sm ring-1 ring-inset ring-[#d9d9e0] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-            'end-4 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100',
+            'end-4 hover:scale-105',
           )}
           aria-label={clearLabel}
-          aria-disabled={!hasSelection}
         >
           <Trash2 className="h-5 w-5" aria-hidden="true" />
         </button>
