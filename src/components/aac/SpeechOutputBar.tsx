@@ -45,8 +45,10 @@ export function SpeechOutputBar({
         className={cn(
           'flex min-h-0 w-full flex-1 items-center rounded-[12px] bg-white py-[10px] ps-[60px] text-start text-sm font-medium leading-snug text-[#1c1b1f]',
           onClear ? 'pe-[52px]' : 'pe-4',
+          isListeningMode && 'opacity-60',
         )}
         aria-live="polite"
+        aria-disabled={isListeningMode}
       >
         <span className="min-w-0 flex-1 whitespace-normal break-words">
           {canSpeak || hasSelection ? summary : ''}
@@ -66,8 +68,10 @@ export function SpeechOutputBar({
         aria-disabled={!canSpeak || isSpeaking}
         aria-pressed={isListeningMode}
       >
-        {canSpeak ? (
-          <Volume2 className={cn('h-6 w-6', (isSpeaking || isListeningMode) && 'animate-pulse')} aria-hidden="true" />
+        {isListeningMode ? (
+          <VolumeX className="h-6 w-6 animate-pulse" aria-hidden="true" />
+        ) : canSpeak ? (
+          <Volume2 className={cn('h-6 w-6', isSpeaking && 'animate-pulse')} aria-hidden="true" />
         ) : (
           <VolumeX className="h-6 w-6" aria-hidden="true" />
         )}

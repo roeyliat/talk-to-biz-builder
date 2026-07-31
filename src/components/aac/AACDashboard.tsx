@@ -56,7 +56,7 @@ const utilityRailCells: AACCell[] = [
     text: 'כמה עולה',
     textEn: 'How much',
     category: 'social',
-    icon: '💰',
+    icon: '',
   },
 ];
 
@@ -652,7 +652,7 @@ const buildRootWantPayFallback = (
     text: 'אני רוצה לשלם',
     textEn: 'I want to pay',
     category: 'social',
-    icon: '💳',
+    icon: '',
     linkToBoardId,
   };
 };
