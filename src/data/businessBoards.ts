@@ -637,7 +637,7 @@ const iceCreamBoards: Record<string, AACBoard> = {
     parentBoardId: 'desserts',
     cells: [
       imageCell('spread-nutella', 'נוטלה', 'Nutella', 'people', '🍫', '/aac-local/flavors/נוצ׳לה.png'),
-      imageCell('spread-kinder', 'שוקולד לבן אגוזי לוז (קינדר)', 'White chocolate hazelnut (Kinder)', 'people', '🍫', '/aac-local/flavors/שוקולד לבן אגוזי לוז קינדר.png'),
+      imageCell('spread-kinder', 'שוקולד לבן אגוזי לוז (קינדר)', 'White chocolate hazelnut (Kinder)', 'people', '🍫', '/aac-local/flavors/שוקולד לבן אגוזי לוז.png'),
     ],
     gridSize: { cols: 2, rows: 1 },
   },

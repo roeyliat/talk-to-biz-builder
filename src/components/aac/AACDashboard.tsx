@@ -907,6 +907,8 @@ export function AACDashboard({
           breadcrumbs: newBreadcrumbs,
         };
       });
+      setTakeAwayFlavorLimit(null);
+      setSelectedOrderFlavors([]);
       setIsTransitioning(false);
     }, 150);
   }, [navState.breadcrumbs, rootBoardId]);
@@ -1202,27 +1204,11 @@ export function AACDashboard({
     return ensureNavigableRootCellLink(resolved, activeBoards, ['help', 'staff'], ROOT_HELP_BOARD_ID);
   }, [activeBoards, currentBoard?.cells]);
 
-  if (!currentBoard) {
-    return <div className="text-center text-muted-foreground">Board not found</div>;
-  }
-
-  const gridCols = currentBoard.gridSize.cols;
-  const boardTypeIcon: Record<BusinessType, string> = {
-    cafe: '☕',
-    restaurant: '🍽️',
-    bakery: '🥐',
-    pizza: '🍕',
-    supermarket: '🛒',
-    pharmacy: '💊',
-    iceCream: '🍦',
-    laundromat: '🧺',
-    partySupplies: '🎉',
-    toyStore: '🧸',
-    hairSalon: '💇',
-    shoeStore: '👟',
-    clothingStore: '👕',
-  };
-
+  // The hooks below were previously declared after the `!currentBoard` early
+  // return, which violates react-hooks/rules-of-hooks (hooks would not run on
+  // renders where the board isn't found). Hoisted above the return and guarded
+  // with `currentBoard?.` so every render calls the same hooks in the same
+  // order; their computed values are unused on the "board not found" render.
   const sortedCells = useMemo(() => {
     const categoryOrder: Record<AACCell['category'], number> = {
       people: 0,
@@ -1231,52 +1217,24 @@ export function AACDashboard({
       social: 3,
     };
 
-    return [...currentBoard.cells].sort((first, second) => categoryOrder[first.category] - categoryOrder[second.category]);
-  }, [currentBoard.cells]);
+    return [...(currentBoard?.cells ?? [])].sort((first, second) => categoryOrder[first.category] - categoryOrder[second.category]);
+  }, [currentBoard?.cells]);
 
-  const peopleCells = sortedCells.filter((cell) => cell.category === 'people');
-  const verbCells = sortedCells.filter((cell) => cell.category === 'verbs');
-  const descriptorCells = sortedCells.filter((cell) => cell.category === 'descriptors');
-  const socialCells = sortedCells.filter((cell) => cell.category === 'social');
-
-  const sideRailCells = utilityRailCells;
-  const extraSocialCells = socialCells.filter(
-    (cell) => !utilityRailCells.some((utilityCell) => utilityCell.text === cell.text || utilityCell.textEn === cell.textEn)
-  ).slice(0, 4);
-  const infoStripCells = [...descriptorCells, ...verbCells].slice(0, 3);
+  const currentBoardCells = currentBoard?.cells;
   const rootCommunicationCells = useMemo(() => {
-    if (navState.breadcrumbs.length !== 0) {
+    if (!currentBoardCells || navState.breadcrumbs.length !== 0) {
       return [];
     }
 
-    return buildRootCommunicationCells(currentBoard.cells, activeBoards, businessType);
-  }, [activeBoards, businessType, currentBoard.cells, navState.breadcrumbs.length]);
-  const rootPublicGridCols = Math.min(2, Math.max(1, rootCommunicationCells.length));
+    return buildRootCommunicationCells(currentBoardCells, activeBoards, businessType);
+  }, [activeBoards, businessType, currentBoardCells, navState.breadcrumbs.length]);
 
-  const featuredCellIds = new Set([...socialCells, ...infoStripCells].map((cell) => cell.id));
-  const mainGridCells = peopleCells.length > 0 ? peopleCells : sortedCells.filter((cell) => !featuredCellIds.has(cell.id));
-  const displayGridCells = mainGridCells.length > 0 ? mainGridCells : sortedCells;
-  const effectiveGridCols = Math.min(5, Math.max(2, displayGridCells.length >= 10 ? 5 : displayGridCells.length >= 8 ? 4 : displayGridCells.length || 2));
-  const boardTitle = language === 'he' || language === 'ar' ? currentBoard.name : currentBoard.nameEn;
-  const showMockupSideRail = sideRailCells.length > 0;
-  const boardEmoji = boardTypeIcon[businessType] || '🗂️';
-  const selectionSummary = selectedWords.length > 0
-    ? selectedWords.join(' ')
-    : infoStripCells[0]
-      ? (language === 'he' || language === 'ar' ? infoStripCells[0].text : infoStripCells[0].textEn)
-      : language === 'he'
-        ? 'בחירה נוספת'
-        : 'Another choice';
-  const useIceCreamReferenceLayout =
-    businessType === 'iceCream' &&
-    isBuiltInIceCreamBoardSet(activeBoards) &&
-    ['flavors-cup', 'flavors-cone'].includes(navState.currentBoardId);
   const manualIceCreamSections = useMemo(() => {
-    if (businessType !== 'iceCream' || navState.currentBoardId !== rootBoardId) {
+    if (!currentBoardCells || businessType !== 'iceCream' || navState.currentBoardId !== rootBoardId) {
       return null;
     }
 
-    const linkedBoards = currentBoard.cells
+    const linkedBoards = currentBoardCells
       .filter((cell) => cell.linkToBoardId && activeBoards[cell.linkToBoardId])
       .map((cell) => {
         const linkedBoard = activeBoards[cell.linkToBoardId!];
@@ -1317,7 +1275,63 @@ export function AACDashboard({
         toppings: toppingsSection?.label ?? (language === 'he' ? 'תוספות' : 'Toppings'),
       },
     };
-  }, [activeBoards, businessType, currentBoard.cells, language, navState.currentBoardId, rootBoardId]);
+  }, [activeBoards, businessType, currentBoardCells, language, navState.currentBoardId, rootBoardId]);
+
+  const getCellLabel = useCallback((cell: AACCell) => (
+    language === 'he' || language === 'ar' ? cell.text : cell.textEn
+  ), [language]);
+
+  if (!currentBoard) {
+    return <div className="text-center text-muted-foreground">Board not found</div>;
+  }
+
+  const gridCols = currentBoard.gridSize.cols;
+  const boardTypeIcon: Record<BusinessType, string> = {
+    cafe: '☕',
+    restaurant: '🍽️',
+    bakery: '🥐',
+    pizza: '🍕',
+    supermarket: '🛒',
+    pharmacy: '💊',
+    iceCream: '🍦',
+    laundromat: '🧺',
+    partySupplies: '🎉',
+    toyStore: '🧸',
+    hairSalon: '💇',
+    shoeStore: '👟',
+    clothingStore: '👕',
+  };
+
+  const peopleCells = sortedCells.filter((cell) => cell.category === 'people');
+  const verbCells = sortedCells.filter((cell) => cell.category === 'verbs');
+  const descriptorCells = sortedCells.filter((cell) => cell.category === 'descriptors');
+  const socialCells = sortedCells.filter((cell) => cell.category === 'social');
+
+  const sideRailCells = utilityRailCells;
+  const extraSocialCells = socialCells.filter(
+    (cell) => !utilityRailCells.some((utilityCell) => utilityCell.text === cell.text || utilityCell.textEn === cell.textEn)
+  ).slice(0, 4);
+  const infoStripCells = [...descriptorCells, ...verbCells].slice(0, 3);
+  const rootPublicGridCols = Math.min(2, Math.max(1, rootCommunicationCells.length));
+
+  const featuredCellIds = new Set([...socialCells, ...infoStripCells].map((cell) => cell.id));
+  const mainGridCells = peopleCells.length > 0 ? peopleCells : sortedCells.filter((cell) => !featuredCellIds.has(cell.id));
+  const displayGridCells = mainGridCells.length > 0 ? mainGridCells : sortedCells;
+  const effectiveGridCols = Math.min(5, Math.max(2, displayGridCells.length >= 10 ? 5 : displayGridCells.length >= 8 ? 4 : displayGridCells.length || 2));
+  const boardTitle = language === 'he' || language === 'ar' ? currentBoard.name : currentBoard.nameEn;
+  const showMockupSideRail = sideRailCells.length > 0;
+  const boardEmoji = boardTypeIcon[businessType] || '🗂️';
+  const selectionSummary = selectedWords.length > 0
+    ? selectedWords.join(' ')
+    : infoStripCells[0]
+      ? (language === 'he' || language === 'ar' ? infoStripCells[0].text : infoStripCells[0].textEn)
+      : language === 'he'
+        ? 'בחירה נוספת'
+        : 'Another choice';
+  const useIceCreamReferenceLayout =
+    businessType === 'iceCream' &&
+    isBuiltInIceCreamBoardSet(activeBoards) &&
+    ['flavors-cup', 'flavors-cone'].includes(navState.currentBoardId);
   const useManualIceCreamLayout = businessType === 'iceCream' && Boolean(manualIceCreamSections);
   const useIceCreamLayout = useIceCreamReferenceLayout || useManualIceCreamLayout;
   const iceCreamPrompt = language === 'he' ? 'בחר טעם גלידה' : 'Choose Ice Cream Flavor';
@@ -1348,9 +1362,6 @@ export function AACDashboard({
     doneChoosing: language === 'he' ? 'סיימתי לבחור' : 'Done choosing',
     moreMessages: language === 'he' ? 'עוד מסרים' : 'More messages',
   };
-  const getCellLabel = useCallback((cell: AACCell) => (
-    language === 'he' || language === 'ar' ? cell.text : cell.textEn
-  ), [language]);
 
   const iceCreamCategoryButtons = [
     {
