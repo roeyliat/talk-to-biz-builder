@@ -60,7 +60,7 @@ export function CoreActionsBar({
     );
 
   const iconClassName = (isActive: boolean) =>
-    cn('h-6 w-6', isActive ? 'text-[#1c1b1f]' : 'text-[#a09cab]');
+    cn('h-5 w-5', isActive ? 'text-[#1c1b1f]' : 'text-[#a09cab]');
 
   const actions = useMemo(() => {
     const fromContext = (communicationActions ?? []).filter((action) => action.key !== 'more');
@@ -88,7 +88,7 @@ export function CoreActionsBar({
             )}
             aria-hidden="true"
           >
-            <Check className="h-7 w-7 stroke-[3]" />
+            <Check className="h-6 w-6 stroke-[2.5]" />
           </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
         </>

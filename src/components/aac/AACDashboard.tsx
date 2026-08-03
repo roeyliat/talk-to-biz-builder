@@ -1589,6 +1589,7 @@ export function AACDashboard({
               onUpload={(file) => console.log('File uploaded for AI processing:', file.name)}
             />
               ) : (
+            <>
             <PublicBoardPage
               title={boardTitle}
               boardEmoji={boardEmoji}
@@ -1624,6 +1625,35 @@ export function AACDashboard({
               onHome={() => runSpokenAction(language === 'he' ? 'דף ראשי' : 'Home', () => navigateToBreadcrumb(-1))}
               onDoneChoosing={speakAllWords}
             />
+            {useIceCreamReferenceLayout && !isEditMode && (
+              <div
+                className="pointer-events-none fixed inset-x-0 z-40 mx-auto flex w-full max-w-[375px] justify-end px-4"
+                style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom, 0px))' }}
+                dir={contentDir}
+              >
+                <div className="pointer-events-auto flex flex-col items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => speakAndAddCommunicationWord('טעים')}
+                    aria-label="טעים"
+                    className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-[#8fd19e] bg-white text-[11px] font-bold text-[#1c1b1f] shadow-lg transition-transform active:scale-95"
+                  >
+                    <span className="text-xl leading-none" aria-hidden="true">😋</span>
+                    <span>טעים</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => speakAndAddCommunicationWord('לא טעים')}
+                    aria-label="לא טעים"
+                    className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-[#f3a6a6] bg-white text-[11px] font-bold text-[#1c1b1f] shadow-lg transition-transform active:scale-95"
+                  >
+                    <span className="text-xl leading-none" aria-hidden="true">🙁</span>
+                    <span>לא טעים</span>
+                  </button>
+                </div>
+              </div>
+            )}
+            </>
               )}
             </SentenceSpeechContext.Provider>
             </CoreCommunicationBarContext.Provider>
