@@ -19,11 +19,21 @@ interface BoardCardProps {
 
 const isFlavorCard = (cell: AACCell) => cell.linkToBoardId === 'toppings';
 
-// This root icon ships as a flat PNG with a baked-in white background.
-// Multiply-blending removes the visible white box on colored card backgrounds
-// without needing to re-export the source asset.
-const WHITE_BACKGROUND_ICON_TEXTS = new Set(['כמה עולה']);
+// Icons whose source PNG still has a light baked-in canvas. Multiply-blending
+// lets the card's solid category color show through uniformly.
+const WHITE_BACKGROUND_ICON_TEXTS = new Set([
+  'כמה עולה',
+]);
 const hasWhiteBackgroundIcon = (cell: AACCell) => WHITE_BACKGROUND_ICON_TEXTS.has(cell.text.trim());
+
+const CREAM_BACKGROUND_TEXTS = new Set([
+  'אפשר חשבון?',
+  'תשלום באשראי',
+  'תשלום במזומן',
+  'קבלה בבקשה',
+]);
+
+const isKinderLabel = (label: string) => label.trim() === 'שוקולד לבן אגוזי לוז (קינדר)';
 
 const isLongFlavorLabel = (label: string) => {
   const trimmed = label.trim();
@@ -45,15 +55,19 @@ export function BoardCard({
   previewAriaLabel,
   className,
 }: BoardCardProps) {
-  const categoryClassName = {
-    people: 'border-transparent bg-[#ccedcc]',
-    verbs: 'border-transparent bg-[#ccedcc]',
-    descriptors: 'border-transparent bg-[#e8f2ff]',
-    social: 'border-black bg-white',
-  }[cell.category];
+  const creamCard = CREAM_BACKGROUND_TEXTS.has(cell.text.trim()) || CREAM_BACKGROUND_TEXTS.has(label.trim());
+  const categoryClassName = creamCard
+    ? 'border-transparent bg-[#fff3c9]'
+    : {
+        people: 'border-transparent bg-[#ccedcc]',
+        verbs: 'border-transparent bg-[#ccedcc]',
+        descriptors: 'border-transparent bg-[#e8f2ff]',
+        social: 'border-black bg-white',
+      }[cell.category];
 
   const flavorCard = isFlavorCard(cell);
-  const longLabel = flavorCard && isLongFlavorLabel(label);
+  const kinderLabel = isKinderLabel(label);
+  const longLabel = !kinderLabel && flavorCard && isLongFlavorLabel(label);
   const boxedIcon = hasWhiteBackgroundIcon(cell);
 
   return (
@@ -84,10 +98,13 @@ export function BoardCard({
         '[&>span]:flex [&>span]:h-[46px] [&>span]:min-h-[46px] [&>span]:max-h-[46px] [&>span]:shrink-0 [&>span]:grow-0',
         '[&>span]:items-center [&>span]:justify-center [&>span]:overflow-hidden [&>span]:px-1',
         '[&>span]:text-center [&>span]:font-semibold [&>span]:tracking-[0.2px] [&>span]:text-[#1c1b1f]',
-        // Short labels keep 21px; long flavor names wrap to 2 lines without ellipsis
-        longLabel
-          ? '[&>span]:!line-clamp-none [&>span]:whitespace-normal [&>span]:break-words [&>span]:text-[14px] [&>span]:leading-[1.05]'
-          : '[&>span]:text-[21px] [&>span]:leading-[22px]',
+        // Short labels keep 21px; long flavor names wrap to 2 lines without ellipsis.
+        // Kinder is a single exceptional long label — shrink only this card.
+        kinderLabel
+          ? '[&>span]:!line-clamp-none [&>span]:whitespace-normal [&>span]:break-words [&>span]:text-[12px] [&>span]:leading-[1.05]'
+          : longLabel
+            ? '[&>span]:!line-clamp-none [&>span]:whitespace-normal [&>span]:break-words [&>span]:text-[14px] [&>span]:leading-[1.05]'
+            : '[&>span]:text-[21px] [&>span]:leading-[22px]',
         categoryClassName,
         className,
       )}
@@ -102,7 +119,7 @@ export function BoardCard({
         // "כמה עולה" source art carries less built-in canvas padding than sibling
         // icons, so it reads visibly smaller at the shared 107px box; matches the
         // scale-[1.2] already used for this same icon on the utility side-rail.
-        boxedIcon && 'scale-[1.2]',
+        cell.text.trim() === 'כמה עולה' && 'scale-[1.2]',
       )}
     />
   );

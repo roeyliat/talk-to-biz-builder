@@ -397,10 +397,12 @@ const injectMissingTemplateBoard = (
 };
 
 const REQUIRED_PAYMENT_BILL_TEXTS = [
+  'אני רוצה לשלם',
   'אפשר חשבון?',
-  'קבלה בבקשה',
-  'תשלום במזומן',
   'תשלום באשראי',
+  'תשלום במזומן',
+  'תודה',
+  'קבלה בבקשה',
 ].map(normalizeHebrewText);
 
 const implementsRequiredPaymentBillFlow = (board?: AACBoard) => {

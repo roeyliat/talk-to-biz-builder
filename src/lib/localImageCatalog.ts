@@ -187,7 +187,7 @@ const LOCAL_IMAGE_ENTRIES = [
     aliases: ['frozen yogurt', 'yogurt', 'יוגורט', 'יוגורט קפוא'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('תוספות', 'toppings') ?? '/aac-local/toppings.svg',
+    imageUrl: findDiscoveredImageUrl('תוספות', 'toppings') ?? '/aac-local/תוספות.png',
     aliases: ['toppings', 'תוספות'],
   },
   {
