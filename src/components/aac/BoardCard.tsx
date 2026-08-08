@@ -57,12 +57,12 @@ export function BoardCard({
 }: BoardCardProps) {
   const creamCard = CREAM_BACKGROUND_TEXTS.has(cell.text.trim()) || CREAM_BACKGROUND_TEXTS.has(label.trim());
   const categoryClassName = creamCard
-    ? 'border-transparent bg-[#fff3c9]'
+    ? 'bg-[#fff3c9]'
     : {
-        people: 'border-transparent bg-[#ccedcc]',
-        verbs: 'border-transparent bg-[#ccedcc]',
-        descriptors: 'border-transparent bg-[#e8f2ff]',
-        social: 'border-black bg-white',
+        people: 'bg-[#ccedcc]',
+        verbs: 'bg-[#ccedcc]',
+        descriptors: 'bg-[#e8f2ff]',
+        social: 'bg-white',
       }[cell.category];
 
   const flavorCard = isFlavorCard(cell);
@@ -89,7 +89,7 @@ export function BoardCard({
       onPreview={onPreview}
       previewAriaLabel={previewAriaLabel}
       className={cn(
-        'relative mx-auto flex !h-[153px] !min-h-[153px] !max-h-[153px] w-full max-w-[153px] flex-col !gap-0 !rounded-[24px] border !px-2 !py-0 shadow-[0_2px_4px_rgba(0,0,0,0.06)]',
+        'relative mx-auto flex !h-[153px] !min-h-[153px] !max-h-[153px] w-full max-w-[153px] flex-col !gap-0 !rounded-[24px] !px-2 !py-0 shadow-[0_2px_4px_rgba(0,0,0,0.06)]',
         // Figma opacity-80 was verified against the root communication cards only;
         // nested boards (flavors/toppings/allergies/drinks/etc.) stay full opacity.
         isRootCard && 'opacity-80',

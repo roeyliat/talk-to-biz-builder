@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { X, Volume2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useResolvedAacImage } from '@/hooks/useResolvedAacImage';
+import { AAC_CARD_BORDER_CLASS } from './AACCard';
 
 interface CustomerModeOverlayProps {
   cell: AACCell | null;
@@ -57,12 +58,9 @@ export function CustomerModeOverlay({ cell, onClose }: CustomerModeOverlayProps)
         <div 
           className={cn(
             'flex flex-col items-center justify-center gap-6 p-8 md:p-12 rounded-3xl shadow-2xl w-full',
-            'bg-gradient-to-br from-card via-card to-card/95 border-4',
+            'bg-gradient-to-br from-card via-card to-card/95',
             'transition-all duration-300',
-            cell.category === 'people' && 'border-[hsl(var(--fitzgerald-yellow))]',
-            cell.category === 'verbs' && 'border-[hsl(var(--fitzgerald-green))]',
-            cell.category === 'descriptors' && 'border-[hsl(var(--fitzgerald-pink))]',
-            cell.category === 'social' && 'border-[hsl(var(--fitzgerald-blue))]',
+            AAC_CARD_BORDER_CLASS,
             // Speaking animation
             isSpeaking && 'ring-4 ring-primary/50 animate-pulse shadow-primary/20 shadow-xl',
           )}

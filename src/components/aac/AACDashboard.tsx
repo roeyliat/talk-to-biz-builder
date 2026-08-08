@@ -759,8 +759,7 @@ const buildRootCommunicationCells = (
   // Root screen renders these six cells in a 2-column RTL grid: array order
   // [0,2,4] fills the right column and [1,3,5] fills the left column.
   // Colors reuse BoardCard's existing category palette (verbs/people = green,
-  // descriptors = blue, social = white with a black border) instead of adding
-  // a new styling mechanism.
+  // descriptors = blue, social = white). Border chrome comes only from AACCard.
   const priceCell: AACCell = {
     ...utilityPrice,
     category: 'descriptors',
@@ -1751,7 +1750,7 @@ export function AACDashboard({
                               isSpeaking={speakingCellId === cell.id}
                               onDelete={() => handleDeleteCell(cell.id, boardId)}
                               onEdit={() => handleEditCell(cell, boardId)}
-                              className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                              className="min-h-[108px] rounded-[14px] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
                           ))}
                         </div>
@@ -1800,7 +1799,7 @@ export function AACDashboard({
                               isSpeaking={speakingCellId === cell.id}
                               onDelete={() => handleDeleteCell(cell.id, boardId)}
                               onEdit={() => handleEditCell(cell, boardId)}
-                              className="h-[112px] min-h-[112px] gap-1.5 rounded-[14px] border-[2px] border-[#efcf63] px-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:h-[118px] md:min-h-[118px]"
+                              className="h-[112px] min-h-[112px] gap-1.5 rounded-[14px] px-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:h-[118px] md:min-h-[118px]"
                               labelClassName="min-h-[1.45rem] text-[0.8rem] md:min-h-[1.55rem] md:text-[0.88rem]"
                               imageContainerClassName="min-h-0 px-0 py-0"
                               imageClassName={cn(
@@ -1849,7 +1848,7 @@ export function AACDashboard({
                               isSpeaking={speakingCellId === cell.id}
                               onDelete={() => handleDeleteCell(cell.id, boardId)}
                               onEdit={() => handleEditCell(cell, boardId)}
-                              className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                              className="min-h-[108px] rounded-[14px] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                             />
                           ))}
                         </div>
@@ -1881,7 +1880,7 @@ export function AACDashboard({
                             isSpeaking={speakingCellId === cell.id}
                             onDelete={() => handleDeleteCell(cell.id)}
                             onEdit={() => handleEditCell(cell)}
-                            className="min-h-[108px] rounded-[14px] border-[2px] border-[#efcf63] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
+                            className="min-h-[108px] rounded-[14px] px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.96)] md:min-h-[116px]"
                           />
                         ))}
                       </div>

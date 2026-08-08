@@ -30,11 +30,13 @@ interface AACCardProps {
   imageClassName?: string;
 }
 
+// Background-only category fills for the default Fitzgerald variant.
+// Border chrome must NOT live here — every AAC card uses AAC_CARD_BORDER_CLASS.
 const categoryStyles: Record<FitzgeraldCategory, string> = {
-  people: 'fitzgerald-yellow',
-  verbs: 'fitzgerald-green',
-  descriptors: 'fitzgerald-pink',
-  social: 'fitzgerald-blue',
+  people: 'bg-[hsl(var(--fitzgerald-yellow-light))]',
+  verbs: 'bg-[hsl(var(--fitzgerald-green-light))]',
+  descriptors: 'bg-[hsl(var(--fitzgerald-pink-light))]',
+  social: 'bg-[hsl(var(--fitzgerald-blue-light))]',
 };
 
 const sizeStyles = {
@@ -43,11 +45,15 @@ const sizeStyles = {
   lg: 'h-40 text-lg',
 };
 
+// Sole shared AAC card border — import this anywhere a non-AACCard AAC cell
+// chrome must match (e.g. customer-mode enlarged card).
+export const AAC_CARD_BORDER_CLASS = 'border-solid border-[2.5px] border-black';
+
 const variantStyles = {
   fitzgerald: '',
-  mockup: 'border-[2.5px] border-[#efcf63] bg-[linear-gradient(180deg,#fffef6_0%,#fff3c9_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.10)] text-slate-800',
-  rail: 'border-[2.5px] border-[#c8d1e0] bg-[linear-gradient(180deg,#ffffff_0%,#f5f7fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)] text-slate-800',
-  utility: 'border-[2.5px] border-[#cad3e4] bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_3px_10px_rgba(15,23,42,0.06)] text-slate-800',
+  mockup: 'bg-[linear-gradient(180deg,#fffef6_0%,#fff3c9_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.10)] text-slate-800',
+  rail: 'bg-[linear-gradient(180deg,#ffffff_0%,#f5f7fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_2px_6px_rgba(15,23,42,0.08)] text-slate-800',
+  utility: 'bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.98),0_3px_10px_rgba(15,23,42,0.06)] text-slate-800',
 };
 
 export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
@@ -104,7 +110,9 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
           isEditMode && 'ring-2 ring-dashed ring-foreground/30 cursor-pointer',
           // Speaking indicator - pulse animation
           isSpeaking && 'ring-4 ring-primary animate-pulse shadow-lg shadow-primary/30',
-          className
+          className,
+          // Sole border source for every AAC card.
+          AAC_CARD_BORDER_CLASS,
         )}
         aria-label={isFolder ? `${text} - folder` : text}
       >
