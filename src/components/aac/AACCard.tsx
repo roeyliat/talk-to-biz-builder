@@ -30,13 +30,11 @@ interface AACCardProps {
   imageClassName?: string;
 }
 
-// Background-only category fills for the default Fitzgerald variant.
-// Border chrome must NOT live here — every AAC card uses AAC_CARD_BORDER_CLASS.
 const categoryStyles: Record<FitzgeraldCategory, string> = {
-  people: 'bg-[hsl(var(--fitzgerald-yellow-light))]',
-  verbs: 'bg-[hsl(var(--fitzgerald-green-light))]',
-  descriptors: 'bg-[hsl(var(--fitzgerald-pink-light))]',
-  social: 'bg-[hsl(var(--fitzgerald-blue-light))]',
+  people: 'fitzgerald-yellow',
+  verbs: 'fitzgerald-green',
+  descriptors: 'fitzgerald-pink',
+  social: 'fitzgerald-blue',
 };
 
 const sizeStyles = {
@@ -47,7 +45,8 @@ const sizeStyles = {
 
 // Sole shared AAC card border — import this anywhere a non-AACCard AAC cell
 // chrome must match (e.g. customer-mode enlarged card).
-export const AAC_CARD_BORDER_CLASS = 'border-solid border-[2.5px] border-black';
+// Important flags beat Fitzgerald category CSS border-color/width only.
+export const AAC_CARD_BORDER_CLASS = 'border-solid !border-[2.5px] !border-black';
 
 const variantStyles = {
   fitzgerald: '',
