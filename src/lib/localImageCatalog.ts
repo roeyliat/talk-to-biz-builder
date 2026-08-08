@@ -171,7 +171,7 @@ const LOCAL_IMAGE_ENTRIES = [
     aliases: ['cookie', 'cookies', 'biscuit', 'עוגיה', 'ביסקוויט', 'biscoff'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('קרמל', 'caramel') ?? '/aac-local/caramel.svg',
+    imageUrl: findDiscoveredImageUrl('קרמל', 'caramel') ?? '/aac-local/caramel.png',
     aliases: ['caramel', 'קרמל', 'dulce de leche', 'דולצה למנצ׳ה', 'דולצה למנצה', 'דולצה למנצ׳ה'],
   },
   {
@@ -207,7 +207,7 @@ const LOCAL_IMAGE_ENTRIES = [
     aliases: ['sprinkles', 'סוכריות צבעוניות'],
   },
   {
-    imageUrl: findDiscoveredImageUrl('אגוזים', 'nuts') ?? '/aac-local/nuts.svg',
+    imageUrl: findDiscoveredImageUrl('אגוזים', 'nuts') ?? '/aac-local/nuts.png',
     aliases: ['nuts', 'אגוזים', 'אגוז לוז', 'hazelnut', 'hazelnuts'],
   },
 ] as const;

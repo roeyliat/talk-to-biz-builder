@@ -595,9 +595,9 @@ const iceCreamBoards: Record<string, AACBoard> = {
     cells: [
       imageCell('sprinkles', 'סוכריות צבעוניות', 'Sprinkles', 'people', '🌈', '/aac-local/סוכריות צבעוניות.png'),
       imageCell('hot-chocolate', 'שוקולד חם', 'Hot Chocolate', 'people', '🍫', '/aac-local/flavors/שוקולד חם.png'),
-      imageCell('nuts', 'אגוזים', 'Nuts', 'people', '🥜', '/aac-local/nuts.svg'),
+      imageCell('nuts', 'אגוזים', 'Nuts', 'people', '🥜', '/aac-local/nuts.png'),
       imageCell('whipped-cream', 'קצפת', 'Whipped Cream', 'people', '🥛', '/aac-local/flavors/קצפת.png'),
-      imageCell('caramel', 'קרמל', 'Caramel', 'people', '🍯', '/aac-local/caramel.svg'),
+      imageCell('caramel', 'קרמל', 'Caramel', 'people', '🍯', '/aac-local/caramel.png'),
       imageCell('pinoli', 'פינולי', 'Pine nuts', 'people', '🌰', '/aac-local/פינולי (צנובר).PNG'),
       imageCell('roasted-pine-nuts', 'צנובר קלוי', 'Roasted pine nuts', 'people', '🌰', '/aac-local/flavors/צנובר קלוי.png'),
       imageCell('no-toppings', 'ללא תוספות', 'No Toppings', 'descriptors', '✖️', '/aac-local/לא.PNG'),
