@@ -93,6 +93,10 @@ export function BoardCard({
         // Figma opacity-80 was verified against the root communication cards only;
         // nested boards (flavors/toppings/allergies/drinks/etc.) stay full opacity.
         isRootCard && 'opacity-80',
+        // Mockup variant paints a cream gradient via background-image; that does not
+        // conflict with category bg-* color in twMerge, so root cards must clear it
+        // for the solid green/blue/white fill to be the only visible card background.
+        isRootCard && '![background-image:none]',
         '[&>div.rounded-md]:top-3 [&>div.rounded-md]:end-3',
         // Fixed title band (~30% of 153px) — AACCard bottom label is a direct span child
         '[&>span]:flex [&>span]:h-[46px] [&>span]:min-h-[46px] [&>span]:max-h-[46px] [&>span]:shrink-0 [&>span]:grow-0',
@@ -115,7 +119,9 @@ export function BoardCard({
           // Cap at ~90% of image region; neutralize AACCard flavor scale-* boosts
           ? '!h-[90%] !w-[90%] !max-h-[90%] !max-w-[90%] !scale-100 !transform-none'
           : '!h-full !w-full !max-h-full !max-w-full',
-        boxedIcon && 'mix-blend-multiply',
+        // Root cards + known light-canvas icons: multiply so baked cream/white plates
+        // adopt the solid card color while keeping the illustration.
+        (isRootCard || boxedIcon) && 'mix-blend-multiply',
         // "כמה עולה" source art carries less built-in canvas padding than sibling
         // icons, so it reads visibly smaller at the shared 107px box; matches the
         // scale-[1.2] already used for this same icon on the utility side-rail.
