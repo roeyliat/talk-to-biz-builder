@@ -46,7 +46,7 @@ const sizeStyles = {
 // Sole shared AAC card border — import this anywhere a non-AACCard AAC cell
 // chrome must match (e.g. customer-mode enlarged card).
 // Important flags beat Fitzgerald category CSS border-color/width only.
-export const AAC_CARD_BORDER_CLASS = 'border-solid !border-[2.5px] !border-black';
+export const AAC_CARD_BORDER_CLASS = 'border-solid !border-[1.5px] !border-black';
 
 const variantStyles = {
   fitzgerald: '',

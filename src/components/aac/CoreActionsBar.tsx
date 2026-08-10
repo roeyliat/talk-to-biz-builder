@@ -51,16 +51,17 @@ export function CoreActionsBar({
   const communicationActions = useContext(CoreCommunicationBarContext);
 
   const actionButtonClassName =
-    'flex min-h-14 min-w-12 shrink-0 flex-col items-center justify-center gap-1 px-[13px] bg-transparent transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:opacity-45 active:scale-95';
+    'flex min-h-14 min-w-12 shrink-0 flex-col items-center justify-start gap-1 px-[13px] bg-transparent transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:opacity-45 active:scale-95';
+
+  // Shared icon slot so Yes/No/Thanks/Back paint at one visual size and
+  // labels land on one baseline under the fixed-height icon row.
+  const iconSlotClassName = 'flex h-11 w-11 shrink-0 items-center justify-center';
 
   const labelClassName = (isActive: boolean) =>
     cn(
-      'text-[13px] font-semibold leading-none tracking-[0.2px]',
+      'h-[13px] text-[13px] font-semibold leading-none tracking-[0.2px]',
       isActive ? 'text-[#1c1b1f]' : 'text-[#a09cab]',
     );
-
-  const iconClassName = (isActive: boolean) =>
-    cn('h-5 w-5', isActive ? 'text-[#1c1b1f]' : 'text-[#a09cab]');
 
   const actions = useMemo(() => {
     const fromContext = (communicationActions ?? []).filter((action) => action.key !== 'more');
@@ -81,14 +82,15 @@ export function CoreActionsBar({
     if (action.key === 'yes') {
       return (
         <>
-          <span
-            className={cn(
-              'flex h-11 w-11 items-center justify-center rounded-full bg-[#22c55e] text-white shadow-sm',
-              disabled && 'opacity-60',
-            )}
-            aria-hidden="true"
-          >
-            <Check className="h-6 w-6 stroke-[2.5]" />
+          <span className={iconSlotClassName} aria-hidden="true">
+            <span
+              className={cn(
+                'flex h-11 w-11 items-center justify-center rounded-full bg-[#22c55e] text-white shadow-sm',
+                disabled && 'opacity-60',
+              )}
+            >
+              <Check className="h-6 w-6 stroke-[2.5]" />
+            </span>
           </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
         </>
@@ -98,14 +100,15 @@ export function CoreActionsBar({
     if (action.key === 'no') {
       return (
         <>
-          <span
-            className={cn(
-              'flex h-11 w-11 items-center justify-center rounded-full bg-[#ef4444] text-white shadow-sm',
-              disabled && 'opacity-60',
-            )}
-            aria-hidden="true"
-          >
-            <X className="h-7 w-7 stroke-[3]" />
+          <span className={iconSlotClassName} aria-hidden="true">
+            <span
+              className={cn(
+                'flex h-11 w-11 items-center justify-center rounded-full bg-[#ef4444] text-white shadow-sm',
+                disabled && 'opacity-60',
+              )}
+            >
+              <X className="h-6 w-6 stroke-[2.5]" />
+            </span>
           </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
         </>
@@ -118,11 +121,11 @@ export function CoreActionsBar({
           {/* Source PNG has more built-in transparent padding than the icon
               needs at this size; crop/zoom presentationally (file untouched)
               to match the tighter icon crop used everywhere else in this bar. */}
-          <span className="flex h-6 w-6 items-center justify-center overflow-hidden" aria-hidden="true">
+          <span className={cn(iconSlotClassName, 'overflow-hidden')} aria-hidden="true">
             <img
               src={THANKS_ICON_SRC}
               alt=""
-              className={cn('h-full w-full scale-125 object-contain', disabled && 'opacity-60')}
+              className={cn('h-11 w-11 scale-125 object-contain', disabled && 'opacity-60')}
             />
           </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
@@ -133,7 +136,12 @@ export function CoreActionsBar({
     if (action.key === 'back' && BackIcon) {
       return (
         <>
-          <BackIcon className={iconClassName(!disabled)} aria-hidden="true" />
+          <span className={iconSlotClassName} aria-hidden="true">
+            <BackIcon
+              className={cn('h-11 w-11', disabled ? 'text-[#a09cab]' : 'text-[#1c1b1f]')}
+              aria-hidden="true"
+            />
+          </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
         </>
       );

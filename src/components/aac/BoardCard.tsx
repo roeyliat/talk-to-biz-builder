@@ -93,10 +93,10 @@ export function BoardCard({
         // Figma opacity-80 was verified against the root communication cards only;
         // nested boards (flavors/toppings/allergies/drinks/etc.) stay full opacity.
         isRootCard && 'opacity-80',
-        // Mockup variant paints a cream gradient via background-image; that does not
-        // conflict with category bg-* color in twMerge, so root cards must clear it
-        // for the solid green/blue/white fill to be the only visible card background.
-        isRootCard && '![background-image:none]',
+        // Mockup variant paints a cream gradient via background-image; that sits above
+        // category bg-* fills and can visually bury icons. Clear it so the solid
+        // category color is the only card background and icons sit on top.
+        '![background-image:none]',
         '[&>div.rounded-md]:top-3 [&>div.rounded-md]:end-3',
         // Fixed title band (~30% of 153px) — AACCard bottom label is a direct span child
         '[&>span]:flex [&>span]:h-[46px] [&>span]:min-h-[46px] [&>span]:max-h-[46px] [&>span]:shrink-0 [&>span]:grow-0',
@@ -112,7 +112,7 @@ export function BoardCard({
         categoryClassName,
         className,
       )}
-      imageContainerClassName="!flex !h-[107px] !min-h-[107px] !max-h-[107px] !w-full !flex-none !grow-0 !shrink-0 !items-center !justify-center !overflow-hidden !p-0"
+      imageContainerClassName="relative z-[1] !flex !h-[107px] !min-h-[107px] !max-h-[107px] !w-full !flex-none !grow-0 !shrink-0 !items-center !justify-center !overflow-hidden !p-0"
       imageClassName={cn(
         'object-contain object-center',
         flavorCard
