@@ -87,7 +87,6 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
     const shouldBoostBelgianChocolateFlavorImage = ['שוקולד בלגי', 'belgian chocolate'].includes(normalizedText)
       || decodedImageUrl.includes('שוקולד בלגי');
     const shouldShrinkBrownSprinklesImage = normalizedText.includes('סוכריות חומות') || decodedImageUrl.includes('סוכריות חומות');
-    const shouldBoostColorfulSprinklesImage = normalizedText.includes('סוכריות צבעוניות') || decodedImageUrl.includes('סוכריות צבעוניות');
 
     return (
       <button
@@ -207,7 +206,6 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
                 shouldBoostChocolateFlavorImage && 'scale-[1.18]',
                 shouldBoostBelgianChocolateFlavorImage && 'scale-[1.16]',
                 shouldShrinkBrownSprinklesImage && 'scale-[0.82]',
-                shouldBoostColorfulSprinklesImage && 'scale-[2.25]',
                 isRailCard && 'max-h-[88px] md:max-h-[96px]',
                 isUtilityCard && 'max-h-[54px] md:max-h-[64px]',
                 imageClassName

@@ -24,6 +24,7 @@ const fromBoardsJson = (boardsData: Json): Record<string, AACBoard> =>
   migrateBoardsData(boardsData as unknown as Record<string, AACBoard>);
 
 const STORAGE_KEY = 'talktobiz_saved_boards';
+const DELETED_BOARD_IDS_KEY = 'talktobiz_deleted_board_ids';
 
 const BUSINESS_TYPE_ICONS: Record<string, string> = {
   cafe: '☕',
@@ -43,6 +44,45 @@ const BUSINESS_TYPE_ICONS: Record<string, string> = {
 };
 
 const canUseStorage = () => typeof window !== 'undefined';
+
+const getDeletedBoardIds = (): Set<string> => {
+  if (!canUseStorage()) {
+    return new Set();
+  }
+
+  try {
+    const raw = window.localStorage.getItem(DELETED_BOARD_IDS_KEY);
+    if (!raw) {
+      return new Set();
+    }
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : []);
+  } catch {
+    return new Set();
+  }
+};
+
+const writeDeletedBoardIds = (ids: Set<string>) => {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.setItem(DELETED_BOARD_IDS_KEY, JSON.stringify([...ids]));
+};
+
+const rememberDeletedBoardId = (boardId: string) => {
+  const ids = getDeletedBoardIds();
+  ids.add(boardId);
+  writeDeletedBoardIds(ids);
+};
+
+const forgetDeletedBoardId = (boardId: string) => {
+  const ids = getDeletedBoardIds();
+  if (!ids.delete(boardId)) {
+    return;
+  }
+  writeDeletedBoardIds(ids);
+};
 
 const mapRowToSavedBoardRecord = (row: BoardRecordRow): SavedBoardRecord => ({
   id: row.id,
@@ -146,24 +186,24 @@ export const deleteSavedBoard = async (boardId: string, userId?: string) => {
   const existingBoards = getLocalSavedBoards();
   const updatedBoards = existingBoards.filter((board) => board.id !== boardId);
 
+  // Persist intent so login sync/load cannot resurrect this id from cloud or stale local.
+  rememberDeletedBoardId(boardId);
+
+  // Authenticated users: Supabase board_records is the source of truth across logout/login.
+  if (userId) {
+    const { error } = await supabase
+      .from('board_records')
+      .delete()
+      .eq('user_id', userId)
+      .eq('id', boardId);
+
+    if (error) {
+      console.error('Failed to delete board record from Supabase', error);
+      return false;
+    }
+  }
+
   writeSavedBoards(updatedBoards);
-
-  if (!userId) {
-    return true;
-  }
-
-  const { error } = await supabase
-    .from('board_records')
-    .delete()
-    .eq('user_id', userId)
-    .eq('id', boardId);
-
-  if (error) {
-    writeSavedBoards(existingBoards);
-    console.error('Failed to delete board record from Supabase', error);
-    return false;
-  }
-
   return true;
 };
 
@@ -183,9 +223,27 @@ export const getSavedBoards = async (userId?: string): Promise<SavedBoardRecord[
     return getLocalSavedBoards();
   }
 
+  const deletedIds = getDeletedBoardIds();
   const records = (data ?? []).map(mapRowToSavedBoardRecord);
-  writeSavedBoards(records);
-  return records;
+
+  // Replay any deletes that only landed locally (e.g. guest delete, or cloud miss)
+  // so Supabase stays the durable source of truth after login.
+  const resurrected = records.filter((record) => deletedIds.has(record.id));
+  if (resurrected.length > 0) {
+    const { error: replayError } = await supabase
+      .from('board_records')
+      .delete()
+      .eq('user_id', userId)
+      .in('id', resurrected.map((record) => record.id));
+
+    if (replayError) {
+      console.error('Failed to replay deleted board ids to Supabase', replayError);
+    }
+  }
+
+  const kept = records.filter((record) => !deletedIds.has(record.id));
+  writeSavedBoards(kept);
+  return kept;
 };
 
 export const getSavedBoardById = async (boardId?: string, userId?: string) => {
@@ -224,6 +282,7 @@ export const saveBoardRecord = async (input: {
   const existing = existingBoards.find((board) => board.id === input.boardId) ?? null;
   const record = buildRecord({ ...input, existing });
 
+  forgetDeletedBoardId(record.id);
   writeSavedBoardToLocal(record);
 
   if (input.userId) {
@@ -272,12 +331,34 @@ export const updateSavedBoardBoards = async (boardId: string, boards: Record<str
 
 export const syncLocalBoardsToCloud = async (userId: string) => {
   const localBoards = getLocalSavedBoards();
+  const deletedIds = getDeletedBoardIds();
 
   if (localBoards.length === 0) {
     return [] as SavedBoardRecord[];
   }
 
-  const payload = localBoards.map((record) => ({
+  const { data: cloudRows, error: cloudListError } = await supabase
+    .from('board_records')
+    .select('id')
+    .eq('user_id', userId);
+
+  if (cloudListError) {
+    console.error('Failed to list cloud boards before sync', cloudListError);
+    return localBoards;
+  }
+
+  const cloudIds = new Set((cloudRows ?? []).map((row) => row.id));
+  // Upload only brand-new local boards. Never upsert ids that already exist in
+  // cloud, and never re-upload ids the user deleted (tombstoned).
+  const newLocalBoards = localBoards.filter(
+    (record) => !cloudIds.has(record.id) && !deletedIds.has(record.id),
+  );
+
+  if (newLocalBoards.length === 0) {
+    return localBoards;
+  }
+
+  const payload = newLocalBoards.map((record) => ({
     id: record.id,
     user_id: userId,
     business_name: record.business_name,
@@ -298,7 +379,5 @@ export const syncLocalBoardsToCloud = async (userId: string) => {
     return localBoards;
   }
 
-  const synced = (data ?? []).map(mapRowToSavedBoardRecord);
-  writeSavedBoards(synced);
-  return synced;
+  return (data ?? []).map(mapRowToSavedBoardRecord);
 };

@@ -153,6 +153,7 @@ const createUiOnlyRootFallbackBoards = (rootBoardId: string): Record<string, AAC
         textEn: 'Excuse me, can you help me?',
         category: 'social',
         icon: '🙋',
+        imageUrl: ROOT_HELP_IMAGE_URL,
       },
       {
         id: 'ui-help-menu',
@@ -160,6 +161,7 @@ const createUiOnlyRootFallbackBoards = (rootBoardId: string): Record<string, AAC
         textEn: 'Where is the menu?',
         category: 'social',
         icon: '📋',
+        imageUrl: '/aac-local/flavors/תפריט.png',
       },
       {
         id: 'ui-help-restroom',
@@ -167,6 +169,7 @@ const createUiOnlyRootFallbackBoards = (rootBoardId: string): Record<string, AAC
         textEn: 'Where is the restroom?',
         category: 'social',
         icon: '🚻',
+        imageUrl: '/aac-local/flavors/שירותים.png',
       },
       {
         id: 'ui-help-allergy',
@@ -174,6 +177,7 @@ const createUiOnlyRootFallbackBoards = (rootBoardId: string): Record<string, AAC
         textEn: 'I have an allergy',
         category: 'social',
         icon: '⚠️',
+        imageUrl: '/aac-local/flavors/יש לי אלרגיה.png',
       },
     ],
     gridSize: { cols: 2, rows: 2 },
