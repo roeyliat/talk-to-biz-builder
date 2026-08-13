@@ -51,15 +51,15 @@ export function CoreActionsBar({
   const communicationActions = useContext(CoreCommunicationBarContext);
 
   const actionButtonClassName =
-    'flex min-h-14 min-w-12 shrink-0 flex-col items-center justify-start gap-1 px-[13px] bg-transparent transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:opacity-45 active:scale-95';
+    'flex w-[76px] shrink-0 flex-col items-center justify-start gap-2 bg-transparent transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary disabled:opacity-45 active:scale-95';
 
-  // Shared icon slot so Yes/No/Thanks/Back paint at one visual size and
-  // labels land on one baseline under the fixed-height icon row.
-  const iconSlotClassName = 'flex h-11 w-11 shrink-0 items-center justify-center';
+  // Shared 40×40 icon slot; glyph/image inside stays 24–28px.
+  const iconSlotClassName = 'flex h-10 w-10 shrink-0 items-center justify-center';
+  const iconGlyphClassName = 'h-7 w-7';
 
   const labelClassName = (isActive: boolean) =>
     cn(
-      'h-[13px] text-[13px] font-semibold leading-none tracking-[0.2px]',
+      'w-full text-center font-sans text-base font-medium leading-none',
       isActive ? 'text-[#1c1b1f]' : 'text-[#a09cab]',
     );
 
@@ -85,11 +85,11 @@ export function CoreActionsBar({
           <span className={iconSlotClassName} aria-hidden="true">
             <span
               className={cn(
-                'flex h-11 w-11 items-center justify-center rounded-full bg-[#22c55e] text-white shadow-sm',
+                'flex h-10 w-10 items-center justify-center rounded-full bg-[#22c55e] text-white shadow-sm',
                 disabled && 'opacity-60',
               )}
             >
-              <Check className="h-6 w-6 stroke-[2.5]" />
+              <Check className={cn(iconGlyphClassName, 'stroke-[2.5]')} />
             </span>
           </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
@@ -103,11 +103,11 @@ export function CoreActionsBar({
           <span className={iconSlotClassName} aria-hidden="true">
             <span
               className={cn(
-                'flex h-11 w-11 items-center justify-center rounded-full bg-[#ef4444] text-white shadow-sm',
+                'flex h-10 w-10 items-center justify-center rounded-full bg-[#ef4444] text-white shadow-sm',
                 disabled && 'opacity-60',
               )}
             >
-              <X className="h-6 w-6 stroke-[2.5]" />
+              <X className={cn(iconGlyphClassName, 'stroke-[2.5]')} />
             </span>
           </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
@@ -125,7 +125,7 @@ export function CoreActionsBar({
             <img
               src={THANKS_ICON_SRC}
               alt=""
-              className={cn('h-11 w-11 scale-125 object-contain', disabled && 'opacity-60')}
+              className={cn(iconGlyphClassName, 'scale-125 object-contain', disabled && 'opacity-60')}
             />
           </span>
           <span className={labelClassName(!disabled)}>{action.label}</span>
@@ -138,7 +138,7 @@ export function CoreActionsBar({
         <>
           <span className={iconSlotClassName} aria-hidden="true">
             <BackIcon
-              className={cn('h-11 w-11', disabled ? 'text-[#a09cab]' : 'text-[#1c1b1f]')}
+              className={cn(iconGlyphClassName, disabled ? 'text-[#a09cab]' : 'text-[#1c1b1f]')}
               aria-hidden="true"
             />
           </span>

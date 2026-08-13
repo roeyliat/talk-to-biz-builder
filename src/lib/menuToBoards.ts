@@ -1,4 +1,5 @@
 import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
+import { selectAacCategory } from '@/lib/aacColorSelection';
 import { DISCOVERED_LOCAL_IMAGES, normalizeImageKey } from '@/lib/localImageCatalog';
 
 export interface MenuItemData {
@@ -257,7 +258,7 @@ const mergeCompositeLocalItems = (items: MenuItemData[]) => {
         id: createId('item', entry.alias, Math.min(...matchedIndexes)),
         text: entry.alias,
         textEn: entry.alias,
-        category: sourceItem?.category || 'people',
+        category: selectAacCategory(entry.alias),
         icon: sourceItem?.icon || inferItemIcon(entry.alias),
         imageUrl: entry.imageUrl,
       },
@@ -356,7 +357,7 @@ const parseMenuItemLine = (line: string, index: number): MenuItemData | null => 
     id: createId('item', text, index),
     text,
     textEn,
-    category: 'people',
+    category: selectAacCategory(text),
     icon,
   };
 };
@@ -421,20 +422,23 @@ export const parseManualMenuText = (
 export const convertMenuToBoards = (menuData: MenuData): Record<string, AACBoard> => {
   const boards: Record<string, AACBoard> = {};
 
-  const mainCells: AACCell[] = menuData.categories.map((category) => ({
-    id: `cat-${category.id}`,
-    text: category.nameHe || category.name,
-    textEn: category.name,
-    category: 'people' as FitzgeraldCategory,
-    icon: inferCategoryIcon(category.nameHe || category.name),
-    linkToBoardId: category.id,
-  }));
+  const mainCells: AACCell[] = menuData.categories.map((category) => {
+    const label = category.nameHe || category.name;
+    return {
+      id: `cat-${category.id}`,
+      text: label,
+      textEn: category.name,
+      category: selectAacCategory(label),
+      icon: inferCategoryIcon(label),
+      linkToBoardId: category.id,
+    };
+  });
 
   const standaloneCells: AACCell[] = (menuData.standaloneItems ?? []).map((item, index) => ({
     id: item.id || createId('main-item', item.text, index),
     text: item.text,
     textEn: item.textEn || item.text,
-    category: item.category || 'people',
+    category: selectAacCategory(item.text),
     icon: item.icon || inferItemIcon(item.text),
     imageUrl: item.imageUrl,
   }));
@@ -455,7 +459,7 @@ export const convertMenuToBoards = (menuData: MenuData): Record<string, AACBoard
       id: item.id || createId('item', item.text, itemIndex),
       text: item.text,
       textEn: item.textEn || item.text,
-      category: item.category || 'people',
+      category: selectAacCategory(item.text),
       icon: item.icon || inferItemIcon(item.text),
       imageUrl: item.imageUrl,
     }));

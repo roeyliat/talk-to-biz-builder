@@ -3,6 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FitzgeraldCategory } from '@/types/aac';
+import { selectAacCategory } from '@/lib/aacColorSelection';
 import { cn } from '@/lib/utils';
 import { Plus, Trash2, FolderOpen, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import {
@@ -146,12 +147,13 @@ export function CategoryItemsEditor({
 
   // Add item to category
   const handleAddItemToCategory = (categoryId: string) => {
+    const defaultText = language === 'he' ? 'פריט חדש' : 'New Item';
     const newItem: MenuItem = {
       id: generateId(),
-      text: language === 'he' ? 'פריט חדש' : 'New Item',
+      text: defaultText,
       textEn: 'New Item',
       icon: '📦',
-      category: 'people',
+      category: selectAacCategory(defaultText),
     };
     
     setCategories(categories.map(c => 
@@ -163,7 +165,17 @@ export function CategoryItemsEditor({
   const handleUpdateCategoryItem = (categoryId: string, itemId: string, updates: Partial<MenuItem>) => {
     setCategories(categories.map(c => 
       c.id === categoryId 
-        ? { ...c, items: c.items.map(item => item.id === itemId ? { ...item, ...updates } : item) }
+        ? {
+            ...c,
+            items: c.items.map((item) => {
+              if (item.id !== itemId) return item;
+              const next = { ...item, ...updates };
+              if (updates.text !== undefined) {
+                next.category = selectAacCategory(updates.text);
+              }
+              return next;
+            }),
+          }
         : c
     ));
   };
@@ -177,21 +189,27 @@ export function CategoryItemsEditor({
 
   // Add standalone item
   const handleAddStandaloneItem = () => {
+    const defaultText = language === 'he' ? 'פריט חדש' : 'New Item';
     const newItem: MenuItem = {
       id: generateId(),
-      text: language === 'he' ? 'פריט חדש' : 'New Item',
+      text: defaultText,
       textEn: 'New Item',
       icon: '📦',
-      category: 'people',
+      category: selectAacCategory(defaultText),
     };
     setStandaloneItems([...standaloneItems, newItem]);
   };
 
   // Update standalone item
   const handleUpdateStandaloneItem = (itemId: string, updates: Partial<MenuItem>) => {
-    setStandaloneItems(standaloneItems.map(item => 
-      item.id === itemId ? { ...item, ...updates } : item
-    ));
+    setStandaloneItems(standaloneItems.map((item) => {
+      if (item.id !== itemId) return item;
+      const next = { ...item, ...updates };
+      if (updates.text !== undefined) {
+        next.category = selectAacCategory(updates.text);
+      }
+      return next;
+    }));
   };
 
   // Delete standalone item

@@ -1,6 +1,15 @@
 import { AACCard } from './AACCard';
 import { AACCell } from '@/types/aac';
+import { selectAacCardColor } from '@/lib/aacColorSelection';
 import { cn } from '@/lib/utils';
+
+const AAC_COLOR_CLASS: Record<ReturnType<typeof selectAacCardColor>, string> = {
+  green: 'bg-[#ccedcc]',
+  yellow: 'bg-[#fbeec6]',
+  pink: 'bg-[#efd9e8]',
+  blue: 'bg-[#e8f2ff]',
+  white: 'bg-white',
+};
 
 interface BoardCardProps {
   cell: AACCell;
@@ -58,12 +67,7 @@ export function BoardCard({
   const creamCard = CREAM_BACKGROUND_TEXTS.has(cell.text.trim()) || CREAM_BACKGROUND_TEXTS.has(label.trim());
   const categoryClassName = creamCard
     ? 'bg-[#fff3c9]'
-    : {
-        people: 'bg-[#ccedcc]',
-        verbs: 'bg-[#ccedcc]',
-        descriptors: 'bg-[#e8f2ff]',
-        social: 'bg-white',
-      }[cell.category];
+    : AAC_COLOR_CLASS[selectAacCardColor(label || cell.text)];
 
   const flavorCard = isFlavorCard(cell);
   const kinderLabel = isKinderLabel(label);

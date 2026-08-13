@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMenuScanner } from '@/hooks/useMenuScanner';
 import { CategoryItemsEditor, MenuCategory, MenuItem } from '@/components/create-board/CategoryItemsEditor';
 import { ManualMenuModal } from '@/components/create-board/ManualMenuModal';
+import { selectAacCategory } from '@/lib/aacColorSelection';
 import { convertMenuToBoards, parseManualMenuText, sanitizeMenuData } from '@/lib/menuToBoards';
 import { saveBoardRecord } from '@/lib/savedBoards';
 
@@ -208,7 +209,7 @@ const CreateBoard = () => {
               id: item.id,
               text: item.text,
               textEn: item.textEn,
-              category: item.category,
+              category: selectAacCategory(item.text),
               icon: item.icon,
               imageUrl: item.imageUrl,
             });
@@ -225,7 +226,7 @@ const CreateBoard = () => {
               id: `link-${category.id}`,
               text: category.name,
               textEn: category.nameEn,
-              category: 'people' as FitzgeraldCategory,
+              category: selectAacCategory(category.name),
               icon: category.icon,
               linkToBoardId: subBoardId,
             });
@@ -236,7 +237,7 @@ const CreateBoard = () => {
             id: item.id,
             text: item.text,
             textEn: item.textEn,
-            category: item.category,
+            category: selectAacCategory(item.text),
             icon: item.icon,
             imageUrl: item.imageUrl,
           }));
@@ -354,7 +355,7 @@ const CreateBoard = () => {
       userItems.push({
         text: cat.name,
         textEn: cat.nameEn,
-        category: 'people' as FitzgeraldCategory,
+        category: selectAacCategory(cat.name),
         icon: cat.icon,
       });
     });

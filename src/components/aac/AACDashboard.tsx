@@ -8,6 +8,7 @@ import { PublicBoardPage } from './PublicBoardPage';
 import { CoreCommunicationBarContext, SentenceSpeechContext, type CoreCommunicationAction } from './CoreActionsBar';
 import { AIUploadPlaceholder } from './AIUploadPlaceholder';
 import { BoardEditModal } from './BoardEditModal';
+import { KeyboardTextEntry } from './KeyboardTextEntry';
 import { CustomerModeOverlay } from './CustomerModeOverlay';
 import { VoiceSettingsModal } from '@/components/settings/VoiceSettingsModal';
 import { GuestWatermark } from './GuestWatermark';
@@ -762,8 +763,8 @@ const buildRootCommunicationCells = (
 
   // Root screen renders these six cells in a 2-column RTL grid: array order
   // [0,2,4] fills the right column and [1,3,5] fills the left column.
-  // Colors reuse BoardCard's existing category palette (verbs/people = green,
-  // descriptors = blue, social = white). Border chrome comes only from AACCard.
+  // Colors reuse BoardCard's Fitzgerald palette (verbs=green, nouns=yellow,
+  // descriptors=pink, greetings=blue, function words=white). Border from AACCard.
   const priceCell: AACCell = {
     ...utilityPrice,
     category: 'descriptors',
@@ -833,6 +834,9 @@ export function AACDashboard({
 
   // Listening/playback mode: tapping an item only speaks it (no select/append/navigate)
   const [isListeningMode, setIsListeningMode] = useState(false);
+
+  // Native keyboard entry → append trimmed text to selectedWords (speech bar)
+  const [showKeyboardEntry, setShowKeyboardEntry] = useState(false);
 
   const currentBoard = activeBoards[navState.currentBoardId];
 
@@ -1423,7 +1427,7 @@ export function AACDashboard({
         listeningModeOffLabel={language === 'he' ? 'מצב השמעה' : 'Listening Mode'}
         keyboardLabel={language === 'he' ? 'מקלדת' : 'Keyboard'}
         helpLabel={language === 'he' ? 'עזרה' : 'Help'}
-        onKeyboard={() => runSpokenAction(language === 'he' ? 'מקלדת' : 'Keyboard', () => {})}
+        onKeyboard={() => runSpokenAction(language === 'he' ? 'מקלדת' : 'Keyboard', () => setShowKeyboardEntry(true))}
         onHelp={() => runSpokenAction(
           getSpokenCellText(topNavHelpCell),
           () => {
@@ -1643,7 +1647,7 @@ export function AACDashboard({
                     aria-label="טעים"
                     className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-[#8fd19e] bg-white text-[11px] font-bold text-[#1c1b1f] shadow-lg transition-transform active:scale-95"
                   >
-                    <span className="text-xl leading-none" aria-hidden="true">😋</span>
+                    <img src="/aac-local/flavors/טעים.png" alt="" aria-hidden="true" className="h-7 w-7 object-contain" />
                     <span>טעים</span>
                   </button>
                   <button
@@ -1652,7 +1656,7 @@ export function AACDashboard({
                     aria-label="לא טעים"
                     className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border-2 border-[#f3a6a6] bg-white text-[11px] font-bold text-[#1c1b1f] shadow-lg transition-transform active:scale-95"
                   >
-                    <span className="text-xl leading-none" aria-hidden="true">🙁</span>
+                    <img src="/aac-local/flavors/לא טעים.png" alt="" aria-hidden="true" className="h-7 w-7 object-contain" />
                     <span>לא טעים</span>
                   </button>
                 </div>
@@ -2028,6 +2032,16 @@ export function AACDashboard({
         onAddCell={handleAddCell}
         editingCell={editingCell}
         onUpdateCell={handleUpdateCell}
+      />
+
+      <KeyboardTextEntry
+        open={showKeyboardEntry}
+        language={language}
+        onClose={() => setShowKeyboardEntry(false)}
+        onSubmit={(text) => {
+          // Append only — do not speak typed text (existing speak flow unchanged).
+          setSelectedWords((prev) => [...prev, text]);
+        }}
       />
 
       {/* Customer Mode Overlay */}

@@ -90,7 +90,7 @@ export function PublicBoardPage({
   onUpload,
 }: PublicBoardPageProps) {
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-[375px] flex-col bg-white" dir={contentDir}>
+    <div className="mx-auto flex min-h-full w-full max-w-[375px] flex-col bg-white" dir={contentDir} lang={language}>
       <SpeechOutputBar
         summary={selectionSummary}
         doneLabel={labels.doneChoosing}

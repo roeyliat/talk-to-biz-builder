@@ -3,6 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AACBoard, AACCell, FitzgeraldCategory } from '@/types/aac';
+import { selectAacCategory } from '@/lib/aacColorSelection';
 import { cn } from '@/lib/utils';
 import { Trash2, Plus, Edit2, Check, X, Save, Eye } from 'lucide-react';
 import {
@@ -123,6 +124,7 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
 
   const handleSaveEdit = () => {
     if (!editingCell) return;
+    const category = selectAacCategory(editForm.text);
 
     setEditableBoards(prev => ({
       ...prev,
@@ -130,7 +132,7 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
         ...prev[editingCell.boardId],
         cells: prev[editingCell.boardId].cells.map(c =>
           c.id === editingCell.cellId
-            ? { ...c, text: editForm.text, textEn: editForm.textEn, icon: editForm.icon, imageUrl: editForm.imageUrl, category: editForm.category }
+            ? { ...c, text: editForm.text, textEn: editForm.textEn, icon: editForm.icon, imageUrl: editForm.imageUrl, category }
             : c
         ),
       },
@@ -139,11 +141,12 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
   };
 
   const handleAddCell = (boardId: string) => {
+    const text = language === 'he' ? 'פריט חדש' : 'New Item';
     const newCell: AACCell = {
       id: `new-${Date.now()}`,
-      text: language === 'he' ? 'פריט חדש' : 'New Item',
+      text,
       textEn: 'New Item',
-      category: 'people',
+      category: selectAacCategory(text),
       icon: '➕',
     };
 
