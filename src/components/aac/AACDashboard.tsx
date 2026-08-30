@@ -295,7 +295,6 @@ const RUNTIME_ICE_CREAM_ENSURE_BOARD_IDS = [
   'coffee-type',
   'coffee-milk',
   'allergy-info',
-  'allergy-more',
 ] as const;
 
 const RUNTIME_ICE_CREAM_TEMPLATE_BOARD_IDS = [
@@ -988,6 +987,13 @@ export function AACDashboard({
     // Listening/playback mode: speak the label only - no selection, no sentence append, no navigation
     if (isListeningMode) {
       speakButtonLabel(text, cell.id);
+      return;
+    }
+
+    // Allergy "משהו אחר" → existing native keyboard text-entry (append happens on Done/Enter)
+    if (cell.id === 'allergy-something-else') {
+      speakButtonLabel(text, cell.id);
+      setShowKeyboardEntry(true);
       return;
     }
 
