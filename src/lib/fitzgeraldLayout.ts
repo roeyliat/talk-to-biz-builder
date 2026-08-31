@@ -1,12 +1,19 @@
 import { AACBoard, AACBoardSection, AACCell, FitzgeraldCategory } from '@/types/aac';
 
-const MAIN_COLUMN_CATEGORIES: FitzgeraldCategory[] = ['people', 'verbs', 'descriptors', 'social'];
+const MAIN_COLUMN_CATEGORIES: FitzgeraldCategory[] = [
+  'people',
+  'verbs',
+  'descriptors',
+  'questions',
+  'social',
+];
 
-const SECTION_TITLE_KEYS: Record<FitzgeraldCategory, string> = {
+const SECTION_TITLE_KEYS: Record<FitzgeraldCategory | 'core', string> = {
   core: 'aac.coreVocabulary',
   people: 'fitzgerald.people',
   verbs: 'fitzgerald.verbs',
   descriptors: 'fitzgerald.descriptors',
+  questions: 'fitzgerald.social',
   social: 'fitzgerald.social',
 };
 

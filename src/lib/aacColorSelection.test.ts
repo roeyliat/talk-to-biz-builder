@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { selectAacCardColor, selectAacCategory } from './aacColorSelection';
+import { getAacCardSurfaceClass } from './aacCardTemplate';
 
 describe('selectAacCardColor — 5 Fitzgerald bands', () => {
   it.each([
@@ -57,9 +58,9 @@ describe('selectAacCategory', () => {
     ['רוצה', 'verbs'],
     ['להזמין', 'verbs'],
     ['אוכל', 'verbs'],
-    ['שלום', 'social'],
-    ['תודה', 'social'],
-    ['איפה השירותים?', 'social'],
+    ['שלום', 'questions'],
+    ['תודה', 'questions'],
+    ['איפה השירותים?', 'questions'],
     ['כן', 'social'],
     ['אני', 'social'],
     ['טעים', 'descriptors'],
@@ -70,7 +71,7 @@ describe('selectAacCategory', () => {
     expect(selectAacCategory(text)).toBe(expected);
   });
 
-  it('stays aligned with selectAacCardColor bands', () => {
+  it('stays aligned with selectAacCardColor bands and Figma surfaces', () => {
     const samples = [
       'רוצה',
       'תודה',
@@ -86,9 +87,12 @@ describe('selectAacCategory', () => {
       const color = selectAacCardColor(text);
       const category = selectAacCategory(text);
       if (color === 'green') expect(category).toBe('verbs');
-      else if (color === 'blue' || color === 'white') expect(category).toBe('social');
+      else if (color === 'blue') expect(category).toBe('questions');
+      else if (color === 'white') expect(category).toBe('social');
       else if (color === 'pink') expect(category).toBe('descriptors');
       else expect(category).toBe('people');
+
+      expect(getAacCardSurfaceClass(category)).toBeTruthy();
     }
   });
 });

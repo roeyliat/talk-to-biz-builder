@@ -207,11 +207,12 @@ export const selectAacCardColor = (text: string): AacCardColor => {
 
 /**
  * Map Hebrew text to Fitzgerald category used when generating AAC board cells.
- *   green verbs → verbs
- *   blue greetings/questions → social
- *   white function words → social (no separate Fitzgerald slot; color stays white)
- *   pink adjectives → descriptors
- *   yellow nouns → people
+ * Aligns with selectAacCardColor so automatic boards get the correct Figma surfaces:
+ *   green verbs → verbs (verb template)
+ *   blue greetings/questions → questions (question template)
+ *   white function words → social (communication template)
+ *   pink adjectives → descriptors (descriptor template)
+ *   yellow nouns → people (noun template)
  */
 export const selectAacCategory = (text: string): FitzgeraldCategory => {
   const color = selectAacCardColor(text);
@@ -219,6 +220,7 @@ export const selectAacCategory = (text: string): FitzgeraldCategory => {
     case 'green':
       return 'verbs';
     case 'blue':
+      return 'questions';
     case 'white':
       return 'social';
     case 'pink':

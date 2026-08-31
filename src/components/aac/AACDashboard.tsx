@@ -56,7 +56,7 @@ const utilityRailCells: AACCell[] = [
     id: 'utility-price',
     text: 'כמה עולה',
     textEn: 'How much',
-    category: 'social',
+    category: 'questions',
     icon: '',
   },
 ];
@@ -762,11 +762,10 @@ const buildRootCommunicationCells = (
 
   // Root screen renders these six cells in a 2-column RTL grid: array order
   // [0,2,4] fills the right column and [1,3,5] fills the left column.
-  // Colors reuse BoardCard's Fitzgerald palette (verbs=green, nouns=yellow,
-  // descriptors=pink, greetings=blue, function words=white). Border from AACCard.
+  // Surfaces come from shared aacCardTemplate by category only.
   const priceCell: AACCell = {
     ...utilityPrice,
-    category: 'descriptors',
+    category: 'questions',
     imageUrl: ROOT_HOW_MUCH_IMAGE_URL,
   };
   const payCell: AACCell = {
@@ -1320,7 +1319,7 @@ export function AACDashboard({
   const peopleCells = sortedCells.filter((cell) => cell.category === 'people');
   const verbCells = sortedCells.filter((cell) => cell.category === 'verbs');
   const descriptorCells = sortedCells.filter((cell) => cell.category === 'descriptors');
-  const socialCells = sortedCells.filter((cell) => cell.category === 'social');
+  const socialCells = sortedCells.filter((cell) => cell.category === 'social' || cell.category === 'questions');
 
   const sideRailCells = utilityRailCells;
   const extraSocialCells = socialCells.filter(

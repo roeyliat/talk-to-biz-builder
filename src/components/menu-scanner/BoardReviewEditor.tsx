@@ -27,7 +27,8 @@ const fitzgeraldColors: Record<FitzgeraldCategory, string> = {
   people: 'bg-yellow-100 border-yellow-400 text-yellow-900',
   verbs: 'bg-green-100 border-green-400 text-green-900',
   descriptors: 'bg-pink-100 border-pink-400 text-pink-900',
-  social: 'bg-blue-100 border-blue-400 text-blue-900',
+  questions: 'bg-blue-100 border-blue-400 text-blue-900',
+  social: 'bg-white border-slate-300 text-slate-900',
 };
 
 export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardReviewEditorProps) {
@@ -56,7 +57,8 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
       people: 'אנשים/עצמים',
       verbs: 'פעולות',
       descriptors: 'תיאורים',
-      social: 'חברתי',
+      questions: 'שאלות',
+      social: 'תקשורת',
     },
     en: {
       title: 'Review & Edit',
@@ -69,7 +71,8 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
       people: 'People/Nouns',
       verbs: 'Actions',
       descriptors: 'Descriptors',
-      social: 'Social',
+      questions: 'Questions',
+      social: 'Communication',
     },
     ar: {
       title: 'مراجعة وتحرير',
@@ -82,7 +85,8 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
       people: 'أشخاص/أسماء',
       verbs: 'أفعال',
       descriptors: 'صفات',
-      social: 'اجتماعي',
+      questions: 'أسئلة',
+      social: 'تواصل',
     },
     ru: {
       title: 'Обзор и редактирование',
@@ -95,7 +99,8 @@ export function BoardReviewEditor({ boards, onSave, onPreview, onBack }: BoardRe
       people: 'Люди/Существительные',
       verbs: 'Действия',
       descriptors: 'Описания',
-      social: 'Социальные',
+      questions: 'Вопросы',
+      social: 'Коммуникация',
     },
   };
 
@@ -332,6 +337,7 @@ function CellCard({
             <SelectItem value="people">{t.people}</SelectItem>
             <SelectItem value="verbs">{t.verbs}</SelectItem>
             <SelectItem value="descriptors">{t.descriptors}</SelectItem>
+            <SelectItem value="questions">{t.questions}</SelectItem>
             <SelectItem value="social">{t.social}</SelectItem>
           </SelectContent>
         </Select>

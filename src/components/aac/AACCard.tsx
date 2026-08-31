@@ -2,8 +2,10 @@ import { cn } from '@/lib/utils';
 import { CSSProperties, forwardRef, useEffect, useState } from 'react';
 import { FolderOpen, X, Pencil, Volume2 } from 'lucide-react';
 import { useResolvedAacImage } from '@/hooks/useResolvedAacImage';
+import type { FitzgeraldCategory } from '@/types/aac';
+import { getAacCardSurfaceClass } from '@/lib/aacCardTemplate';
 
-export type FitzgeraldCategory = 'people' | 'verbs' | 'descriptors' | 'social';
+export type { FitzgeraldCategory };
 
 interface AACCardProps {
   text: string;
@@ -29,13 +31,6 @@ interface AACCardProps {
   imageContainerClassName?: string;
   imageClassName?: string;
 }
-
-const categoryStyles: Record<FitzgeraldCategory, string> = {
-  people: 'fitzgerald-yellow',
-  verbs: 'fitzgerald-green',
-  descriptors: 'fitzgerald-pink',
-  social: 'fitzgerald-blue',
-};
 
 const sizeStyles = {
   sm: 'h-24 text-sm',
@@ -101,7 +96,9 @@ export const AACCard = forwardRef<HTMLButtonElement, AACCardProps>(
           'active:translate-y-0 active:shadow-md',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           'disabled:opacity-50 disabled:pointer-events-none',
-          variant === 'fitzgerald' ? categoryStyles[category] : variantStyles[variant],
+          variant === 'fitzgerald'
+            ? cn(getAacCardSurfaceClass(category), 'border-4')
+            : variantStyles[variant],
           sizeStyles[size],
           // Stacked card appearance for folders
           isFolder && 'before:absolute before:inset-1 before:-z-10 before:rounded-xl before:bg-inherit before:opacity-60 before:translate-x-1 before:translate-y-1',

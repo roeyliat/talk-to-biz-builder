@@ -19,10 +19,11 @@ interface BoardEditModalProps {
 }
 
 const categoryColors: Record<FitzgeraldCategory, { bg: string; label: string; labelEn: string }> = {
-  people: { bg: 'bg-amber-400', label: 'שמות עצם / אנשים', labelEn: 'Nouns / People' },
-  verbs: { bg: 'bg-emerald-500', label: 'פעלים', labelEn: 'Verbs' },
-  descriptors: { bg: 'bg-sky-400', label: 'תארים', labelEn: 'Descriptors' },
-  social: { bg: 'bg-pink-400', label: 'ביטויים חברתיים', labelEn: 'Social Phrases' },
+  people: { bg: 'bg-[#fbeec6]', label: 'שמות עצם', labelEn: 'Nouns' },
+  verbs: { bg: 'bg-[#e8f5e6]', label: 'פעלים', labelEn: 'Verbs' },
+  descriptors: { bg: 'bg-[#efd9e8]', label: 'תארים', labelEn: 'Descriptors' },
+  questions: { bg: 'bg-[#e8f2ff]', label: 'שאלות', labelEn: 'Questions' },
+  social: { bg: 'bg-white', label: 'תקשורת', labelEn: 'Communication' },
 };
 
 const commonEmojis = ['😊', '👍', '❤️', '🙏', '👆', '🔍', '✨', '🔥', '❄️', '💧', '🍽️', '☕', '🥤', '🍦', '🍞', '🥐', '🍰', '💊', '🩹', '🧴'];

@@ -1,6 +1,6 @@
 // AAC Board Types with Hierarchical Navigation Support
 
-export type FitzgeraldCategory = 'people' | 'verbs' | 'descriptors' | 'social';
+export type FitzgeraldCategory = 'people' | 'verbs' | 'descriptors' | 'questions' | 'social';
 
 export interface AACCell {
   id: string;

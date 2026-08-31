@@ -49,7 +49,8 @@ const fitzgeraldColors: Record<FitzgeraldCategory, { bg: string; border: string 
   people: { bg: 'bg-yellow-100', border: 'border-yellow-400' },
   verbs: { bg: 'bg-green-100', border: 'border-green-400' },
   descriptors: { bg: 'bg-pink-100', border: 'border-pink-400' },
-  social: { bg: 'bg-blue-100', border: 'border-blue-400' },
+  questions: { bg: 'bg-blue-100', border: 'border-blue-400' },
+  social: { bg: 'bg-white', border: 'border-slate-300' },
 };
 
 const commonEmojis = ['☕', '🍕', '🍔', '🥗', '🍦', '🧁', '🥐', '🍝', '🍜', '🥩', '🍰', '🍪', '💊', '🩹', '📦', '🛒'];
@@ -88,7 +89,8 @@ export function CategoryItemsEditor({
       people: 'עצמים',
       verbs: 'פעולות',
       descriptors: 'תיאורים',
-      social: 'חברתי',
+      questions: 'שאלות',
+      social: 'תקשורת',
     },
     en: {
       addCategory: 'Add Category',
@@ -108,7 +110,8 @@ export function CategoryItemsEditor({
       people: 'Nouns',
       verbs: 'Actions',
       descriptors: 'Descriptors',
-      social: 'Social',
+      questions: 'Questions',
+      social: 'Communication',
     },
   };
 
@@ -436,6 +439,7 @@ function ItemRow({ item, onUpdate, onDelete, t }: ItemRowProps) {
           <SelectItem value="people">{t.people}</SelectItem>
           <SelectItem value="verbs">{t.verbs}</SelectItem>
           <SelectItem value="descriptors">{t.descriptors}</SelectItem>
+          <SelectItem value="questions">{t.questions}</SelectItem>
           <SelectItem value="social">{t.social}</SelectItem>
         </SelectContent>
       </Select>
