@@ -1366,6 +1366,7 @@ export function AACDashboard({
   const getUtilityRailImageSrc = (cell: AACCell) => utilityRailImageVisuals[cell.id]?.src ?? cell.imageUrl;
   const isAtRoot = navState.breadcrumbs.length === 0;
   const isPublicNestedBoardView = !isAtRoot && (businessType !== 'iceCream' ? !useIceCreamLayout : true);
+  // Board body chrome may still vary by layout; TopBar is global on every AAC board.
   const showPublicBoardChrome = isAtRoot || isPublicNestedBoardView;
   const publicBoardPageLabels = {
     delete: language === 'he' ? 'מחק' : 'Delete',
@@ -1403,8 +1404,7 @@ export function AACDashboard({
 
   return (
     <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-[#eef2f8] text-base', className)}>
-      {/* Top Bar */}
-      {showPublicBoardChrome && (
+      {/* Global AAC TopBar — every board / every business */}
       <BoardTopNavigation
         backLabel={t('aac.back')}
         backIcon={BackIcon}
@@ -1475,7 +1475,6 @@ export function AACDashboard({
         onSignOut={() => runSpokenAction(language === 'he' ? 'התנתק' : 'Sign Out', () => { void handleSignOut(); })}
         isRootView={isAtRoot}
       />
-      )}
 
       {/* Customer Mode Indicator Bar */}
       {isCustomerMode && !isEditMode && showPublicBoardChrome && (
